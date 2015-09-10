@@ -1,0 +1,400 @@
+# DataLoader
+
+DataLoader is a generic utility to be used as part of your application's data
+fetching layer to provide a consistent API over various key-value store backends
+and reduce requests to those back-ends via batching and caching.
+
+[![Build Status](https://travis-ci.org/facebook/dataloader.svg)](https://travis-ci.org/facebook/dataloader)
+[![Coverage Status](https://coveralls.io/repos/facebook/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/facebook/dataloader?branch=master)
+
+A port of the "Loader" API originally developed by [@schrockn][] at Facebook in
+2010 as a simplifying force to coalesce the sundry key-value store back-end
+APIs which existed at the time. At Facebook, "Loader" became one of the
+implementation details of the "Ent" framework, a privacy-aware data entity
+loading and caching layer within web server product code. This ultimately became
+the underpinning for Facebook's GraphQL server implementation and type
+definitions. DataLoader is presented in the hope that it may be useful to
+produce a similar GraphQL underpinning for other systems which use
+[graphql-js][] along side key-value stores, or at the very least remain a
+publicly available example of this abstraction.
+
+
+## Getting Started
+
+First, install DataLoader using npm.
+
+```sh
+npm install --save dataloader
+```
+
+DataLoader assumes a JavaScript environment with global ES6 `Promise` and `Map`
+classes, available in the recent versions of node.js or when using [babel][].
+If your environment does not have these, provide them before using DataLoader.
+
+```js
+global.Promise = require('es6-promise')
+global.Map = require('es6-map')
+```
+
+To get started, create a `DataLoader`. Each `DataLoader` instance represents a
+unique cache. You might create each loader once for your whole application, or
+create new instances per request when used within a web-server like [express][]
+if different users can see different things. It's up to you.
+
+Batching is a not an advanced feature, it's DataLoader's primary feature.
+Create loaders by providing a batch loading function.
+
+```js
+var DataLoader = require('dataloader')
+
+var userLoader = new DataLoader(keys => myBatchGetUsers(keys));
+```
+
+A batch loading function accepts an Array of keys, and returns a Promise which
+resolves to an Array of values.
+
+Then load individual values from the loader. In this example, we're illustrating
+two parts of an example application which shows who was invited by whom.
+
+```js
+userLoader.load(1)
+  .then(user => userLoader.load(user.invitedByID))
+  .then(invitedBy => console.log(`User 1 was invited by ${invitedBy}`));
+
+// Elsewhere in your application
+userLoader.load(2)
+  .then(user => userLoader.load(user.lastInvitedID))
+  .then(lastInvited => console.log(`User 2 last invited ${lastInvited}`));
+```
+
+A naive application may have issued four round-trips to a backend for the
+required information, but with DataLoader this application will make at most
+two.
+
+DataLoader allows you to decouple unrelated parts of your application without
+sacrificing the performance of batch data-loading. While the loader presents an
+API that loads individual values, all concurrent requests will be coalesced and
+presented to your batch loading function. This allows your application to safely
+distribute data fetching requirements throughout your application and maintain
+minimal outgoing data requests.
+
+### Caching
+
+After being loaded once, the resulting value is cached, eliminating
+redundant requests.
+
+In the example above, if User `1` was last invited by User `2`, only a single
+round trip will occur.
+
+Caching results in creating fewer objects which may relieve memory pressure on
+your application:
+
+```js
+var promise1A = userLoader.load(1)
+var promise1B = userLoader.load(1)
+assert(promise1A === promise1B)
+```
+
+There are two common examples when clearing the loader's cache is necessary:
+
+*Mutations:* after a mutation or update, a cached value may be out of date.
+Future loads should not use any possibly cached value.
+
+Here's a simple example using SQL UPDATE to illustrate.
+
+```js
+sqlRun('UPDATE users WHERE id=4 SET username="zuck"').then(
+  () => userLoader.clear(4)
+)
+```
+
+*Transient Errors:* A load may fail because it simply can't be loaded
+(a permanent issue) or it may fail because of a transient issue such as a down
+database or network issue. For transient errors, clear the cache:
+
+```js
+userLoader.load(1).catch(error => {
+  if (/* determine if error is transient */) {
+    userLoader.clear(1);
+  }
+  throw error;
+});
+```
+
+
+## API
+
+#### class DataLoader
+
+DataLoader creates a public API for loading data from a particular
+data back-end with unique keys such as the `id` column of a SQL table or
+document name in a MongoDB database, given a batch loading function.
+
+Each `DataLoader` instance contains a unique memoized cache. Use caution when
+used in long-lived applications or those which serve many users with different
+access permissions and consider creating a new instance per web request.
+
+##### `new DataLoader(batchLoadFn [, options])`
+
+Create a new `DataLoader` given a batch loading function and options.
+
+- *batchLoadFn*: A function which accepts an Array of keys, and returns a
+  Promise which resolves to an Array of values.
+
+- *options*: An optional object of options:
+
+  - *batch*: Default `true`. Set to `false` to disable batching, instead
+    immediately invoking `batchLoadFn` with a single load key.
+
+  - *cache*: Default `true`. Set to `false` to disable caching, instead
+    creating a new Promise and new key in the `batchLoadFn` for every load.
+
+##### `load(key)`
+
+Loads a key, returning a `Promise` for the value represented by that key.
+
+- *key*: An key value to load.
+
+##### `loadMany(keys)`
+
+Loads multiple keys, promising an array of values:
+
+```js
+var [ a, b ] = await myLoader.loadMany([ 'a', 'b' ]);
+```
+
+This is equivalent to the more verbose:
+
+```js
+var [ a, b ] = await Promise.all([
+  myLoader.load('a'),
+  myLoader.load('b')
+]);
+```
+
+- *keys*: An array of key values to load.
+
+##### `clear(key)`
+
+Clears the value at `key` from the cache, if it exists. Returns itself for
+method chaining.
+
+- *key*: An key value to clear.
+
+##### `clearAll()`
+
+Clears the entire cache. To be used when some event results in unknown
+invalidations across this particular `DataLoader`. Returns itself for
+method chaining.
+
+
+## Using with GraphQL
+
+DataLoader pairs nicely well with [GraphQL][graphql-js]. GraphQL fields are
+designed to be stand-alone functions. Without a caching or batching mechanism,
+it's easy for a naive GraphQL server to issue new database requests each time a
+field is resolved.
+
+Consider the following GraphQL request:
+
+```
+{
+  me {
+    name
+    bestFriend {
+      name
+    }
+    friends(first: 5) {
+      name
+      bestFriend {
+        name
+      }
+    }
+  }
+}
+```
+
+Naively, if `me`, `bestFriend` and `friends` each need to request the backend,
+there could be at most 13 database requests!
+
+When using DataLoader, we could define the `User` type using the
+[SQLLite](#sqlite) example with clearer code and at most 4 database requests,
+and possibly fewer if there are cache hits.
+
+```js
+var UserType = new GraphQLObjectType({
+  name: 'User',
+  fields: () => ({
+    name: { type: GraphQLString },
+    bestFriend: {
+      type: UserType,
+      resolve: user => userLoader.load(user.bestFriendID)
+    },
+    friends: {
+      args: {
+        first: { type: GraphQLInt }
+      },
+      type: new GraphQLList(UserType)
+      resolve (user, { first }) => queryLoader.load([
+        'SELECT toID as id FROM friends WHERE fromID=? LIMIT ?', user.id, first
+      ]).then(rows => rows.map(row => userLoader.load(row.friendID)))
+    }
+  })
+})
+```
+
+
+## Common Patterns
+
+In many applications, a web server using DataLoader serves requests to many
+different users with different access permissions. It may be dangerous to use
+one cache across many users, and is encouraged to create a new cache
+per request:
+
+```js
+function createLoaders(authToken) {
+  return {
+    users: new DataLoader(ids => genUsers(authToken, ids)),
+    cdnUrls: new DataLoader(rawUrls => genCdnUrls(authToken, rawUrls)),
+    stories: new DataLoader(keys => genStories(authToken, keys)),
+  };
+}
+
+// Later, in an web request handler:
+var loaders = createLoaders(request.query.authToken);
+
+// Then, within application logic:
+var user = await loaders.users.load(4);
+var pic = await loaders.cdnUrls.load(user.rawPicUrl);
+```
+
+Creating an object where each key is a `DataLoader` is also a common pattern.
+This provides a single value to pass around to code which needs to perform
+data loading, such as part of the `rootValue` in a [graphql-js][] request.
+
+
+## Common Back-ends
+
+Looking to get started with a specific back-end? Try these example loaders:
+
+
+#### Redis
+
+Redis is a very simple key-value store which provides the batch load method
+[MGET](http://redis.io/commands/mget). Here we build a Redis DataLoader
+using [node_redis][].
+
+```js
+var DataLoader = require('./');
+var redis = require("redis");
+
+var client = redis.createClient();
+
+var redisLoader = new DataLoader(keys => new Promise((resolve, reject) => {
+  client.mget(keys, (error, results) => {
+    if (error) {
+      return reject(error);
+    }
+    resolve(results.map((result, index) =>
+      result !== null ? result : new Error(`No key: ${keys[index]}`)
+    ));
+  });
+});
+```
+
+
+#### CouchDB
+
+This example uses the [nano][] CouchDB client which offers a `fetch` method
+implementing the [HTTP Bulk Document API](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
+
+```js
+var DataLoader = require('dataloader');
+var nano = require('nano');
+
+var couch = nano('http://localhost:5984');
+
+var userDB = couch.use('users');
+var userLoader = new DataLoader(keys => new Promise((resolve, reject) => {
+  userDB.fetch({ keys: keys }, (error, docs) => {
+    if (error) {
+      return reject(error);
+    }
+    resolve(docs.rows.map(row => row.error ? new Error(row.error) : row.doc));
+  });
+}));
+
+// Usage
+
+var promise1 = userLoader.load('8fce1902834ac6458e9886fa7f89c0ef');
+var promise2 = userLoader.load('00a271787f89c0ef2e10e88a0c00048b');
+
+Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
+  console.log(user1, user2);
+});
+```
+
+
+#### SQLite
+
+SQL offers a natural batch mechanism with `SELECT * WHERE IN`. `DataLoader`
+is designed to operate over key-value stores, so in this example just requests
+the entire row at a given `id`.
+
+This example uses the [sqlite3][] client which offers a `parallelize` method to
+further batch queries together. Another non-caching `DataLoader` utilizes this
+method to provide a similar API. `DataLoaders` can access other `DataLoaders`.
+
+```js
+var DataLoader = require('./');
+var sqlite3 = require('sqlite3');
+
+var db = new sqlite3.Database('./to/your/db.sql');
+
+// Dispatch a WHERE-IN query, ensuring response has rows in correct order.
+var userLoader = new DataLoader(ids => {
+  var params = ids.map(id => '?' ).join();
+  var query = `SELECT * FROM users WHERE id IN (${params})`;
+  return queryLoader.load([query, ids]).then(
+    rows => ids.map(
+      id => rows.find(
+        row => row.id === id) || new Error(`Row not found: ${id}`
+      )
+    )
+  );
+});
+
+// Parallelize all queries, but do not cache.
+var queryLoader = new DataLoader(queries => new Promise(resolve => {
+  var waitingOn = queries.length;
+  var results = [];
+  db.parallelize(() => {
+    queries.forEach((query, index) => {
+      db.all.apply(db, query.concat((error, result) => {
+        results[index] = error || result;
+        if (--waitingOn === 0) {
+          resolve(results);
+        }
+      }));
+    });
+  });
+}), { cache: false });
+
+// Usage
+
+var promise1 = userLoader.load('1234');
+var promise2 = userLoader.load('5678');
+
+Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
+  console.log(user1, user2);
+});
+```
+
+
+[@schrockn]: https://github.com/schrockn
+[graphql-js]: https://github.com/graphql/graphql-js
+[express]: http://expressjs.com/
+[babel]: http://babeljs.io/
+[node_redis]: https://github.com/NodeRedis/node_redis
+[nano]: https://github.com/dscape/nano
+[sqlite3]: https://github.com/mapbox/node-sqlite3

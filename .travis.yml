@@ -1,0 +1,31 @@
+language: node_js
+
+node_js:
+  - "stable"
+  - "iojs"
+  - "0.12"
+  - "0.10"
+
+before_install:
+  - npm config set spin false --global
+
+script:
+  - npm run lint && npm run check && (if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then npm run cover:lcov; else npm run testonly; fi)
+
+after_failure:
+  - (cd resources; python travis_after_all.py)
+
+after_success:
+  - (cd resources; python travis_after_all.py)
+  - export $(cat resources/.to_export_back)
+  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js; fi
+
+deploy:
+  provider: npm
+  email: "lee@leebyron.com"
+  api_key:
+    secure: tCIGE/3CLOQlC49i/9ug42ILQjZnMOrSjyjdHkqmTVN5q9p9bljjziXQbNxYfVPYa9icICnVnI4c5psjktW+vwaz2WJAJhpWD6P3YGcpmKjjgPKKHKWOcXvq3HdIzH7DIbXyVtE0QLpV5zgbyxglD96vYScO9dvGeAhTGY/9qJaDvVkLOZ+6YpKiTwZlZcyPHlD1tbxzd4NytJgIsi7CedFdfATAmOyVsot1NRZr5q3oV0aXFjJRnhBQ3RtykGgGHtXEWYTNhAmYxcIwezYRYXLxtlkbrlwxixpKAdJr/UXHg6amplkaHtCopi+QChPQRmdndcDC6F+e2nFHut6BCi14Jnbvf7seaqWrmh0uqdopqMJFRP3OBc9lXZf3hljVKV9+iVbWNjxoUB7ezurOOEpgkXleJ5AO2o3u8oYh3OFfLYu7E1a4uSjfe4nP/zi+th+wvS4Wy2UWqErYFUMotMyStS/vllXUpK7pl+Qt59MUVHB8YzREyCVKxakQ/uvNvY+bzKf4sM8UJ/Dqnl3MaAjLG3rWZbFyzXdaJnRGdTeFK2lpz8nrfJEDzLIQX5ZC88yR30WahrRjAhLnnq0V1fYp0wLbLxs4SdN+tuMRlkzQhQEYYDYa5osgEo2C+O4D/H9F7GWHHJp9zPE+hMi5+ZwTPKHkln4/AqrABUKOk78=
+  on:
+    tags: true
+    branch: master
+    condition: "$BUILD_LEADER$BUILD_AGGREGATE_STATUS = YESothers_succeeded"
