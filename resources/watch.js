@@ -40,7 +40,7 @@ var flowServer = spawn(flowBinPath, ['server'], {
   env: process.env
 });
 
-var watcher = sane(srcDir, { glob: ['**/*.js', '**/*.graphql'] })
+var watcher = sane(srcDir, { glob: ['**/*.js'] })
   .on('ready', startWatch)
   .on('add', changeFile)
   .on('delete', deleteFile)

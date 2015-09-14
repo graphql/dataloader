@@ -18,13 +18,13 @@ after_failure:
 after_success:
   - (cd resources; python travis_after_all.py)
   - export $(cat resources/.to_export_back)
-  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js; fi
+  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then cat ./coverage/lcov.info | ./node_modules/.bin/coveralls; fi
 
 deploy:
   provider: npm
   email: "lee@leebyron.com"
   api_key:
-    secure: tCIGE/3CLOQlC49i/9ug42ILQjZnMOrSjyjdHkqmTVN5q9p9bljjziXQbNxYfVPYa9icICnVnI4c5psjktW+vwaz2WJAJhpWD6P3YGcpmKjjgPKKHKWOcXvq3HdIzH7DIbXyVtE0QLpV5zgbyxglD96vYScO9dvGeAhTGY/9qJaDvVkLOZ+6YpKiTwZlZcyPHlD1tbxzd4NytJgIsi7CedFdfATAmOyVsot1NRZr5q3oV0aXFjJRnhBQ3RtykGgGHtXEWYTNhAmYxcIwezYRYXLxtlkbrlwxixpKAdJr/UXHg6amplkaHtCopi+QChPQRmdndcDC6F+e2nFHut6BCi14Jnbvf7seaqWrmh0uqdopqMJFRP3OBc9lXZf3hljVKV9+iVbWNjxoUB7ezurOOEpgkXleJ5AO2o3u8oYh3OFfLYu7E1a4uSjfe4nP/zi+th+wvS4Wy2UWqErYFUMotMyStS/vllXUpK7pl+Qt59MUVHB8YzREyCVKxakQ/uvNvY+bzKf4sM8UJ/Dqnl3MaAjLG3rWZbFyzXdaJnRGdTeFK2lpz8nrfJEDzLIQX5ZC88yR30WahrRjAhLnnq0V1fYp0wLbLxs4SdN+tuMRlkzQhQEYYDYa5osgEo2C+O4D/H9F7GWHHJp9zPE+hMi5+ZwTPKHkln4/AqrABUKOk78=
+    secure: "LKgxA5+LSG1TPLlpE5mS4DGfirzBjNKO3UhDptXSXYR78QTs/lS0YlYKkNq/lCeTEMGKAgi9edVQfnsruKAsjiT4naZz/ZoSAzonRedO6ynHng+ec4WszJVew0xDPK1hJ2Gy+RdSyzRxGZUn6RDBZZR3Bj412azgwrgGf8x/HY6qBmVP9JZKPlpuRHM/lEL2IiKtJict7sFel0MH01t7n1rzsriUviPYsh6XElqLqSdeVe54iMu7PNp1A6p8hgt+I6IOree2km5TVC/MYn9iOIIK4kC6b+QCcE3jUOWioRIrQkI3DoN9QrxqeeOpx+i4ozsvjYcsl9b9TI6n66wNxkXJsDVRXA3oQ/0YjVlY4tznC/+3CI49gtLiKVeos2LsIdP6Xnnx7VvMOPvjEbl4386wLZAhbbc0VxjWilyVRJeErGsQvrujY/0JZwhxsXDAtGzqFXkiV7tTin+wivUgGW1VNf81q3ANOr8TG91yZMeYeRwTlECN0jQaFqNvagc8/Atp2akrbW4P46gh4+f/gp4hSLrYbjwybmZdM4zesHeBezA87PPIlm5INhe2Lgsgmw2Ipgn8x2cBzsHepbsfGcvxMxu4CAhPISRdB9nlnbZ6eEpU2o6caeJN/hjmiwDHOsSbCa2RxVbMPkxqjdGG6VJmUyDMFny7apzNAYSiIJ0="
   on:
     tags: true
     branch: master
