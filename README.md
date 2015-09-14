@@ -236,8 +236,8 @@ var UserType = new GraphQLObjectType({
       },
       type: new GraphQLList(UserType)
       resolve (user, { first }) => queryLoader.load([
-        'SELECT toID as id FROM friends WHERE fromID=? LIMIT ?', user.id, first
-      ]).then(rows => rows.map(row => userLoader.load(row.friendID)))
+        'SELECT toID FROM friends WHERE fromID=? LIMIT ?', user.id, first
+      ]).then(rows => rows.map(row => userLoader.load(row.toID)))
     }
   })
 })
