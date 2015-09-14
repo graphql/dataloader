@@ -285,7 +285,7 @@ Redis is a very simple key-value store which provides the batch load method
 using [node_redis][].
 
 ```js
-var DataLoader = require('./');
+var DataLoader = require('dataloader');
 var redis = require("redis");
 
 var client = redis.createClient();
@@ -346,7 +346,7 @@ further batch queries together. Another non-caching `DataLoader` utilizes this
 method to provide a similar API. `DataLoaders` can access other `DataLoaders`.
 
 ```js
-var DataLoader = require('./');
+var DataLoader = require('dataloader');
 var sqlite3 = require('sqlite3');
 
 var db = new sqlite3.Database('./to/your/db.sql');
@@ -389,6 +389,7 @@ Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
   console.log(user1, user2);
 });
 ```
+
 
 
 [@schrockn]: https://github.com/schrockn
