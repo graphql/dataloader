@@ -71,13 +71,13 @@ export default class DataLoader<K, V> {
 
     // Otherwise, produce a new Promise for this value.
     var promise = new Promise((resolve, reject) => {
-
-      // Enqueue this Promise to be dispatched, and determine if a new dispatch
-      // needs to be created: if this is the first enqueue upon an empty queue.
-      var needsDispatch = this._queue.length === 0;
+      // Enqueue this Promise to be dispatched.
       this._queue.push({ key, resolve, reject });
 
-      if (needsDispatch) {
+      // Determine if a dispatch of this queue should be scheduled.
+      // A single dispatch should be scheduled per queue at the time when the
+      // queue changes from "empty" to "full".
+      if (this._queue.length === 1) {
         if (shouldBatch) {
           // If batching, schedule a task to dispatch the queue.
           enqueuePostPromiseJob(() => dispatchQueue(this));
