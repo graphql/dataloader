@@ -53,8 +53,9 @@ var userLoader = new DataLoader(keys => myBatchGetUsers(keys));
 A batch loading function accepts an Array of keys, and returns a Promise which
 resolves to an Array of values.
 
-Then load individual values from the loader. In this example, we're illustrating
-two parts of an example application which shows who was invited by whom.
+Then load individual values from the loader. DataLoader will coalesce all
+individual loads which occur within a single frame of execution (a single tick
+of the event loop) and then call your batch function with all requested keys.
 
 ```js
 userLoader.load(1)
