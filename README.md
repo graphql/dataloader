@@ -28,8 +28,9 @@ npm install --save dataloader
 ```
 
 DataLoader assumes a JavaScript environment with global ES6 `Promise` and `Map`
-classes, available in the recent versions of node.js or when using [babel][].
-If your environment does not have these, provide them before using DataLoader.
+classes, available in the recent versions of node.js or when using
+[babel/polyfill][]. If your environment does not have these, provide them before
+using DataLoader.
 
 ```js
 global.Promise = require('es6-promise')
@@ -396,7 +397,7 @@ Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
 [@schrockn]: https://github.com/schrockn
 [graphql-js]: https://github.com/graphql/graphql-js
 [express]: http://expressjs.com/
-[babel]: http://babeljs.io/
+[babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
 [node_redis]: https://github.com/NodeRedis/node_redis
 [nano]: https://github.com/dscape/nano
 [sqlite3]: https://github.com/mapbox/node-sqlite3
