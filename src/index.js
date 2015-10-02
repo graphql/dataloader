@@ -16,7 +16,7 @@ type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>
 type Options = { batch?: boolean, cache?: boolean }
 
 /**
- A `DataLoader` creates a public API for loading data from a particular
+ * A `DataLoader` creates a public API for loading data from a particular
  * data back-end with unique keys such as the `id` column of a SQL table or
  * document name in a MongoDB database, given a batch loading function.
  *
