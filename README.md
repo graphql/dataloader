@@ -288,7 +288,7 @@ using [node_redis][].
 
 ```js
 var DataLoader = require('dataloader');
-var redis = require("redis");
+var redis = require('redis');
 
 var client = redis.createClient();
 
