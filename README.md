@@ -42,7 +42,7 @@ unique cache. You might create each loader once for your whole application, or
 create new instances per request when used within a web-server like [express][]
 if different users can see different things. It's up to you.
 
-Batching is a not an advanced feature, it's DataLoader's primary feature.
+Batching is not an advanced feature, it's DataLoader's primary feature.
 Create loaders by providing a batch loading function.
 
 ```js
