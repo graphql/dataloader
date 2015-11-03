@@ -378,6 +378,44 @@ describe('Accepts any kind of key', () => {
 
 });
 
+describe('Accepts object key in custom serializeKey function', () => {
+  function serializeKey(key) {
+    var result;
+    if (typeof key === 'object' && key !== null) {
+      result = Object.keys(key).sort().map(k => k + ':' + key[k]).join('-');
+    } else {
+      result = key;
+    }
+    return result;
+  }
+
+  it('Accepts objects with different order of keys', async () => {
+    var keyA = { a: 123, b: 321 };
+    var keyB = { b: 321, a: 123 };
+
+    var identityLoadCalls = [];
+    var identityLoader = new DataLoader(keys => {
+      identityLoadCalls.push(keys);
+      return Promise.resolve(keys);
+    }, {serializeKey});
+
+    // Fetches as expected
+
+    var [ valueA, valueB ] = await Promise.all([
+      identityLoader.load(keyA),
+      identityLoader.load(keyB),
+    ]);
+
+    expect(valueA).to.equal(keyA);
+    expect(valueB).to.equal(valueA);
+
+    expect(identityLoadCalls).to.have.length(1);
+    expect(identityLoadCalls[0]).to.have.length(1);
+    expect(identityLoadCalls[0][0]).to.equal(keyA);
+  });
+
+});
+
 describe('Accepts options', () => {
 
   // Note: mirrors 'batches multiple requests' above.
