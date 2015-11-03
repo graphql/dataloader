@@ -12,6 +12,15 @@ import { expect } from 'chai';
 import { describe, it } from 'mocha';
 import DataLoader from '../';
 
+function idLoader(options) {
+  var loadCalls = [];
+  var identityLoader = new DataLoader(keys => {
+    loadCalls.push(keys);
+    return Promise.resolve(keys);
+  }, options);
+  return [ identityLoader, loadCalls ];
+}
+
 describe('Primary API', () => {
 
   it('builds a really really simple data loader', async () => {
@@ -41,11 +50,7 @@ describe('Primary API', () => {
   });
 
   it('batches multiple requests', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
+    var [ identityLoader, loadCalls ] = idLoader();
 
     var promise1 = identityLoader.load(1);
     var promise2 = identityLoader.load(2);
@@ -58,11 +63,7 @@ describe('Primary API', () => {
   });
 
   it('coalesces identical requests', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
+    var [ identityLoader, loadCalls ] = idLoader();
 
     var promise1a = identityLoader.load(1);
     var promise1b = identityLoader.load(1);
@@ -77,11 +78,7 @@ describe('Primary API', () => {
   });
 
   it('caches repeated requests', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
+    var [ identityLoader, loadCalls ] = idLoader();
 
     var [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -117,11 +114,7 @@ describe('Primary API', () => {
   });
 
   it('clears single value in loader', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
+    var [ identityLoader, loadCalls ] = idLoader();
 
     var [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -147,11 +140,7 @@ describe('Primary API', () => {
   });
 
   it('clears all values in loader', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
+    var [ identityLoader, loadCalls ] = idLoader();
 
     var [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -334,14 +323,10 @@ describe('Represents Errors', () => {
 describe('Accepts any kind of key', () => {
 
   it('Accepts objects as keys', async () => {
+    var [ identityLoader, loadCalls ] = idLoader();
+
     var keyA = {};
     var keyB = {};
-
-    var identityLoadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      identityLoadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
 
     // Fetches as expected
 
@@ -353,10 +338,10 @@ describe('Accepts any kind of key', () => {
     expect(valueA).to.equal(keyA);
     expect(valueB).to.equal(keyB);
 
-    expect(identityLoadCalls).to.have.length(1);
-    expect(identityLoadCalls[0]).to.have.length(2);
-    expect(identityLoadCalls[0][0]).to.equal(keyA);
-    expect(identityLoadCalls[0][1]).to.equal(keyB);
+    expect(loadCalls).to.have.length(1);
+    expect(loadCalls[0]).to.have.length(2);
+    expect(loadCalls[0][0]).to.equal(keyA);
+    expect(loadCalls[0][1]).to.equal(keyB);
 
     // Caching
 
@@ -370,9 +355,9 @@ describe('Accepts any kind of key', () => {
     expect(valueA2).to.equal(keyA);
     expect(valueB2).to.equal(keyB);
 
-    expect(identityLoadCalls).to.have.length(2);
-    expect(identityLoadCalls[1]).to.have.length(1);
-    expect(identityLoadCalls[1][0]).to.equal(keyA);
+    expect(loadCalls).to.have.length(2);
+    expect(loadCalls[1]).to.have.length(1);
+    expect(loadCalls[1][0]).to.equal(keyA);
 
   });
 
@@ -382,11 +367,7 @@ describe('Accepts options', () => {
 
   // Note: mirrors 'batches multiple requests' above.
   it('May disable batching', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    }, { batch: false });
+    var [ identityLoader, loadCalls ] = idLoader({ batch: false });
 
     var promise1 = identityLoader.load(1);
     var promise2 = identityLoader.load(2);
@@ -400,11 +381,7 @@ describe('Accepts options', () => {
 
   // Note: mirror's 'caches repeated requests' above.
   it('May disable caching', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    }, { cache: false });
+    var [ identityLoader, loadCalls ] = idLoader({ cache: false });
 
     var [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -446,11 +423,7 @@ describe('Accepts options', () => {
 describe('It is resilient to job queue ordering', () => {
 
   it('batches loads occuring within promises', async () => {
-    var loadCalls = [];
-    var identityLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(keys);
-    });
+    var [ identityLoader, loadCalls ] = idLoader();
 
     await Promise.all([
       identityLoader.load('A'),
