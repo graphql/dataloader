@@ -49,7 +49,7 @@ export default class DataLoader<K, V> {
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
   _options: ?Options;
-  _promiseCache: Map<string, Promise<V>>;
+  _promiseCache: Map<K, Promise<V>>;
   _queue: LoaderQueue<K, V>;
   _serializeKey: SerializeKeyFn;
 
