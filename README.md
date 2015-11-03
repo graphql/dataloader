@@ -236,8 +236,8 @@ var UserType = new GraphQLObjectType({
       args: {
         first: { type: GraphQLInt }
       },
-      type: new GraphQLList(UserType)
-      resolve (user, { first }) => queryLoader.load([
+      type: new GraphQLList(UserType),
+      resolve: (user, { first }) => queryLoader.load([
         'SELECT toID FROM friends WHERE fromID=? LIMIT ?', user.id, first
       ]).then(rows => rows.map(row => userLoader.load(row.toID)))
     }
@@ -301,7 +301,7 @@ var redisLoader = new DataLoader(keys => new Promise((resolve, reject) => {
       result !== null ? result : new Error(`No key: ${keys[index]}`)
     ));
   });
-});
+}));
 ```
 
 
@@ -359,9 +359,7 @@ var userLoader = new DataLoader(ids => {
   var query = `SELECT * FROM users WHERE id IN (${params})`;
   return queryLoader.load([query, ids]).then(
     rows => ids.map(
-      id => rows.find(
-        row => row.id === id) || new Error(`Row not found: ${id}`
-      )
+      id => rows.find(row => row.id === id) || new Error(`Row not found: ${id}`)
     )
   );
 });
