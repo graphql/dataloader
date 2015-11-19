@@ -12,8 +12,9 @@
 // of values or Errors.
 type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>
 
+type SerializeKeyFn<K> = (key: K) => K
 // Optionally turn off batching or caching.
-type Options = { batch?: boolean, cache?: boolean }
+type Options = { batch?: boolean, cache?: boolean, keyFn?: SerializeKeyFn }
 
 /**
  * A `DataLoader` creates a public API for loading data from a particular
@@ -39,6 +40,9 @@ export default class DataLoader<K, V> {
     this._batchLoadFn = batchLoadFn;
     this._options = options;
     this._promiseCache = new Map();
+    this._serializeKey = options && options.serializeKey ?
+        options.serializeKey :
+        this._defaultSerializeKey;
     this._queue = [];
   }
 
@@ -47,6 +51,11 @@ export default class DataLoader<K, V> {
   _options: ?Options;
   _promiseCache: Map<K, Promise<V>>;
   _queue: LoaderQueue<K, V>;
+  _serializeKey: SerializeKeyFn;
+
+  _defaultSerializeKey(key: K): K {
+    return key;
+  }
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -58,15 +67,14 @@ export default class DataLoader<K, V> {
         `but got: ${key}.`
       );
     }
-
     // Determine options
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
     var shouldCache = !options || options.cache !== false;
-
+    var cacheKey = this._serializeKey(key);
     // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache && this._promiseCache.has(key)) {
-      return this._promiseCache.get(key);
+    if (shouldCache && this._promiseCache.has(cacheKey)) {
+      return this._promiseCache.get(cacheKey);
     }
 
     // Otherwise, produce a new Promise for this value.
@@ -90,7 +98,7 @@ export default class DataLoader<K, V> {
 
     // If caching, cache this promise.
     if (shouldCache) {
-      this._promiseCache.set(key, promise);
+      this._promiseCache.set(cacheKey, promise);
     }
 
     return promise;
@@ -124,7 +132,7 @@ export default class DataLoader<K, V> {
    * method chaining.
    */
   clear(key: K): DataLoader<K, V> {
-    this._promiseCache.delete(key);
+    this._promiseCache.delete(this._serializeKey(key));
     return this;
   }
 
@@ -204,6 +212,7 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
         `not return a Promise of an Array: ${values}.`
       );
     }
+
     if (values.length !== keys.length) {
       throw new Error(
         'DataLoader must be constructed with a function which accepts ' +
