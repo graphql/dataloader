@@ -381,13 +381,25 @@ describe('Accepts any kind of key', () => {
 describe('Accepts object key in custom serializeKey function', () => {
   function serializeKey(key) {
     var result;
-    if (typeof key === 'object' && key !== null) {
+    if (typeof key === 'object') {
       result = Object.keys(key).sort().map(k => k + ':' + key[k]).join('-');
     } else {
-      result = key;
+      result = String(key);
     }
     return result;
   }
+
+  it('Accepts objects with simple key', async () => {
+    var keyA = '1234';
+    var identityLoadCalls = [];
+    var identityLoader = new DataLoader(keys => {
+      identityLoadCalls.push(keys);
+      return Promise.resolve(keys);
+    }, {serializeKey});
+
+    var valueA = await identityLoader.load(keyA);
+    expect(valueA).to.equal(keyA);
+  });
 
   it('Accepts objects with different order of keys', async () => {
     var keyA = { a: 123, b: 321 };
