@@ -12,8 +12,12 @@
 // of values or Errors.
 type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>
 
-// Optionally turn off batching or caching.
-type Options = { batch?: boolean, cache?: boolean }
+// Optionally turn off batching or caching or provide a cache key function.
+type Options = {
+  batch?: boolean,
+  cache?: boolean,
+  cacheKeyFn?: (key: any) => any
+}
 
 /**
  * A `DataLoader` creates a public API for loading data from a particular
@@ -63,10 +67,12 @@ export default class DataLoader<K, V> {
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
     var shouldCache = !options || options.cache !== false;
+    var cacheKeyFn = options && options.cacheKeyFn;
+    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
 
     // If caching and there is a cache-hit, return cached Promise.
     if (shouldCache) {
-      var cachedPromise = this._promiseCache.get(key);
+      var cachedPromise = this._promiseCache.get(cacheKey);
       if (cachedPromise) {
         return cachedPromise;
       }
@@ -93,7 +99,7 @@ export default class DataLoader<K, V> {
 
     // If caching, cache this promise.
     if (shouldCache) {
-      this._promiseCache.set(key, promise);
+      this._promiseCache.set(cacheKey, promise);
     }
 
     return promise;
@@ -127,7 +133,9 @@ export default class DataLoader<K, V> {
    * method chaining.
    */
   clear(key: K): DataLoader<K, V> {
-    this._promiseCache.delete(key);
+    var cacheKeyFn = this._options && this._options.cacheKeyFn;
+    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+    this._promiseCache.delete(cacheKey);
     return this;
   }
 
