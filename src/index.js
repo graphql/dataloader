@@ -65,8 +65,11 @@ export default class DataLoader<K, V> {
     var shouldCache = !options || options.cache !== false;
 
     // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache && this._promiseCache.has(key)) {
-      return this._promiseCache.get(key);
+    if (shouldCache) {
+      var cachedPromise = this._promiseCache.get(key);
+      if (cachedPromise) {
+        return cachedPromise;
+      }
     }
 
     // Otherwise, produce a new Promise for this value.
