@@ -155,6 +155,9 @@ Create a new `DataLoader` given a batch loading function and options.
     Defaults to `key => key`. Useful to provide when JavaScript objects are keys
     and two similarly shaped objects should be considered equivalent.
 
+  - *cacheMap*: An instance of [Map][] (or an object with a similar API) to be
+    used as the underlying cache for this loader. Default `new Map()`.
+
 ##### `load(key)`
 
 Loads a key, returning a `Promise` for the value represented by that key.
@@ -279,6 +282,16 @@ This provides a single value to pass around to code which needs to perform
 data loading, such as part of the `rootValue` in a [graphql-js][] request.
 
 
+## Custom Caches
+
+DataLoader can optionaly be provided a custom Map instance to use as its
+cache. More specifically, any object that implements the methods `get()`,
+`set()`, `delete()` and `clear()` can be provided. This allows for custom Maps
+which implement various [cache algorithms][] to be provided. By default,
+DataLoader uses the standard [Map][] which simply grows until the DataLoader
+is released.
+
+
 ## Common Back-ends
 
 Looking to get started with a specific back-end? Try these example loaders:
@@ -397,7 +410,9 @@ Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
 
 
 [@schrockn]: https://github.com/schrockn
+[Map]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map
 [graphql-js]: https://github.com/graphql/graphql-js
+[cache algorithms]: https://en.wikipedia.org/wiki/Cache_algorithms
 [express]: http://expressjs.com/
 [babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
 [node_redis]: https://github.com/NodeRedis/node_redis
