@@ -468,6 +468,80 @@ describe('Accepts options', () => {
 
   });
 
+  describe('Accepts custom cacheMap instance', () => {
+
+    class SimpleMap {
+      stash: Object;
+
+      constructor() {
+        this.stash = {};
+      }
+      get(key) {
+        return this.stash[key];
+      }
+      set(key, value) {
+        this.stash[key] = value;
+      }
+      delete(key) {
+        delete this.stash[key];
+      }
+      clear() {
+        this.stash = {};
+      }
+    }
+
+    it('Accepts a custom cache map implementation', async () => {
+      var aCustomMap = new SimpleMap();
+      var identityLoadCalls = [];
+      var identityLoader = new DataLoader(keys => {
+        identityLoadCalls.push(keys);
+        return Promise.resolve(keys);
+      }, { cacheMap: aCustomMap });
+
+      // Fetches as expected
+
+      var [ valueA, valueB1 ] = await Promise.all([
+        identityLoader.load('a'),
+        identityLoader.load('b'),
+      ]);
+
+      expect(valueA).to.equal('a');
+      expect(valueB1).to.equal('b');
+
+      expect(identityLoadCalls).to.deep.equal([ [ 'a', 'b' ] ]);
+      expect(Object.keys(aCustomMap.stash)).to.deep.equal([ 'a', 'b' ]);
+
+      var [ valueC, valueB2 ] = await Promise.all([
+        identityLoader.load('c'),
+        identityLoader.load('b'),
+      ]);
+
+      expect(valueC).to.equal('c');
+      expect(valueB2).to.equal('b');
+
+      expect(identityLoadCalls).to.deep.equal([ [ 'a', 'b' ], [ 'c' ] ]);
+      expect(Object.keys(aCustomMap.stash)).to.deep.equal([ 'a', 'b', 'c' ]);
+
+      // Supports clear
+
+      identityLoader.clear('b');
+      var valueB3 = await identityLoader.load('b');
+
+      expect(valueB3).to.equal('b');
+      expect(identityLoadCalls).to.deep.equal(
+        [ [ 'a', 'b' ], [ 'c' ], [ 'b' ] ]
+      );
+      expect(Object.keys(aCustomMap.stash)).to.deep.equal([ 'a', 'c', 'b' ]);
+
+      // Supports clear all
+
+      identityLoader.clearAll();
+
+      expect(Object.keys(aCustomMap.stash)).to.deep.equal([]);
+    });
+
+  });
+
 });
 
 describe('It is resilient to job queue ordering', () => {

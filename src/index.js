@@ -12,10 +12,19 @@
 // of values or Errors.
 type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>
 
-// Optionally turn off batching or caching or provide a cache key function.
-type Options = {
+type CacheMap<K, V> = {
+  get(key: K): V | void;
+  set(key: K, value: V): any;
+  delete(key: K): any;
+  clear(): any;
+}
+
+// Optionally turn off batching or caching or provide a cache key function or a
+// custom cache instance.
+type Options<K, V> = {
   batch?: boolean,
   cache?: boolean,
+  cacheMap?: CacheMap<K, Promise<V>>,
   cacheKeyFn?: (key: any) => any
 }
 
@@ -32,7 +41,7 @@ type Options = {
 export default class DataLoader<K, V> {
   constructor(
     batchLoadFn: BatchLoadFn<K, V>,
-    options?: Options
+    options?: Options<K, V>
   ) {
     if (typeof batchLoadFn !== 'function') {
       throw new TypeError(
@@ -42,14 +51,14 @@ export default class DataLoader<K, V> {
     }
     this._batchLoadFn = batchLoadFn;
     this._options = options;
-    this._promiseCache = new Map();
+    this._promiseCache = options && options.cacheMap || new Map();
     this._queue = [];
   }
 
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
-  _options: ?Options;
-  _promiseCache: Map<K, Promise<V>>;
+  _options: ?Options<K, V>;
+  _promiseCache: CacheMap<K, Promise<V>>;
   _queue: LoaderQueue<K, V>;
 
   /**
