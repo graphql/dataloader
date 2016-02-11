@@ -10,14 +10,14 @@
 
 // A Function, which when given an Array of keys, returns a Promise of an Array
 // of values or Errors.
-type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>
+type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>;
 
 type CacheMap<K, V> = {
   get(key: K): V | void;
   set(key: K, value: V): any;
   delete(key: K): any;
   clear(): any;
-}
+};
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
@@ -26,7 +26,7 @@ type Options<K, V> = {
   cache?: boolean,
   cacheMap?: CacheMap<K, Promise<V>>,
   cacheKeyFn?: (key: any) => any
-}
+};
 
 /**
  * A `DataLoader` creates a public API for loading data from a particular
@@ -155,6 +155,24 @@ export default class DataLoader<K, V> {
    */
   clearAll(): DataLoader<K, V> {
     this._promiseCache.clear();
+    return this;
+  }
+
+  /**
+   * Adds/updates the provied key and value in the cache. Returns itself for
+   * method chaining.
+   */
+  prime(key: K, value: V): DataLoader<K, V> {
+    var cacheKeyFn = this._options && this._options.cacheKeyFn;
+    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+
+    // Cache a rejected promise if the value is an Error, in order to match the
+    // behavior of load(key).
+    var promise = value instanceof Error ?
+        Promise.reject(value) :
+        Promise.resolve(value);
+
+    this._promiseCache.set(cacheKey, promise);
     return this;
   }
 }

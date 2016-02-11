@@ -196,6 +196,11 @@ Clears the entire cache. To be used when some event results in unknown
 invalidations across this particular `DataLoader`. Returns itself for
 method chaining.
 
+##### `prime(key, value)`
+
+Primes the cache with the provided key and value. If the key already exists, the
+value will be updated. Returns itself for method chaining.
+
 
 ## Using with GraphQL
 

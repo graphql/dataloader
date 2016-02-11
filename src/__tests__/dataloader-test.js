@@ -165,6 +165,22 @@ describe('Primary API', () => {
     expect(loadCalls).to.deep.equal([ [ 'A', 'B' ], [ 'A', 'B' ] ]);
   });
 
+  it('allows priming the cache', async () => {
+    var [ identityLoader, loadCalls ] = idLoader();
+
+    identityLoader.prime('A', 'A');
+
+    var [ a, b ] = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('B')
+    ]);
+
+    expect(a).to.equal('A');
+    expect(b).to.equal('B');
+
+    expect(loadCalls).to.deep.equal([ [ 'B' ] ]);
+  });
+
 });
 
 describe('Represents Errors', () => {
@@ -247,6 +263,23 @@ describe('Represents Errors', () => {
     expect((caughtErrorB: any).message).to.equal('Error: 1');
 
     expect(loadCalls).to.deep.equal([ [ 1 ] ]);
+  });
+
+  it('Handles priming the cache with an error', async () => {
+    var [ identityLoader, loadCalls ] = idLoader();
+
+    identityLoader.prime(1, new Error('Error: 1'));
+
+    var caughtErrorA;
+    try {
+      await identityLoader.load(1);
+    } catch (error) {
+      caughtErrorA = error;
+    }
+    expect(caughtErrorA).to.be.instanceof(Error);
+    expect((caughtErrorA: any).message).to.equal('Error: 1');
+
+    expect(loadCalls).to.deep.equal([]);
   });
 
   it('Can clear values from cache after errors', async () => {
@@ -483,6 +516,22 @@ describe('Accepts options', () => {
       expect(identityLoadCalls).to.have.length(1);
       expect(identityLoadCalls[0]).to.have.length(1);
       expect(identityLoadCalls[0][0]).to.equal(keyA);
+    });
+
+    it('Allows priming the cache with an object key', async () => {
+      var [ identityLoader, loadCalls ] = idLoader({ cacheKeyFn: cacheKey });
+
+      var key1 = { id: 123 };
+      var key2 = { id: 123 };
+
+      identityLoader.prime(key1, key1);
+
+      var value1 = await identityLoader.load(key1);
+      var value2 = await identityLoader.load(key2);
+
+      expect(loadCalls).to.deep.equal([]);
+      expect(value1).to.equal(key1);
+      expect(value2).to.equal(key1);
     });
 
   });
