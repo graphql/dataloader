@@ -42,7 +42,7 @@
     "babel": "5.8.21",
     "babel-runtime": "^5.8.x",
     "babel-core": "5.8.22",
-    "babel-eslint": "4.1.6",
+    "babel-eslint": "4.1.8",
     "chai": "3.4.1",
     "coveralls": "2.11.6",
     "eslint": "1.10.3",
