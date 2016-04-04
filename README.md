@@ -198,8 +198,9 @@ method chaining.
 
 ##### `prime(key, value)`
 
-Primes the cache with the provided key and value. If the key already exists, the
-value will be updated. Returns itself for method chaining.
+Primes the cache with the provided key and value. If the key already exists, no
+change is made. (To forcefully prime the cache, clear the key first with
+`loader.clear(key).prime(key, value)`.) Returns itself for method chaining.
 
 
 ## Using with GraphQL

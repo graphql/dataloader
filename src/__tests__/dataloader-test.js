@@ -181,6 +181,48 @@ describe('Primary API', () => {
     expect(loadCalls).to.deep.equal([ [ 'B' ] ]);
   });
 
+  it('does not prime keys that already exist', async () => {
+    var [ identityLoader, loadCalls ] = idLoader();
+
+    identityLoader.prime('A', 'X');
+
+    var a1 = await identityLoader.load('A');
+    var b1 = await identityLoader.load('B');
+    expect(a1).to.equal('X');
+    expect(b1).to.equal('B');
+
+    identityLoader.prime('A', 'Y');
+    identityLoader.prime('B', 'Y');
+
+    var a2 = await identityLoader.load('A');
+    var b2 = await identityLoader.load('B');
+    expect(a2).to.equal('X');
+    expect(b2).to.equal('B');
+
+    expect(loadCalls).to.deep.equal([ [ 'B' ] ]);
+  });
+
+  it('allows forcefully priming the cache', async () => {
+    var [ identityLoader, loadCalls ] = idLoader();
+
+    identityLoader.prime('A', 'X');
+
+    var a1 = await identityLoader.load('A');
+    var b1 = await identityLoader.load('B');
+    expect(a1).to.equal('X');
+    expect(b1).to.equal('B');
+
+    identityLoader.clear('A').prime('A', 'Y');
+    identityLoader.clear('B').prime('B', 'Y');
+
+    var a2 = await identityLoader.load('A');
+    var b2 = await identityLoader.load('B');
+    expect(a2).to.equal('Y');
+    expect(b2).to.equal('Y');
+
+    expect(loadCalls).to.deep.equal([ [ 'B' ] ]);
+  });
+
 });
 
 describe('Represents Errors', () => {

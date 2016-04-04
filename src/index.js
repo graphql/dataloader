@@ -159,8 +159,8 @@ export default class DataLoader<K, V> {
   }
 
   /**
-   * Adds/updates the provied key and value in the cache. Returns itself for
-   * method chaining.
+   * Adds the provied key and value to the cache. If the key already exists, no
+   * change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V): DataLoader<K, V> {
     var cacheKeyFn = this._options && this._options.cacheKeyFn;
@@ -172,7 +172,11 @@ export default class DataLoader<K, V> {
         Promise.reject(value) :
         Promise.resolve(value);
 
-    this._promiseCache.set(cacheKey, promise);
+    // Only add the key if it does not already exist.
+    if (this._promiseCache.get(cacheKey) === undefined) {
+      this._promiseCache.set(cacheKey, promise);
+    }
+
     return this;
   }
 }
