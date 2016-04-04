@@ -412,6 +412,11 @@ Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
 });
 ```
 
+## Video Source Code Walkthrough
+
+**DataLoader Source Code Walkthrough (YouTube):**
+
+<a href="https://youtu.be/OQTnXNCDywA" target="_blank" alt="DataLoader Source Code Walkthrough"><img src="https://img.youtube.com/vi/OQTnXNCDywA/0.jpg" /></a>
 
 
 [@schrockn]: https://github.com/schrockn
