@@ -1,8 +1,8 @@
 # DataLoader
 
 DataLoader is a generic utility to be used as part of your application's data
-fetching layer to provide a consistent API over various key-value store backends
-and reduce requests to those back-ends via batching and caching.
+fetching layer to provide a simplified and consistent API over various remote
+data sources such as databases or web services via batching and caching.
 
 [![Build Status](https://travis-ci.org/facebook/dataloader.svg)](https://travis-ci.org/facebook/dataloader)
 [![Coverage Status](https://coveralls.io/repos/facebook/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/facebook/dataloader?branch=master)
@@ -13,10 +13,22 @@ APIs which existed at the time. At Facebook, "Loader" became one of the
 implementation details of the "Ent" framework, a privacy-aware data entity
 loading and caching layer within web server product code. This ultimately became
 the underpinning for Facebook's GraphQL server implementation and type
-definitions. DataLoader is presented in the hope that it may be useful to
-produce a similar GraphQL underpinning for other systems which use
-[graphql-js][] along side key-value stores, or at the very least remain a
-publicly available example of this abstraction.
+definitions.
+
+DataLoader is a simplified version of this original idea implemented in
+JavaScript for Node.js services. DataLoader is often used when implementing a
+[graphql-js][] service, though it is also broadly useful in other situations.
+
+This mechanism of batching and caching data requests is certainly not unique to
+Node.js or JavaScript, it is also the primary motivation for
+[Haxl](https://github.com/facebook/Haxl), Facebook's data loading library
+for Haskell. More about how Haxl works can be read in this [blog post](https://code.facebook.com/posts/302060973291128/open-sourcing-haxl-a-library-for-haskell/).
+
+DataLoader is provided so that it may be useful not just to build GraphQL
+services for Node.js but also as a publicly available reference implementation
+of this concept in the hopes that it can be ported to other languages. If you
+port DataLoader to another language, please open an issue to include a link from
+this repository.
 
 
 ## Getting Started
