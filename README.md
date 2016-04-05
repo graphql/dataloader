@@ -273,6 +273,8 @@ var UserType = new GraphQLObjectType({
 
 ## Common Patterns
 
+### Creating a new DataLoader per request.
+
 In many applications, a web server using DataLoader serves requests to many
 different users with different access permissions. It may be dangerous to use
 one cache across many users, and is encouraged to create a new cache
@@ -299,6 +301,28 @@ Creating an object where each key is a `DataLoader` is also a common pattern.
 This provides a single value to pass around to code which needs to perform
 data loading, such as part of the `rootValue` in a [graphql-js][] request.
 
+### Loading by alternative keys.
+
+Occasionally, some kind of value can be accessed in multiple ways. For example,
+perhaps a "User" type can be loaded not only by an "id" but also by a "username"
+value. If the same user is loaded by both keys, then it may be useful to fill
+both caches when a user is loaded from either source:
+
+```js
+let userByIDLoader = new DataLoader(ids => genUsersByID(ids).then(users => {
+  for (let user of users) {
+    usernameLoader.prime(user.username, user);
+  }
+  return users;
+}));
+
+let usernameLoader = new DataLoader(names => genUsernames(names).then(users => {
+  for (let user of users) {
+    userByIDLoader.prime(user.id, user);
+  }
+  return users;
+}));
+```
 
 ## Custom Caches
 
