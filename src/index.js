@@ -12,20 +12,21 @@
 // of values or Errors.
 type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>;
 
+// Optionally turn off batching or caching or provide a cache key function or a
+// custom cache instance.
+type Options<K, V> = {
+  batch?: boolean;
+  cache?: boolean;
+  cacheKeyFn?: (key: any) => any;
+  cacheMap?: CacheMap<K, Promise<V>>;
+};
+
+// If a custom cache is provided, it must be of this type (a subset of ES6 Map).
 type CacheMap<K, V> = {
   get(key: K): V | void;
   set(key: K, value: V): any;
   delete(key: K): any;
   clear(): any;
-};
-
-// Optionally turn off batching or caching or provide a cache key function or a
-// custom cache instance.
-type Options<K, V> = {
-  batch?: boolean,
-  cache?: boolean,
-  cacheMap?: CacheMap<K, Promise<V>>,
-  cacheKeyFn?: (key: any) => any
 };
 
 /**
@@ -285,7 +286,7 @@ function failedDispatch<K, V>(
 
 // Private
 type LoaderQueue<K, V> = Array<{
-  key: K,
-  resolve: (value: V) => void,
-  reject: (error: Error) => void
-}>
+  key: K;
+  resolve: (value: V) => void;
+  reject: (error: Error) => void;
+}>;
