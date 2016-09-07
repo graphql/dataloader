@@ -62,6 +62,22 @@ describe('Primary API', () => {
     expect(loadCalls).to.deep.equal([ [ 1, 2 ] ]);
   });
 
+  it('batches multiple requests with max batch sizes', async () => {
+    var [ identityLoader, loadCalls ] = idLoader({ maxBatchSize: 2 });
+
+    var promise1 = identityLoader.load(1);
+    var promise2 = identityLoader.load(2);
+    var promise3 = identityLoader.load(3);
+
+    var [ value1, value2, value3 ] =
+      await Promise.all([ promise1, promise2, promise3 ]);
+    expect(value1).to.equal(1);
+    expect(value2).to.equal(2);
+    expect(value3).to.equal(3);
+
+    expect(loadCalls).to.deep.equal([ [ 1, 2 ], [ 3 ] ]);
+  });
+
   it('coalesces identical requests', async () => {
     var [ identityLoader, loadCalls ] = idLoader();
 

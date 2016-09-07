@@ -19,6 +19,7 @@ type Options<K, V> = {
   cache?: boolean;
   cacheKeyFn?: (key: any) => any;
   cacheMap?: CacheMap<K, Promise<V>>;
+  maxBatchSize?: number;
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -220,6 +221,14 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
   var queue = loader._queue;
   loader._queue = [];
 
+  var maxBatchSize = loader._options && loader._options.maxBatchSize ||
+    queue.length;
+  for (var i = 0; i < queue.length / maxBatchSize; i++) {
+    loadKeys(loader, queue.slice(i * maxBatchSize, (i + 1) * maxBatchSize));
+  }
+}
+
+function loadKeys<K, V>(loader: DataLoader<K, V>, queue: LoaderQueue<K, V>) {
   // Collect all keys to be loaded in this dispatch
   var keys = queue.map(({ key }) => key);
 
