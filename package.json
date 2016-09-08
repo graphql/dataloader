@@ -34,6 +34,7 @@
   },
   "files": [
     "dist",
+    "dataloader.d.ts",
     "README.md",
     "LICENSE",
     "PATENTS"
@@ -51,5 +52,6 @@
     "isparta": "3.0.3",
     "mocha": "2.3.4",
     "sane": "1.3.0"
-  }
+  },
+  "typings": "dataloader.d.ts"
 }
