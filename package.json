@@ -20,15 +20,54 @@
   "options": {
     "mocha": "--require resources/mocha-bootload src/**/__tests__/**/*.js"
   },
+  "babel": {
+    "plugins": [
+      "transform-async-to-generator",
+      "transform-class-properties",
+      "transform-flow-strip-types",
+      "transform-es2015-template-literals",
+      "transform-es2015-literals",
+      "transform-es2015-function-name",
+      "transform-es2015-arrow-functions",
+      [
+        "transform-es2015-classes",
+        {
+          "loose": true
+        }
+      ],
+      "transform-es2015-shorthand-properties",
+      [
+        "transform-es2015-spread",
+        {
+          "loose": true
+        }
+      ],
+      "transform-es2015-parameters",
+      [
+        "transform-es2015-destructuring",
+        {
+          "loose": true
+        }
+      ],
+      "add-module-exports",
+      "transform-es2015-block-scoping",
+      [
+        "transform-es2015-modules-commonjs",
+        {
+          "loose": true
+        }
+      ]
+    ]
+  },
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
-    "testonly": "mocha $npm_package_options_mocha",
+    "testonly": "babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha",
     "lint": "eslint src",
     "check": "flow check",
     "build": "babel src --ignore __tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
-    "watch": "babel --optional runtime resources/watch.js | node",
-    "cover": "babel-node node_modules/.bin/isparta cover --root src --report html node_modules/.bin/_mocha -- $npm_package_options_mocha",
-    "cover:lcov": "babel-node node_modules/.bin/isparta cover --root src --report lcovonly node_modules/.bin/_mocha -- $npm_package_options_mocha",
+    "watch": "babel resources/watch.js | node",
+    "cover": "babel-node node_modules/.bin/isparta cover --root src --report html _mocha -- $npm_package_options_mocha",
+    "cover:lcov": "babel-node node_modules/.bin/isparta cover --root src --report lcovonly _mocha -- $npm_package_options_mocha",
     "preversion": ". ./resources/checkgit.sh && npm test",
     "prepublish": ". ./resources/prepublish.sh"
   },
@@ -41,16 +80,29 @@
     "PATENTS"
   ],
   "devDependencies": {
-    "babel": "5.8.21",
-    "babel-runtime": "^5.8.x",
-    "babel-core": "5.8.22",
-    "babel-eslint": "4.1.8",
+    "babel-cli": "6.14.0",
+    "babel-eslint": "6.1.2",
+    "babel-plugin-add-module-exports": "0.2.1",
+    "babel-plugin-transform-async-to-generator": "6.8.0",
+    "babel-plugin-transform-class-properties": "6.11.5",
+    "babel-plugin-transform-es2015-arrow-functions": "6.8.0",
+    "babel-plugin-transform-es2015-block-scoping": "6.15.0",
+    "babel-plugin-transform-es2015-classes": "6.14.0",
+    "babel-plugin-transform-es2015-destructuring": "6.9.0",
+    "babel-plugin-transform-es2015-function-name": "6.9.0",
+    "babel-plugin-transform-es2015-literals": "6.8.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "6.14.0",
+    "babel-plugin-transform-es2015-parameters": "6.11.4",
+    "babel-plugin-transform-es2015-shorthand-properties": "6.8.0",
+    "babel-plugin-transform-es2015-spread": "6.8.0",
+    "babel-plugin-transform-es2015-template-literals": "6.8.0",
+    "babel-plugin-transform-flow-strip-types": "6.14.0",
     "chai": "3.5.0",
     "coveralls": "2.11.14",
-    "eslint": "1.10.3",
-    "eslint-plugin-babel": "2.2.0",
+    "eslint": "3.5.0",
+    "eslint-plugin-babel": "3.3.0",
     "flow-bin": "0.32.0",
-    "isparta": "3.0.3",
+    "isparta": "4.0.0",
     "mocha": "3.0.2",
     "sane": "1.4.1"
   },

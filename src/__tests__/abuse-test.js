@@ -60,7 +60,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       idLoader.loadMany();
     }).to.throw(
       'The loader.loadMany() function must be called with Array<key> ' +
-      `but got: undefined.`
+      'but got: undefined.'
     );
 
     expect(() => {
