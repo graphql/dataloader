@@ -1,6 +1,7 @@
 language: node_js
 
 node_js:
+  - "6"
   - "5"
   - "4"
   - "iojs"
@@ -11,7 +12,7 @@ before_install:
   - npm config set spin false --global
 
 script:
-  - npm run lint && npm run check && (if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then npm run cover:lcov; else npm run testonly; fi)
+  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then npm run lint && npm run check && npm run cover:lcov; else npm run testonly; fi
 
 after_failure:
   - (cd resources; python travis_after_all.py)
