@@ -3,6 +3,7 @@
 .*/dist/.*
 .*/coverage/.*
 .*/resources/.*
+.*/node_modules/y18n/test/.*
 
 [include]
 

@@ -16,7 +16,7 @@
     "type": "git",
     "url": "http://github.com/facebook/dataloader.git"
   },
-  "main": "dist/index.js",
+  "main": "index.js",
   "options": {
     "mocha": "--require resources/mocha-bootload src/**/__tests__/**/*.js"
   },
@@ -25,7 +25,7 @@
     "testonly": "mocha $npm_package_options_mocha",
     "lint": "eslint src",
     "check": "flow check",
-    "build": "babel src --ignore __tests__ --out-dir dist/",
+    "build": "babel src --ignore __tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
     "watch": "babel --optional runtime resources/watch.js | node",
     "cover": "babel-node node_modules/.bin/isparta cover --root src --report html node_modules/.bin/_mocha -- $npm_package_options_mocha",
     "cover:lcov": "babel-node node_modules/.bin/isparta cover --root src --report lcovonly node_modules/.bin/_mocha -- $npm_package_options_mocha",
@@ -33,8 +33,9 @@
     "prepublish": ". ./resources/prepublish.sh"
   },
   "files": [
-    "dist",
-    "dataloader.d.ts",
+    "index.js",
+    "index.js.flow",
+    "index.d.ts",
     "README.md",
     "LICENSE",
     "PATENTS"
@@ -48,10 +49,10 @@
     "coveralls": "2.11.6",
     "eslint": "1.10.3",
     "eslint-plugin-babel": "2.2.0",
-    "flow-bin": "0.20.1",
+    "flow-bin": "0.32.0",
     "isparta": "3.0.3",
     "mocha": "2.3.4",
     "sane": "1.3.0"
   },
-  "typings": "dataloader.d.ts"
+  "typings": "index.d.ts"
 }

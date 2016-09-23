@@ -52,7 +52,8 @@ export default class DataLoader<K, V> {
     }
     this._batchLoadFn = batchLoadFn;
     this._options = options;
-    this._promiseCache = options && options.cacheMap || new Map();
+    this._promiseCache =
+      options && options.cacheMap || (new Map(): Map<K,Promise<V>>);
     this._queue = [];
   }
 
@@ -69,7 +70,7 @@ export default class DataLoader<K, V> {
     if (key === null || key === undefined) {
       throw new TypeError(
         'The loader.load() function must be called with a value,' +
-        `but got: ${key}.`
+        `but got: ${String(key)}.`
       );
     }
 
@@ -232,7 +233,7 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
     return failedDispatch(loader, queue, new TypeError(
       'DataLoader must be constructed with a function which accepts ' +
       'Array<key> and returns Promise<Array<value>>, but the function did ' +
-      `not return a Promise: ${batchPromise}.`
+      `not return a Promise: ${String(batchPromise)}.`
     ));
   }
 
@@ -244,7 +245,7 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
       throw new Error(
         'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
-        `not return a Promise of an Array: ${values}.`
+        `not return a Promise of an Array: ${String(values)}.`
       );
     }
     if (values.length !== keys.length) {
@@ -253,8 +254,8 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         'not return a Promise of an Array of the same length as the Array ' +
         'of keys.' +
-        `\n\nKeys:\n${keys}` +
-        `\n\nValues:\n${values}`
+        `\n\nKeys:\n${String(keys)}` +
+        `\n\nValues:\n${String(values)}`
       );
     }
 
