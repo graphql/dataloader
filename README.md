@@ -160,7 +160,7 @@ Create a new `DataLoader` given a batch loading function and options.
   - *batch*: Default `true`. Set to `false` to disable batching, instead
     immediately invoking `batchLoadFn` with a single load key.
 
-  - *maxBatchSize*: Default infinite. Limits the number of items that get
+  - *maxBatchSize*: Default `Infinity`. Limits the number of items that get
     passed in to the `batchLoadFn`.
 
   - *cache*: Default `true`. Set to `false` to disable caching, instead

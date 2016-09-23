@@ -16,10 +16,10 @@ type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>;
 // custom cache instance.
 type Options<K, V> = {
   batch?: boolean;
+  maxBatchSize?: number;
   cache?: boolean;
   cacheKeyFn?: (key: any) => any;
   cacheMap?: CacheMap<K, Promise<V>>;
-  maxBatchSize?: number;
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -222,14 +222,25 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
   var queue = loader._queue;
   loader._queue = [];
 
-  var maxBatchSize = loader._options && loader._options.maxBatchSize ||
-    queue.length;
-  for (var i = 0; i < queue.length / maxBatchSize; i++) {
-    loadKeys(loader, queue.slice(i * maxBatchSize, (i + 1) * maxBatchSize));
+  // If a maxBatchSize was provided and the queue is longer, then segment the
+  // queue into multiple batches, otherwise treat the queue as a single batch.
+  var maxBatchSize = loader._options && loader._options.maxBatchSize;
+  if (maxBatchSize && maxBatchSize > 0 && maxBatchSize < queue.length) {
+    for (var i = 0; i < queue.length / maxBatchSize; i++) {
+      dispatchQueueBatch(
+        loader,
+        queue.slice(i * maxBatchSize, (i + 1) * maxBatchSize)
+      );
+    }
+  } else {
+    dispatchQueueBatch(loader, queue);
   }
 }
 
-function loadKeys<K, V>(loader: DataLoader<K, V>, queue: LoaderQueue<K, V>) {
+function dispatchQueueBatch<K, V>(
+  loader: DataLoader<K, V>,
+  queue: LoaderQueue<K, V>
+) {
   // Collect all keys to be loaded in this dispatch
   var keys = queue.map(({ key }) => key);
 

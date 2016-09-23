@@ -31,6 +31,12 @@ type Options<K, V> = {
   batch?: boolean,
 
   /**
+   * Default `Infinity`. Limits the number of items that get
+   * passed in to the `batchLoadFn`.
+   */
+  maxBatchSize?: number;
+
+  /**
    * Default `true`. Set to `false` to disable caching,
    * instead creating a new Promise and new key in
    * the `batchLoadFn` for every load.
