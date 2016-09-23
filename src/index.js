@@ -218,10 +218,13 @@ var resolvedPromise;
 function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
   // Take the current loader queue, replacing it with an empty queue.
   var queue = loader._queue;
+  var resultMap = new Map();
   loader._queue = [];
 
   // Collect all keys to be loaded in this dispatch
-  var keys = queue.map(({ key }) => key);
+  var keys = queue
+    .map(({ key }) => key)
+    .reduce((acc, key) => acc.indexOf(key) > -1 ? acc : [ ...acc, key ], []);
 
   // Call the provided batchLoadFn for this loader with the loader queue's keys.
   var batchLoadFn = loader._batchLoadFn;
@@ -238,7 +241,6 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
 
   // Await the resolution of the call to batchLoadFn.
   batchPromise.then(values => {
-
     // Assert the expected resolution from batchLoadFn.
     if (!Array.isArray(values)) {
       throw new Error(
@@ -258,16 +260,23 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
       );
     }
 
+    // building result map
+    keys.forEach((key, index) => resultMap.set(key, values[index]));
+
     // Step through the values, resolving or rejecting each Promise in the
     // loaded queue.
-    queue.forEach(({ key, resolve, reject }, index) => {
-      var value = values[index];
+    queue.forEach(({ key, resolve, reject }) => {
+      // finding key-value in result map
+      var value: any = resultMap.get(key);
+
       if (value instanceof Error) {
         reject(value);
       } else {
         resolve(value);
       }
     });
+    // clear batchCaching
+    resultMap.clear();
   }).catch(error => failedDispatch(loader, queue, error));
 }
 
