@@ -262,14 +262,14 @@ function dispatchQueueBatch<K, V>(
 
     // Assert the expected resolution from batchLoadFn.
     if (!Array.isArray(values)) {
-      throw new Error(
+      throw new TypeError(
         'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         `not return a Promise of an Array: ${String(values)}.`
       );
     }
     if (values.length !== keys.length) {
-      throw new Error(
+      throw new TypeError(
         'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         'not return a Promise of an Array of the same length as the Array ' +
