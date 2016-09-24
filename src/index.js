@@ -78,16 +78,13 @@ export default class DataLoader<K, V> {
     // Determine options
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
-    var shouldCache = !options || options.cache !== false;
     var cacheKeyFn = options && options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
 
-    // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache) {
-      var cachedPromise = this._promiseCache.get(cacheKey);
-      if (cachedPromise) {
-        return cachedPromise;
-      }
+    // If this key was already requested, return the existing Promise.
+    var cachedPromise = this._promiseCache.get(cacheKey);
+    if (cachedPromise) {
+      return cachedPromise;
     }
 
     // Otherwise, produce a new Promise for this value.
@@ -109,10 +106,8 @@ export default class DataLoader<K, V> {
       }
     });
 
-    // If caching, cache this promise.
-    if (shouldCache) {
-      this._promiseCache.set(cacheKey, promise);
-    }
+    // Cache this promise.
+    this._promiseCache.set(cacheKey, promise);
 
     return promise;
   }
@@ -222,9 +217,19 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
   var queue = loader._queue;
   loader._queue = [];
 
+  // DataLoader always maintains a cache in order to only request distinct keys
+  // within a given dispatch. However if caching was disabled, then this cache
+  // will be cleared as soon as the dispatch has begun, restricting the duration
+  // of the cache to a single tick of the run loop.
+  var options = loader._options;
+  var shouldCache = !options || options.cache !== false;
+  if (!shouldCache) {
+    loader._promiseCache.clear();
+  }
+
   // If a maxBatchSize was provided and the queue is longer, then segment the
   // queue into multiple batches, otherwise treat the queue as a single batch.
-  var maxBatchSize = loader._options && loader._options.maxBatchSize;
+  var maxBatchSize = options && options.maxBatchSize;
   if (maxBatchSize && maxBatchSize > 0 && maxBatchSize < queue.length) {
     for (var i = 0; i < queue.length / maxBatchSize; i++) {
       dispatchQueueBatch(

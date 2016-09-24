@@ -164,7 +164,10 @@ Create a new `DataLoader` given a batch loading function and options.
     passed in to the `batchLoadFn`.
 
   - *cache*: Default `true`. Set to `false` to disable caching, instead
-    creating a new Promise and new key in the `batchLoadFn` for every load.
+    creating a new Promise and another call to `batchLoadFn` when a key which
+    was requested in the past is requested again. However, if the same key is
+    requested multiple times in the same tick of the run-loop, it will still
+    only appear once in the `keys` provided to `batchLoadFn`.
 
   - *cacheKeyFn*: A function to produce a cache key for a given load key.
     Defaults to `key => key`. Useful to provide when JavaScript objects are keys
