@@ -69,7 +69,7 @@ type Options<K, V> = {
  * with different access permissions and consider creating a new instance
  * per web request.
  */
-export class DataLoader<K, V> {
+export default class DataLoader<K, V> {
 
   constructor(batchLoadFn: BatchLoadFn<K, V>, options?: Options<K, V>);
 
