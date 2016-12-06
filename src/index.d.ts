@@ -39,7 +39,8 @@ type Options<K, V> = {
   /**
    * Default `true`. Set to `false` to disable caching,
    * instead creating a new Promise and new key in
-   * the `batchLoadFn` for every load.
+   * the `batchLoadFn` for every load. However, if the same key is already
+   * queued to load, it will re-use the existing Promise.
    */
   cache?: boolean,
 
