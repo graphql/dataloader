@@ -88,7 +88,7 @@ export default class DataLoader<K, V> {
     var expiresAt = this._expiresAt.get(cacheKey) || parseInt(Date.now(), 10);
     var shouldUpdateCache = Date.now() >= expiresAt;
     // If caching and there is a cache-hit, return cached Promise
-    // only if the cache is not expired
+    // only if the cacheKey is not expired
     if (shouldCache && !shouldUpdateCache) {
       var cachedPromise = this._promiseCache.get(cacheKey);
       if (cachedPromise) {
@@ -120,7 +120,7 @@ export default class DataLoader<K, V> {
       this._promiseCache.set(cacheKey, promise);
     }
 
-    // If cache has expired
+    // If cacheKey has expired, update it's ttl
     if (shouldUpdateCache) {
       this._expiresAt.set(cacheKey, Date.now() + TTL);
     }
