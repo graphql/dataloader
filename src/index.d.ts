@@ -59,7 +59,7 @@ type Options<K, V> = {
   cacheMap?: CacheMap<K, Promise<V>>;
 
   /**
-   * Default `Infinity`. Defines TTL of cached keys.
+   * Default `Infinity`. Defines TTL of cacheKeys.
    */
   TTL?: number;
 }

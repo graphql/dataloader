@@ -173,6 +173,9 @@ Create a new `DataLoader` given a batch loading function and options.
   - *cacheMap*: An instance of [Map][] (or an object with a similar API) to be
     used as the underlying cache for this loader. Default `new Map()`.
 
+  - *TTL*: Default `Infinity`. Defines TTL of cacheKeys in miliseconds, cacheKey will expire
+    after this period of time from the last time it is loaded.
+
 ##### `load(key)`
 
 Loads a key, returning a `Promise` for the value represented by that key.
