@@ -20,6 +20,7 @@ type Options<K, V> = {
   cache?: boolean;
   cacheKeyFn?: (key: any) => any;
   cacheMap?: CacheMap<K, Promise<V>>;
+  TTL?: number;
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -53,6 +54,7 @@ export default class DataLoader<K, V> {
     }
     this._batchLoadFn = batchLoadFn;
     this._options = options;
+    this._expiresAt = (new Map(): Map<K, number>);
     this._promiseCache =
       options && options.cacheMap || (new Map(): Map<K,Promise<V>>);
     this._queue = [];
@@ -62,6 +64,7 @@ export default class DataLoader<K, V> {
   _batchLoadFn: BatchLoadFn<K, V>;
   _options: ?Options<K, V>;
   _promiseCache: CacheMap<K, Promise<V>>;
+  _expiresAt: Map<K, number>;
   _queue: LoaderQueue<K, V>;
 
   /**
@@ -79,11 +82,14 @@ export default class DataLoader<K, V> {
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
     var shouldCache = !options || options.cache !== false;
+    var TTL = (options && options.TTL) ? options.TTL : Infinity;
     var cacheKeyFn = options && options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
-
-    // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache) {
+    var expiresAt = this._expiresAt.get(cacheKey) || parseInt(Date.now(), 10);
+    var shouldUpdateCache = Date.now() >= expiresAt;
+    // If caching and there is a cache-hit, return cached Promise
+    // only if the cache is not expired
+    if (shouldCache && !shouldUpdateCache) {
       var cachedPromise = this._promiseCache.get(cacheKey);
       if (cachedPromise) {
         return cachedPromise;
@@ -112,6 +118,11 @@ export default class DataLoader<K, V> {
     // If caching, cache this promise.
     if (shouldCache) {
       this._promiseCache.set(cacheKey, promise);
+    }
+
+    // If cache has expired
+    if (shouldUpdateCache) {
+      this._expiresAt.set(cacheKey, Date.now() + TTL);
     }
 
     return promise;
@@ -148,6 +159,7 @@ export default class DataLoader<K, V> {
     var cacheKeyFn = this._options && this._options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
     this._promiseCache.delete(cacheKey);
+    this._expiresAt.delete(cacheKey);
     return this;
   }
 
@@ -158,6 +170,7 @@ export default class DataLoader<K, V> {
    */
   clearAll(): DataLoader<K, V> {
     this._promiseCache.clear();
+    this._expiresAt.clear();
     return this;
   }
 
@@ -168,6 +181,8 @@ export default class DataLoader<K, V> {
   prime(key: K, value: V): DataLoader<K, V> {
     var cacheKeyFn = this._options && this._options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+    var TTL = (this._options && this._options.TTL) ?
+      this._options.TTL : Infinity;
 
     // Only add the key if it does not already exist.
     if (this._promiseCache.get(cacheKey) === undefined) {
@@ -178,6 +193,7 @@ export default class DataLoader<K, V> {
         Promise.resolve(value);
 
       this._promiseCache.set(cacheKey, promise);
+      this._expiresAt.set(cacheKey, Date.now() + TTL);
     }
 
     return this;

@@ -239,6 +239,44 @@ describe('Primary API', () => {
     expect(loadCalls).to.deep.equal([ [ 'B' ] ]);
   });
 
+  it('does not load from cache after expires', async () => {
+    var [ identityLoader, loadCalls ] = idLoader({ TTL: 500 });
+
+    await identityLoader.load('A');
+    await (new Promise(resolve => {
+      setTimeout(resolve, 500);
+    }));
+    await identityLoader.load('B');
+    await (new Promise(resolve => {
+      setTimeout(resolve, 100);
+    }));
+
+    await identityLoader.loadMany([ 'A', 'B', 'C' ]);
+
+    expect(loadCalls).to.deep.equal([ [ 'A' ], [ 'B' ], [ 'A', 'C' ] ]);
+  });
+
+  it('does not load prime from cache after expires', async () => {
+    var [ identityLoader, loadCalls ] = idLoader({ TTL: 500 });
+
+    await identityLoader.prime('A', 'X');
+    var a = await identityLoader.load('A');
+    expect(a).equal('X');
+    await (new Promise(resolve => {
+      setTimeout(resolve, 500);
+    }));
+    await identityLoader.prime('B', 'Y');
+    var b = await identityLoader.load('B');
+    expect(b).equal('Y');
+    await (new Promise(resolve => {
+      setTimeout(resolve, 100);
+    }));
+
+    var xy = await identityLoader.loadMany([ 'A', 'B' ]);
+    expect(xy).to.deep.equal([ 'A', 'Y' ]);
+    expect(loadCalls).to.deep.equal([ [ 'A' ] ]);
+  });
+
 });
 
 describe('Represents Errors', () => {
