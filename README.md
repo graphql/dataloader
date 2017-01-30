@@ -54,6 +54,9 @@ unique cache. You might create each loader once for your whole application, or
 create new instances per request when used within a web-server like [express][]
 if different users can see different things. It's up to you.
 
+
+### Batching
+
 Batching is not an advanced feature, it's DataLoader's primary feature.
 Create loaders by providing a batch loading function.
 
@@ -64,7 +67,7 @@ var userLoader = new DataLoader(keys => myBatchGetUsers(keys));
 ```
 
 A batch loading function accepts an Array of keys, and returns a Promise which
-resolves to an Array of values.
+resolves to an Array of values[<sup>*</sup>](#batch-function).
 
 Then load individual values from the loader. DataLoader will coalesce all
 individual loads which occur within a single frame of execution (a single tick
@@ -91,6 +94,41 @@ API that loads individual values, all concurrent requests will be coalesced and
 presented to your batch loading function. This allows your application to safely
 distribute data fetching requirements throughout your application and maintain
 minimal outgoing data requests.
+
+#### Batch Function
+
+A batch loading function accepts an Array of keys, and returns a Promise which
+resolves to an Array of values. There are a few constraints that must be upheld:
+
+ * The Array of values must be the same length as the Array of keys.
+ * Each index in the Array of values must correspond to the same index in the Array of keys.
+
+For example, if your batch function was provided the Array of keys: `[ 2, 9, 6, 1 ]`,
+and loading from a back-end service returned the values:
+
+```js
+{ id: 9, name: 'Chicago' }
+{ id: 1, name: 'New York' }
+{ id: 2, name: 'San Francisco' }
+```
+
+Our back-end service returned results in a different order than we requested, likely
+because it was more efficient for it to do so. Also, it omitted a result for key `6`,
+which we can interpret as no value existing for that key.
+
+To uphold the constraints of the batch function, it must return an Array of values
+the same length as the Array of keys, and re-order them to ensure each index aligns
+with the original keys `[ 2, 9, 6, 1 ]`:
+
+```js
+[
+  { id: 2, name: 'San Francisco' },
+  { id: 9, name: 'Chicago' },
+  null,
+  { id: 1, name: 'New York' }
+]
+```
+
 
 ### Caching
 
