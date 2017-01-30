@@ -53,7 +53,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     }).not.to.throw();
   });
 
-  it('LoadAll function requires a list of key', () => {
+  it('LoadMany function requires a list of key', () => {
     var idLoader = new DataLoader(keys => Promise.resolve(keys));
 
     expect(() => {
@@ -72,7 +72,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
     // Empty array is acceptable
     expect(() => {
-      idLoader.load([]);
+      idLoader.loadMany([]);
     }).not.to.throw();
   });
 
