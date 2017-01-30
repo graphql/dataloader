@@ -7,58 +7,6 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  */
 
-// If a custom cache is provided, it must be of this type (a subset of ES6 Map).
-type CacheMap<K, V> = {
-  get(key: K): V | void;
-  set(key: K, value: V): any;
-  delete(key: K): any;
-  clear(): any;
-}
-
-// A Function, which when given an Array of keys, returns a Promise of an Array
-// of values or Errors.
-type BatchLoadFn<K, V> = (keys: K[]) => Promise<Array<V | Error>>;
-
-// Optionally turn off batching or caching or provide a cache key function or a
-// custom cache instance.
-type Options<K, V> = {
-
-  /**
-   * Default `true`. Set to `false` to disable batching,
-   * instead immediately invoking `batchLoadFn` with a
-   * single load key.
-   */
-  batch?: boolean,
-
-  /**
-   * Default `Infinity`. Limits the number of items that get
-   * passed in to the `batchLoadFn`.
-   */
-  maxBatchSize?: number;
-
-  /**
-   * Default `true`. Set to `false` to disable caching,
-   * instead creating a new Promise and new key in
-   * the `batchLoadFn` for every load.
-   */
-  cache?: boolean,
-
-  /**
-   * A function to produce a cache key for a given load key.
-   * Defaults to `key => key`. Useful to provide when JavaScript
-   * objects are keys and two similarly shaped objects should
-   * be considered equivalent.
-   */
-  cacheKeyFn?: (key: any) => any,
-
-  /**
-   * An instance of Map (or an object with a similar API) to
-   * be used as the underlying cache for this loader.
-   * Default `new Map()`.
-   */
-  cacheMap?: CacheMap<K, Promise<V>>;
-}
-
 /**
  * DataLoader creates a public API for loading data from a particular
  * data back-end with unique keys such as the id column of a SQL table
@@ -69,9 +17,9 @@ type Options<K, V> = {
  * with different access permissions and consider creating a new instance
  * per web request.
  */
-export class DataLoader<K, V> {
+declare class DataLoader<K, V> {
 
-  constructor(batchLoadFn: BatchLoadFn<K, V>, options?: Options<K, V>);
+  constructor(batchLoadFn: DataLoader.BatchLoadFn<K, V>, options?: DataLoader.Options<K, V>);
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -112,3 +60,59 @@ export class DataLoader<K, V> {
    */
   prime(key: K, value: V): DataLoader<K, V>;
 }
+
+declare namespace DataLoader {
+  // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
+  export type CacheMap<K, V> = {
+    get(key: K): V | void;
+    set(key: K, value: V): any;
+    delete(key: K): any;
+    clear(): any;
+  }
+
+  // A Function, which when given an Array of keys, returns a Promise of an Array
+  // of values or Errors.
+  export type BatchLoadFn<K, V> = (keys: K[]) => Promise<Array<V | Error>>;
+
+  // Optionally turn off batching or caching or provide a cache key function or a
+  // custom cache instance.
+  export type Options<K, V> = {
+
+    /**
+     * Default `true`. Set to `false` to disable batching,
+     * instead immediately invoking `batchLoadFn` with a
+     * single load key.
+     */
+    batch?: boolean,
+
+    /**
+     * Default `Infinity`. Limits the number of items that get
+     * passed in to the `batchLoadFn`.
+     */
+    maxBatchSize?: number;
+
+    /**
+     * Default `true`. Set to `false` to disable caching,
+     * instead creating a new Promise and new key in
+     * the `batchLoadFn` for every load.
+     */
+    cache?: boolean,
+
+    /**
+     * A function to produce a cache key for a given load key.
+     * Defaults to `key => key`. Useful to provide when JavaScript
+     * objects are keys and two similarly shaped objects should
+     * be considered equivalent.
+     */
+    cacheKeyFn?: (key: any) => any,
+
+    /**
+     * An instance of Map (or an object with a similar API) to
+     * be used as the underlying cache for this loader.
+     * Default `new Map()`.
+     */
+    cacheMap?: CacheMap<K, Promise<V>>;
+  }
+}
+
+export = DataLoader;
