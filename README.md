@@ -147,10 +147,11 @@ var promise1B = userLoader.load(1)
 assert(promise1A === promise1B)
 ```
 
-There are two common examples when clearing the loader's cache is necessary:
+#### Clearing Cache
 
-*Mutations:* after a mutation or update, a cached value may be out of date.
-Future loads should not use any possibly cached value.
+The most common example when clearing the loader's cache is necessary is after
+a mutation or update, when a cached value may be out of date and future loads
+should not use any possibly cached value.
 
 Here's a simple example using SQL UPDATE to illustrate.
 
@@ -160,13 +161,18 @@ sqlRun('UPDATE users WHERE id=4 SET username="zuck"').then(
 )
 ```
 
-*Transient Errors:* A load may fail because it simply can't be loaded
-(a permanent issue) or it may fail because of a transient issue such as a down
-database or network issue. For transient errors, clear the cache:
+#### Caching Errors
+
+If a batch load fails (that is, a batch function throws or returns a rejected
+Promise), then the requested values will not be cached. However if a batch
+function returns an `Error` instance for an individual value, that `Error` will
+be cached to avoid frequently loading the same `Error`.
+
+In some circumstances you may wish to clear the cache for these individual Errors:
 
 ```js
 userLoader.load(1).catch(error => {
-  if (/* determine if error is transient */) {
+  if (/* determine if should clear error */) {
     userLoader.clear(1);
   }
   throw error;
