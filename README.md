@@ -370,7 +370,7 @@ var UserType = new GraphQLObjectType({
 
 In many applications, a web server using DataLoader serves requests to many
 different users with different access permissions. It may be dangerous to use
-one cache across many users, and is encouraged to create a new cache
+one cache across many users, and is encouraged to create a new DataLoader
 per request:
 
 ```js
@@ -382,7 +382,7 @@ function createLoaders(authToken) {
   };
 }
 
-// Later, in an web request handler:
+// When handling an incoming web request:
 var loaders = createLoaders(request.query.authToken);
 
 // Then, within application logic:
@@ -390,8 +390,8 @@ var user = await loaders.users.load(4);
 var pic = await loaders.cdnUrls.load(user.rawPicUrl);
 ```
 
-Creating an object where each key is a `DataLoader` is also a common pattern.
-This provides a single value to pass around to code which needs to perform
+Creating an object where each key is a `DataLoader` is one common pattern which
+provides a single value to pass around to code which needs to perform
 data loading, such as part of the `rootValue` in a [graphql-js][] request.
 
 ### Loading by alternative keys.
@@ -424,7 +424,8 @@ cache. More specifically, any object that implements the methods `get()`,
 `set()`, `delete()` and `clear()` can be provided. This allows for custom Maps
 which implement various [cache algorithms][] to be provided. By default,
 DataLoader uses the standard [Map][] which simply grows until the DataLoader
-is released.
+is released. The default is appropriate when requests to your application are
+short-lived.
 
 
 ## Common Back-ends
