@@ -132,33 +132,79 @@ with the original keys `[ 2, 9, 6, 1 ]`:
 
 ### Caching
 
-After being loaded once, the resulting value is cached, eliminating
-redundant requests.
+DataLoader provides a cache for all loads which occur in a single request to
+your application. After `.load()` is called once with a given key, the resulting
+value is cached to eliminate redundant loads.
 
-In the example above, if User `1` was last invited by User `2`, only a single
-round trip will occur.
-
-Caching results in creating fewer objects which may relieve memory pressure on
-your application:
+In addition to reliving pressure on your data storage, caching results per-request
+also creates fewer objects which may relieve memory pressure on your application:
 
 ```js
+var userLoader = new DataLoader(...)
 var promise1A = userLoader.load(1)
 var promise1B = userLoader.load(1)
 assert(promise1A === promise1B)
 ```
 
+#### Caching per-Request
+
+DataLoader caching *does not* replace Redis, Memcache, or any other shared
+application-level cache. DataLoader is first and foremost a data loading mechanism,
+and its cache only serves the purpose of not repeatedly loading the same data in
+the context of a single request to your Application. To do this, it maintains a
+simple in-memory cache (more accurately: `.load()` is a memoized function).
+
+Avoid multiple requests from different users using the DataLoader instance, which
+could result in cached data incorrectly appearing in each request. Typically,
+DataLoader instances are created when a Request begins, and are not used once the
+Request ends.
+
+For example, when using with `express`:
+
+```js
+function createLoaders(authToken) {
+  return {
+    users: new DataLoader(ids => genUsers(authToken, ids)),
+  }
+}
+
+var app = express()
+
+app.get('/', function(req, res) {
+  var authToken = authenticateUser(req)
+  var loaders = createLoaders(authToken)
+  res.send(renderPage(req, loaders))
+})
+
+app.listen()
+```
+
 #### Clearing Cache
 
+In certain uncommon cases, clearing the request cache may be necessary.
+
 The most common example when clearing the loader's cache is necessary is after
-a mutation or update, when a cached value may be out of date and future loads
-should not use any possibly cached value.
+a mutation or update within the same request, when a cached value could be out of
+date and future loads should not use any possibly cached value.
 
 Here's a simple example using SQL UPDATE to illustrate.
 
 ```js
+// Request begins...
+var userLoader = new DataLoader(...)
+
+// And a value happens to be loaded (and cached).
+userLoader.load(4).then(...)
+
+// A mutation occurs, invalidating what might be in cache.
 sqlRun('UPDATE users WHERE id=4 SET username="zuck"').then(
   () => userLoader.clear(4)
 )
+
+// Later the value load is loaded again so the mutated data appears.
+userLoader.load(4).then(...)
+
+// Request completes.
 ```
 
 #### Caching Errors
