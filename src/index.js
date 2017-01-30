@@ -78,16 +78,13 @@ export default class DataLoader<K, V> {
     // Determine options
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
-    var shouldCache = !options || options.cache !== false;
     var cacheKeyFn = options && options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
 
-    // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache) {
-      var cachedPromise = this._promiseCache.get(cacheKey);
-      if (cachedPromise) {
-        return cachedPromise;
-      }
+    // If there is a cache-hit, return cached Promise.
+    var cachedPromise = this._promiseCache.get(cacheKey);
+    if (cachedPromise) {
+      return cachedPromise;
     }
 
     // Otherwise, produce a new Promise for this value.
@@ -109,10 +106,7 @@ export default class DataLoader<K, V> {
       }
     });
 
-    // If caching, cache this promise.
-    if (shouldCache) {
-      this._promiseCache.set(cacheKey, promise);
-    }
+    this._promiseCache.set(cacheKey, promise);
 
     return promise;
   }
@@ -247,6 +241,7 @@ function dispatchQueueBatch<K, V>(
   // Call the provided batchLoadFn for this loader with the loader queue's keys.
   var batchLoadFn = loader._batchLoadFn;
   var batchPromise = batchLoadFn(keys);
+  var shouldCache = !loader._options || loader._options.cache !== false;
 
   // Assert the expected response from batchLoadFn
   if (!batchPromise || typeof batchPromise.then !== 'function') {
@@ -283,6 +278,11 @@ function dispatchQueueBatch<K, V>(
     // loaded queue.
     queue.forEach(({ key, resolve, reject }, index) => {
       var value = values[index];
+
+      if (!shouldCache) {
+        loader.clear(key);
+      }
+
       if (value instanceof Error) {
         reject(value);
       } else {

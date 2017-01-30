@@ -509,6 +509,24 @@ describe('Accepts options', () => {
     );
   });
 
+  it('Still batches distinct keys when cache disabled', async () => {
+    var [ identityLoader, loadCalls ] = idLoader({ cache: false });
+
+    var [ values1, values2, values3, values4 ] = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('C'),
+      identityLoader.load('D'),
+      identityLoader.loadMany([ 'C', 'D', 'A', 'A', 'B' ]),
+    ]);
+
+    expect(values1).to.equal('A');
+    expect(values2).to.equal('C');
+    expect(values3).to.equal('D');
+    expect(values4).to.deep.equal([ 'C', 'D', 'A', 'A', 'B' ]);
+
+    expect(loadCalls).to.deep.equal([ [ 'A', 'C', 'D', 'B' ] ]);
+  });
+
   describe('Accepts object key in custom cacheKey function', () => {
     function cacheKey(key) {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();
