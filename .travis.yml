@@ -1,12 +1,10 @@
 language: node_js
 
 node_js:
-  - "6.5" # latest 6 is causing issues with travis.
+  - "7"
+  - "6"
   - "5"
   - "4"
-  - "iojs"
-  - "0.12"
-  - "0.10"
 
 before_install:
   - npm config set spin false --global

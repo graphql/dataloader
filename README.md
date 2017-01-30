@@ -39,23 +39,15 @@ First, install DataLoader using npm.
 npm install --save dataloader
 ```
 
-DataLoader assumes a JavaScript environment with global ES6 `Promise` and `Map`
-classes, available in the recent versions of node.js or when using
-[babel/polyfill][]. If your environment does not have these, provide them before
-using DataLoader.
-
-```js
-global.Promise = require('es6-promise')
-global.Map = require('es6-map')
-```
-
 To get started, create a `DataLoader`. Each `DataLoader` instance represents a
-unique cache. You might create each loader once for your whole application, or
-create new instances per request when used within a web-server like [express][]
-if different users can see different things. It's up to you.
+unique cache. Typically instances are created per request when used within a
+web-server like [express][] if different users can see different things.
+
+> Note: DataLoader assumes a JavaScript environment with global ES6 `Promise`
+and `Map` classes, available in all supported versions of Node.js.
 
 
-### Batching
+## Batching
 
 Batching is not an advanced feature, it's DataLoader's primary feature.
 Create loaders by providing a batch loading function.
@@ -130,7 +122,7 @@ with the original keys `[ 2, 9, 6, 1 ]`:
 ```
 
 
-### Caching
+## Caching
 
 DataLoader provides a cache for all loads which occur in a single request to
 your application. After `.load()` is called once with a given key, the resulting
