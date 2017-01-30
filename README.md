@@ -159,7 +159,7 @@ could result in cached data incorrectly appearing in each request. Typically,
 DataLoader instances are created when a Request begins, and are not used once the
 Request ends.
 
-For example, when using with `express`:
+For example, when using with [express][]:
 
 ```js
 function createLoaders(authToken) {
@@ -417,6 +417,7 @@ let usernameLoader = new DataLoader(names => genUsernames(names).then(users => {
 }));
 ```
 
+
 ## Custom Caches
 
 DataLoader can optionaly be provided a custom Map instance to use as its
@@ -430,118 +431,8 @@ short-lived.
 
 ## Common Back-ends
 
-Looking to get started with a specific back-end? Try these example loaders:
+Looking to get started with a specific back-end? Try the [loaders in the examples directory](/examples).
 
-
-#### Redis
-
-Redis is a very simple key-value store which provides the batch load method
-[MGET](http://redis.io/commands/mget). Here we build a Redis DataLoader
-using [node_redis][].
-
-```js
-var DataLoader = require('dataloader');
-var redis = require('redis');
-
-var client = redis.createClient();
-
-var redisLoader = new DataLoader(keys => new Promise((resolve, reject) => {
-  client.mget(keys, (error, results) => {
-    if (error) {
-      return reject(error);
-    }
-    resolve(results.map((result, index) =>
-      result !== null ? result : new Error(`No key: ${keys[index]}`)
-    ));
-  });
-}));
-```
-
-
-#### CouchDB
-
-This example uses the [nano][] CouchDB client which offers a `fetch` method
-implementing the [HTTP Bulk Document API](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
-
-```js
-var DataLoader = require('dataloader');
-var nano = require('nano');
-
-var couch = nano('http://localhost:5984');
-
-var userDB = couch.use('users');
-var userLoader = new DataLoader(keys => new Promise((resolve, reject) => {
-  userDB.fetch({ keys: keys }, (error, docs) => {
-    if (error) {
-      return reject(error);
-    }
-    resolve(docs.rows.map(row => row.error ? new Error(row.error) : row.doc));
-  });
-}));
-
-// Usage
-
-var promise1 = userLoader.load('8fce1902834ac6458e9886fa7f89c0ef');
-var promise2 = userLoader.load('00a271787f89c0ef2e10e88a0c00048b');
-
-Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
-  console.log(user1, user2);
-});
-```
-
-
-#### SQLite
-
-SQL offers a natural batch mechanism with `SELECT * WHERE IN`. `DataLoader`
-is designed to operate over key-value stores, so in this example just requests
-the entire row at a given `id`.
-
-This example uses the [sqlite3][] client which offers a `parallelize` method to
-further batch queries together. Another non-caching `DataLoader` utilizes this
-method to provide a similar API. `DataLoaders` can access other `DataLoaders`.
-
-```js
-var DataLoader = require('dataloader');
-var sqlite3 = require('sqlite3');
-
-var db = new sqlite3.Database('./to/your/db.sql');
-
-// Dispatch a WHERE-IN query, ensuring response has rows in correct order.
-var userLoader = new DataLoader(ids => {
-  var params = ids.map(id => '?' ).join();
-  var query = `SELECT * FROM users WHERE id IN (${params})`;
-  return queryLoader.load([query, ids]).then(
-    rows => ids.map(
-      id => rows.find(row => row.id === id) || new Error(`Row not found: ${id}`)
-    )
-  );
-});
-
-// Parallelize all queries, but do not cache.
-var queryLoader = new DataLoader(queries => new Promise(resolve => {
-  var waitingOn = queries.length;
-  var results = [];
-  db.parallelize(() => {
-    queries.forEach((query, index) => {
-      db.all.apply(db, query.concat((error, result) => {
-        results[index] = error || result;
-        if (--waitingOn === 0) {
-          resolve(results);
-        }
-      }));
-    });
-  });
-}), { cache: false });
-
-// Usage
-
-var promise1 = userLoader.load('1234');
-var promise2 = userLoader.load('5678');
-
-Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
-  console.log(user1, user2);
-});
-```
 
 ## Video Source Code Walkthrough
 
@@ -556,6 +447,5 @@ Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
 [cache algorithms]: https://en.wikipedia.org/wiki/Cache_algorithms
 [express]: http://expressjs.com/
 [babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
-[node_redis]: https://github.com/NodeRedis/node_redis
-[nano]: https://github.com/dscape/nano
-[sqlite3]: https://github.com/mapbox/node-sqlite3
+
+
