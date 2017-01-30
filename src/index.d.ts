@@ -37,9 +37,11 @@ type Options<K, V> = {
   maxBatchSize?: number;
 
   /**
-   * Default `true`. Set to `false` to disable caching,
-   * instead creating a new Promise and new key in
-   * the `batchLoadFn` for every load.
+   * Default `true`. Set to `false` to disable caching, instead
+   * creating a new Promise and another call to `batchLoadFn` when a key which
+   * was requested in the past is requested again. However, if the same key is
+   * requested multiple times in the same tick of the run-loop, it will still
+   * only appear once in the `keys` provided to `batchLoadFn`.
    */
   cache?: boolean,
 
