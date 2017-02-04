@@ -1,6 +1,6 @@
 {
   "name": "dataloader",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "A data loading utility to reduce requests to a backend via batching and caching.",
   "contributors": [
     "Lee Byron <lee@leebyron.com> (http://leebyron.com/)",
