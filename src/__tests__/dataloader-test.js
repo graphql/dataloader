@@ -509,6 +509,54 @@ describe('Accepts options', () => {
     );
   });
 
+  it('Keys are repeated in batch when cache disabled', async () => {
+    var [ identityLoader, loadCalls ] = idLoader({ cache: false });
+
+    var [ values1, values2, values3, values4 ] = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('C'),
+      identityLoader.load('D'),
+      identityLoader.loadMany([ 'C', 'D', 'A', 'A', 'B' ]),
+    ]);
+
+    expect(values1).to.equal('A');
+    expect(values2).to.equal('C');
+    expect(values3).to.equal('D');
+    expect(values4).to.deep.equal([ 'C', 'D', 'A', 'A', 'B' ]);
+
+    expect(loadCalls).to.deep.equal([
+      [ 'A', 'C', 'D', 'C', 'D', 'A', 'A', 'B' ]
+    ]);
+  });
+
+  it('Complex cache behavior via clearAll()', async () => {
+    // This loader clears its cache as soon as a batch function is dispatched.
+    var loadCalls = [];
+    var identityLoader = new DataLoader(keys => {
+      identityLoader.clearAll();
+      loadCalls.push(keys);
+      return Promise.resolve(keys);
+    });
+
+    var values1 = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('B'),
+      identityLoader.load('A'),
+    ]);
+
+    expect(values1).to.deep.equal([ 'A', 'B', 'A' ]);
+
+    var values2 = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('B'),
+      identityLoader.load('A'),
+    ]);
+
+    expect(values2).to.deep.equal([ 'A', 'B', 'A' ]);
+
+    expect(loadCalls).to.deep.equal([ [ 'A', 'B' ], [ 'A', 'B' ] ]);
+  });
+
   describe('Accepts object key in custom cacheKey function', () => {
     function cacheKey(key) {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();
