@@ -439,5 +439,3 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 [cache algorithms]: https://en.wikipedia.org/wiki/Cache_algorithms
 [express]: http://expressjs.com/
 [babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
-
-
