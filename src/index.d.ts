@@ -92,9 +92,9 @@ declare namespace DataLoader {
     maxBatchSize?: number;
 
     /**
-     * Default `true`. Set to `false` to disable caching,
-     * instead creating a new Promise and new key in
-     * the `batchLoadFn` for every load.
+     * Default `true`. Set to `false` to disable memoization caching,
+     * instead creating a new Promise and new key in the `batchLoadFn` for every
+     * load of the same key.
      */
     cache?: boolean,
 

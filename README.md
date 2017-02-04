@@ -124,9 +124,9 @@ with the original keys `[ 2, 9, 6, 1 ]`:
 
 ## Caching
 
-DataLoader provides a cache for all loads which occur in a single request to
-your application. After `.load()` is called once with a given key, the resulting
-value is cached to eliminate redundant loads.
+DataLoader provides a memoization cache for all loads which occur in a single
+request to your application. After `.load()` is called once with a given key,
+the resulting value is cached to eliminate redundant loads.
 
 In addition to reliving pressure on your data storage, caching results per-request
 also creates fewer objects which may relieve memory pressure on your application:
@@ -144,7 +144,7 @@ DataLoader caching *does not* replace Redis, Memcache, or any other shared
 application-level cache. DataLoader is first and foremost a data loading mechanism,
 and its cache only serves the purpose of not repeatedly loading the same data in
 the context of a single request to your Application. To do this, it maintains a
-simple in-memory cache (more accurately: `.load()` is a memoized function).
+simple in-memory memoization cache (more accurately: `.load()` is a memoized function).
 
 Avoid multiple requests from different users using the DataLoader instance, which
 could result in cached data incorrectly appearing in each request. Typically,
@@ -217,6 +217,46 @@ userLoader.load(1).catch(error => {
 });
 ```
 
+#### Disabling Cache
+
+In certain uncommon cases, a DataLoader which *does not* cache may be desirable.
+Calling `new DataLoader(myBatchFn, { cache: false })` will ensure that every
+call to `.load()` will produce a *new* Promise, and requested keys will not be
+saved in memory.
+
+However, when the memoization cache is disabled, your batch function will
+receive an array of keys which may contain duplicates! Each key will be
+associated with each call to `.load()`. Your batch loader should provide a value
+for each instance of the requested key.
+
+For example:
+
+```js
+var myLoader = new DataLoader(keys => {
+  console.log(keys)
+  return someBatchLoadFn(keys)
+}, { cache: false })
+
+myLoader.load('A')
+myLoader.load('B')
+myLoader.load('A')
+
+// > [ 'A', 'B', 'A' ]
+```
+
+More complex cache behavior can be achieved by calling `.clear()` or `.clearAll()`
+rather than disabling the cache completely. For example, this DataLoader will
+provide unique keys to a batch function due to the memoization cache being
+enabled, but will immediately clear its cache when the batch function is called
+so later requests will load new values.
+
+```js
+var myLoader = new DataLoader(keys => {
+  identityLoader.clearAll()
+  return someBatchLoadFn(keys)
+})
+```
+
 
 ## API
 
@@ -245,8 +285,9 @@ Create a new `DataLoader` given a batch loading function and options.
   - *maxBatchSize*: Default `Infinity`. Limits the number of items that get
     passed in to the `batchLoadFn`.
 
-  - *cache*: Default `true`. Set to `false` to disable caching, instead
-    creating a new Promise and new key in the `batchLoadFn` for every load.
+  - *cache*: Default `true`. Set to `false` to disable memoization caching,
+    instead creating a new Promise and new key in the `batchLoadFn` for every
+    load of the same key.
 
   - *cacheKeyFn*: A function to produce a cache key for a given load key.
     Defaults to `key => key`. Useful to provide when JavaScript objects are keys
@@ -413,7 +454,7 @@ let usernameLoader = new DataLoader(names => genUsernames(names).then(users => {
 ## Custom Caches
 
 DataLoader can optionaly be provided a custom Map instance to use as its
-cache. More specifically, any object that implements the methods `get()`,
+memoization cache. More specifically, any object that implements the methods `get()`,
 `set()`, `delete()` and `clear()` can be provided. This allows for custom Maps
 which implement various [cache algorithms][] to be provided. By default,
 DataLoader uses the standard [Map][] which simply grows until the DataLoader
