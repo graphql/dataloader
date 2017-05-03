@@ -371,7 +371,7 @@ Naively, if `me`, `bestFriend` and `friends` each need to request the backend,
 there could be at most 13 database requests!
 
 When using DataLoader, we could define the `User` type using the
-[SQLLite](#sqlite) example with clearer code and at most 4 database requests,
+[SQLite](examples/SQL.md) example with clearer code and at most 4 database requests,
 and possibly fewer if there are cache hits.
 
 ```js
