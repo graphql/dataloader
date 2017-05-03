@@ -128,7 +128,7 @@ DataLoader provides a memoization cache for all loads which occur in a single
 request to your application. After `.load()` is called once with a given key,
 the resulting value is cached to eliminate redundant loads.
 
-In addition to reliving pressure on your data storage, caching results per-request
+In addition to relieving pressure on your data storage, caching results per-request
 also creates fewer objects which may relieve memory pressure on your application:
 
 ```js
