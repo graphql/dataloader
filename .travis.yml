@@ -6,6 +6,8 @@ node_js:
   - "5"
   - "4"
 
+cache: yarn
+
 before_install:
   - npm config set spin false --global
 
