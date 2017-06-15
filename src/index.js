@@ -53,8 +53,23 @@ export default class DataLoader<K, V> {
     }
     this._batchLoadFn = batchLoadFn;
     this._options = options;
+    var validateCacheFormat = cache => {
+      var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
+      var missingFunctions = cacheFunctions.map(fnName => {
+        return !cache[fnName] ? fnName : null;
+      })
+      .filter(fnName => fnName !== null);
+
+      if (missingFunctions.length > 0) {
+        throw new TypeError('Custom cache needs to implement get, set, ' +
+          'delete, and clear methods, but missing: ' +
+          `${missingFunctions.join(', ')}.` );
+      }
+      return cache;
+    };
     this._promiseCache =
-      options && options.cacheMap || (new Map(): Map<K,Promise<V>>);
+      options && options.cacheMap && validateCacheFormat(options.cacheMap) ||
+      (new Map(): Map<K,Promise<V>>);
     this._queue = [];
   }
 

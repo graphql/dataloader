@@ -150,4 +150,18 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
   });
 
+  it('Cache should have get, set, delete, and clear methods', async () => {
+    class IncompleteMap {
+      get() {}
+    }
+
+    expect(() => {
+      var incompleteMap = new IncompleteMap();
+      var options = { cacheMap: incompleteMap };
+      new DataLoader(keys => keys, options); // eslint-disable-line no-new
+    }).to.throw(
+      'Custom cache needs to implement get, set, delete, and clear methods, ' +
+      'but missing: set, delete, clear.'
+    );
+  });
 });
