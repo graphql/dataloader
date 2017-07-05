@@ -466,6 +466,9 @@ short-lived.
 
 Looking to get started with a specific back-end? Try the [loaders in the examples directory](/examples).
 
+## Other implementations
+
+- [Ruby](https://github.com/sheerun/dataloader)
 
 ## Video Source Code Walkthrough
 
