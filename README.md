@@ -468,7 +468,7 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 
 ## Other implementations
 
-- [ruby](https://github.com/sheerun/dataloader)
+- [Ruby](https://github.com/sheerun/dataloader)
 
 ## Video Source Code Walkthrough
 
