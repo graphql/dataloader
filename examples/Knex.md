@@ -1,7 +1,7 @@
 # Using DataLoader with Knex.js
 
 This example demonstrates how to use **DataLoader** with SQL databases via
-[Knex.js][knex] library, which is a SQL query builder and a client for popular
+[Knex.js][knex], which is a SQL query builder and a client for popular
 databases such as **PostgreSQL**, **MySQL**, **MariaDB** etc.
 
 Similarly to the [SQL](./SQL.md) example, you can use "where in" clause to
@@ -36,7 +36,7 @@ Promise.all([
 ]).then(([user, stories]) => {/* ... */});
 ```
 
-For a complete example visit [kriasoft/nodejs-api-starter][nsk]
+For a complete example visit [kriasoft/nodejs-api-starter][nsk].
 
 [knex]: http://knexjs.org/
 [nsk]: https://github.com/kriasoft/nodejs-api-starter#readme
