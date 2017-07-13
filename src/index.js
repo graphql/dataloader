@@ -12,7 +12,7 @@
 // of values or Errors.
 type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>;
 
-// Optionally turn off batching or caching or provide a cache key function or a
+// Optionally turn off batching or caching, and provide a cache key function or
 // custom cache instance.
 type Options<K, V> = {
   batch?: boolean;
@@ -162,7 +162,7 @@ export default class DataLoader<K, V> {
   }
 
   /**
-   * Adds the provied key and value to the cache. If the key already exists, no
+   * Adds the provided key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V): DataLoader<K, V> {
