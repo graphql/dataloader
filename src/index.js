@@ -12,7 +12,7 @@
 // of values or Errors.
 type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>;
 
-// Optionally turn off batching or caching, and provide a cache key function or
+// Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
 type Options<K, V> = {
   batch?: boolean;
