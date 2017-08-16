@@ -468,8 +468,11 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 
 ## Other implementations
 
-- [PHP](https://github.com/overblog/dataloader-php)
-- [Ruby](https://github.com/sheerun/dataloader)
+* PHP
+  * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
+* Ruby
+  * [Dataloader](https://github.com/sheerun/dataloader)
+  * [BatchLoader](https://github.com/exaspark/batch-loader)
 
 ## Video Source Code Walkthrough
 
