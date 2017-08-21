@@ -1,8 +1,4 @@
 {
-  "globals": {
-    "$ReadOnlyArray": true
-  },
-
   "parser": "babel-eslint",
 
   "plugins": [
