@@ -307,7 +307,7 @@ function failedDispatch<K, V>(
 }
 
 // Private
-type LoaderQueue<K, V> = $ReadOnlyArray<{
+type LoaderQueue<K, V> = Array<{
   key: K;
   resolve: (value: V) => void;
   reject: (error: Error) => void;
