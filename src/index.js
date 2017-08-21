@@ -10,7 +10,7 @@
 
 // A Function, which when given an Array of keys, returns a Promise of an Array
 // of values or Errors.
-type BatchLoadFn<K, V> = (keys: Array<K>) => Promise<Array<V | Error>>;
+type BatchLoadFn<K, V> = (keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
@@ -130,7 +130,7 @@ export default class DataLoader<K, V> {
    *     ]);
    *
    */
-  loadMany(keys: Array<K>): Promise<Array<V>> {
+  loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V>> {
     if (!Array.isArray(keys)) {
       throw new TypeError(
         'The loader.loadMany() function must be called with Array<key> ' +
@@ -162,7 +162,7 @@ export default class DataLoader<K, V> {
   }
 
   /**
-   * Adds the provided key and value to the cache. If the key already exists, no
+   * Adds the provied key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V): DataLoader<K, V> {
@@ -306,7 +306,7 @@ function failedDispatch<K, V>(
 }
 
 // Private
-type LoaderQueue<K, V> = Array<{
+type LoaderQueue<K, V> = $ReadOnlyArray<{
   key: K;
   resolve: (value: V) => void;
   reject: (error: Error) => void;
