@@ -56,6 +56,13 @@ export default class DataLoader<K, V> {
     this._promiseCache =
       options && options.cacheMap || (new Map(): Map<K,Promise<V>>);
     this._queue = [];
+
+    // Bind instance methods
+    this.clear = this.clear.bind(this);
+    this.clearAll = this.clearAll.bind(this);
+    this.load = this.load.bind(this);
+    this.loadMany = this.loadMany.bind(this);
+    this.prime = this.prime.bind(this);
   }
 
   // Private
@@ -67,6 +74,7 @@ export default class DataLoader<K, V> {
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
    */
+  load: (key: K) => Promise<V>;
   load(key: K): Promise<V> {
     if (key === null || key === undefined) {
       throw new TypeError(
@@ -130,6 +138,7 @@ export default class DataLoader<K, V> {
    *     ]);
    *
    */
+  loadMany: (keys: Array<K>) => Promise<Array<V>>;
   loadMany(keys: Array<K>): Promise<Array<V>> {
     if (!Array.isArray(keys)) {
       throw new TypeError(
@@ -144,6 +153,7 @@ export default class DataLoader<K, V> {
    * Clears the value at `key` from the cache, if it exists. Returns itself for
    * method chaining.
    */
+  clear: (key: K) => DataLoader<K, V>;
   clear(key: K): DataLoader<K, V> {
     var cacheKeyFn = this._options && this._options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
@@ -156,6 +166,7 @@ export default class DataLoader<K, V> {
    * invalidations across this particular `DataLoader`. Returns itself for
    * method chaining.
    */
+  clearAll: () => DataLoader<K, V>;
   clearAll(): DataLoader<K, V> {
     this._promiseCache.clear();
     return this;
@@ -165,6 +176,7 @@ export default class DataLoader<K, V> {
    * Adds the provided key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */
+  prime: (key: K, value: V) => DataLoader<K, V>;
   prime(key: K, value: V): DataLoader<K, V> {
     var cacheKeyFn = this._options && this._options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
