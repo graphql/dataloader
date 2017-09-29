@@ -473,6 +473,8 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 * Ruby
   * [Dataloader](https://github.com/sheerun/dataloader)
   * [BatchLoader](https://github.com/exaspark/batch-loader)
+* ReasonML
+  * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
 
 ## Video Source Code Walkthrough
 
