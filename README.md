@@ -279,22 +279,13 @@ Create a new `DataLoader` given a batch loading function and options.
 
 - *options*: An optional object of options:
 
-  - *batch*: Default `true`. Set to `false` to disable batching, instead
-    immediately invoking `batchLoadFn` with a single load key.
-
-  - *maxBatchSize*: Default `Infinity`. Limits the number of items that get
-    passed in to the `batchLoadFn`.
-
-  - *cache*: Default `true`. Set to `false` to disable memoization caching,
-    instead creating a new Promise and new key in the `batchLoadFn` for every
-    load of the same key.
-
-  - *cacheKeyFn*: A function to produce a cache key for a given load key.
-    Defaults to `key => key`. Useful to provide when JavaScript objects are keys
-    and two similarly shaped objects should be considered equivalent.
-
-  - *cacheMap*: An instance of [Map][] (or an object with a similar API) to be
-    used as the underlying cache for this loader. Default `new Map()`.
+  | Option Key | Type | Default | Description |
+  | ---------- | ---- | ------- | ----------- |
+  | *batch*  | Boolean | `true` | Set to `false` to disable batching, invoking `batchLoadFn` with a single load key.
+  | *maxBatchSize* | Number | `Infinity` | Limits the number of items that get passed in to the `batchLoadFn`.
+  | *cache* | Boolean | `true` | Set to `false` to disable memoization caching, creating a new Promise and new key in the `batchLoadFn` for every load of the same key. 
+  | *cacheKeyFn* | Function | `key => key` | Produces cache key for a given load key. Useful when objects are keys and two objects should be considered equivalent.
+  | *cacheMap* | Object | `new Map()` | Instance of [Map][] (or an object with a similar API) to be used as cache.
 
 ##### `load(key)`
 
