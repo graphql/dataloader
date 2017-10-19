@@ -53,23 +53,7 @@ export default class DataLoader<K, V> {
     }
     this._batchLoadFn = batchLoadFn;
     this._options = options;
-    var validateCacheFormat = cache => {
-      var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
-      var missingFunctions = cacheFunctions.map(fnName => {
-        return !cache[fnName] ? fnName : null;
-      })
-      .filter(fnName => fnName !== null);
-
-      if (missingFunctions.length > 0) {
-        throw new TypeError('Custom cache needs to implement get, set, ' +
-          'delete, and clear methods, but missing: ' +
-          `${missingFunctions.join(', ')}.` );
-      }
-      return cache;
-    };
-    this._promiseCache =
-      options && options.cacheMap && validateCacheFormat(options.cacheMap) ||
-      (new Map(): Map<K,Promise<V>>);
+    this._promiseCache = getValidCacheMap(options);
     this._queue = [];
   }
 
@@ -318,6 +302,23 @@ function failedDispatch<K, V>(
     loader.clear(key);
     reject(error);
   });
+}
+
+function getValidCacheMap<K, V>(options: Options<K, V>): CacheMap<K, Promise<V>> {
+  var cacheMap = options && options.cacheMap;
+  if (!cacheMap) {
+    return new Map();
+  }
+  var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
+  var missingFunctions = cacheFunctions
+    .map(fnName => typeof cacheMap[fnName] !== 'function' ? fnName : null)
+    .filter(Boolean);
+  if (missingFunctions.length !== 0) {
+    throw new TypeError(
+      'Custom cacheMap missing methods: ' + missingFunctions.join(', ')
+    );
+  }
+  return cacheMap;
 }
 
 // Private
