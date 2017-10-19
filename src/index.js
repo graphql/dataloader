@@ -311,8 +311,7 @@ function getValidCacheMap<K, V>(options: Options<K, V>): CacheMap<K, Promise<V>>
   }
   var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
   var missingFunctions = cacheFunctions
-    .map(fnName => typeof cacheMap[fnName] !== 'function' ? fnName : null)
-    .filter(Boolean);
+    .filter(fnName => typeof cacheMap[fnName] !== 'function');
   if (missingFunctions.length !== 0) {
     throw new TypeError(
       'Custom cacheMap missing methods: ' + missingFunctions.join(', ')
