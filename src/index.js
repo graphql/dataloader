@@ -305,7 +305,7 @@ function failedDispatch<K, V>(
 }
 
 function getValidCacheMap<K, V>(
-  options: Options<K, V>
+  options: ?Options<K, V>
 ): CacheMap<K, Promise<V>> {
   var cacheMap = options && options.cacheMap;
   if (!cacheMap) {
@@ -313,7 +313,7 @@ function getValidCacheMap<K, V>(
   }
   var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
   var missingFunctions = cacheFunctions
-    .filter(fnName => typeof cacheMap[fnName] !== 'function');
+    .filter(fnName => cacheMap && typeof cacheMap[fnName] !== 'function');
   if (missingFunctions.length !== 0) {
     throw new TypeError(
       'Custom cacheMap missing methods: ' + missingFunctions.join(', ')
