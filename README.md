@@ -466,6 +466,8 @@ Looking to get started with a specific back-end? Try the [loaders in the example
   * [BatchLoader](https://github.com/exaspark/batch-loader)
 * ReasonML
   * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
+* Java
+  * [java-dataloader](https://github.com/graphql-java/java-dataloader)
 
 ## Video Source Code Walkthrough
 
