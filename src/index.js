@@ -209,7 +209,15 @@ function enqueuePostPromiseJob(fn) {
   if (!resolvedPromise) {
     resolvedPromise = Promise.resolve();
   }
-  resolvedPromise.then(() => process.nextTick(fn));
+  resolvedPromise.then(() => {
+    if (process && process.nextTick) {
+      process.nextTick(fn)
+    } else if (setImmediate) {
+      setImmediate(fn);
+    } else {
+      setTimeout(fn);
+    }
+  });
 }
 
 // Private: cached resolved Promise instance
