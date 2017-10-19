@@ -304,7 +304,9 @@ function failedDispatch<K, V>(
   });
 }
 
-function getValidCacheMap<K, V>(options: Options<K, V>): CacheMap<K, Promise<V>> {
+function getValidCacheMap<K, V>(
+  options: Options<K, V>
+): CacheMap<K, Promise<V>> {
   var cacheMap = options && options.cacheMap;
   if (!cacheMap) {
     return new Map();
