@@ -54,8 +54,7 @@ export default class DataLoader<K, V> {
     }
     this._batchLoadFn = batchLoadFn;
     this._options = options;
-    this._promiseCache =
-      options && options.cacheMap || (new Map(): Map<K,Promise<V>>);
+    this._promiseCache = getValidCacheMap(options);
     this._queue = [];
   }
 
@@ -304,6 +303,24 @@ function failedDispatch<K, V>(
     loader.clear(key);
     reject(error);
   });
+}
+
+function getValidCacheMap<K, V>(
+  options: ?Options<K, V>
+): CacheMap<K, Promise<V>> {
+  var cacheMap = options && options.cacheMap;
+  if (!cacheMap) {
+    return new Map();
+  }
+  var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
+  var missingFunctions = cacheFunctions
+    .filter(fnName => cacheMap && typeof cacheMap[fnName] !== 'function');
+  if (missingFunctions.length !== 0) {
+    throw new TypeError(
+      'Custom cacheMap missing methods: ' + missingFunctions.join(', ')
+    );
+  }
+  return cacheMap;
 }
 
 // Private
