@@ -160,8 +160,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       var options = { cacheMap: incompleteMap };
       new DataLoader(keys => keys, options); // eslint-disable-line no-new
     }).to.throw(
-      'Custom cache needs to implement get, set, delete, and clear methods, ' +
-      'but missing: set, delete, clear.'
+      'Custom cacheMap missing methods: set, delete, clear'
     );
   });
 });
