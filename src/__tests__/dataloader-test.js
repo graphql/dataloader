@@ -8,9 +8,12 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  */
 
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
+import spies from 'chai-spies';
 import { describe, it } from 'mocha';
 import DataLoader from '../';
+
+chai.use(spies);
 
 function idLoader(options) {
   var loadCalls = [];
@@ -409,6 +412,43 @@ describe('Represents Errors', () => {
     expect(loadCalls).to.deep.equal([ [ 1, 2 ] ]);
   });
 
+});
+
+describe('Calls setTimeout when browser environment', () => {
+
+});
+
+describe('Environment', () => {
+  it('Calls process.nextTick in node environment', async () => {
+    const setTimeoutSpy = chai.spy.on(global, 'setTimeout');
+    // const nextTickSpy = chai.spy.on(process, 'nextTick');
+    var identityLoader = new DataLoader(keys => Promise.resolve(keys));
+
+    var promise1 = identityLoader.load(1);
+    expect(promise1).to.be.instanceof(Promise);
+
+    var value1 = await promise1;
+    expect(value1).to.equal(1);
+
+    expect(setTimeoutSpy).to.not.have.been.called();
+    // expect(nextTickSpy).to.have.been.called();
+  });
+
+  it('Calls setTimeout in browser environment', async () => {
+    const setTimeoutSpy = chai.spy.on(global, 'setTimeout');
+    // const nextTickSpy = chai.spy.on(process, 'nextTick');
+    var identityLoader = new DataLoader(keys => Promise.resolve(keys));
+    identityLoader._environment.isNode = false;
+    var promise1 = identityLoader.load(1);
+    expect(promise1).to.be.instanceof(Promise);
+
+    var value1 = await promise1;
+    expect(value1).to.equal(1);
+
+    expect(setTimeoutSpy).to.have.been.called();
+    // expect(nextTickSpy).to.not.have.been.called();
+
+  });
 });
 
 describe('Accepts any kind of key', () => {
