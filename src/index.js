@@ -31,6 +31,14 @@ type CacheMap<K, V> = {
   clear(): any;
 };
 
+type CacheAccessMapEntry<V> = {
+  dispatch: () => void;
+  promise: Promise<V>;
+}
+type CacheAccessMap<K, V> = Map<K, CacheAccessMapEntry<V>>;
+
+var noop = () => {};
+
 /**
  * A `DataLoader` creates a public API for loading data from a particular
  * data back-end with unique keys such as the `id` column of a SQL table or
@@ -56,6 +64,7 @@ export default class DataLoader<K, V> {
     this._options = options;
     this._promiseCache = getValidCacheMap(options);
     this._queue = [];
+    this._cacheAccess = new Map();
   }
 
   // Private
@@ -63,6 +72,7 @@ export default class DataLoader<K, V> {
   _options: ?Options<K, V>;
   _promiseCache: CacheMap<K, Promise<V>>;
   _queue: LoaderQueue<K, V>;
+  _cacheAccess: CacheAccessMap<K, V>;
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -82,11 +92,37 @@ export default class DataLoader<K, V> {
     var cacheKeyFn = options && options.cacheKeyFn;
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
 
-    // If caching and there is a cache-hit, return cached Promise.
+    // If caching and there is a cache-hit, set up a promise that is resolved
+    // when the queue is dispatched. Return the cached promise if not batching.
     if (shouldCache) {
-      var cachedPromise = this._promiseCache.get(cacheKey);
+      const cachedPromise = this._promiseCache.get(cacheKey);
       if (cachedPromise) {
-        return cachedPromise;
+        if (!shouldBatch) {
+          return cachedPromise;
+        }
+
+        var cachedAccess = this._cacheAccess.get(cacheKey);
+        if (cachedAccess) {
+          return cachedAccess.promise;
+        }
+
+        var dispatch;
+        var dispatchPromise = new Promise(resolve => {
+          dispatch = () => resolve(cachedPromise);
+        });
+        this._cacheAccess.set(cacheKey, {
+          dispatch: ((dispatch: any): () => void),
+          promise: dispatchPromise
+        });
+
+        // Determine if a dispatch of this cache access should be scheduled.
+        // A single dispatch should be scheduled while the queue itself is still
+        // empty and the access map changes from "empty" to "full".
+        if (this._queue.length === 0 && this._cacheAccess.size === 1) {
+          enqueuePostPromiseJob(() => dispatchQueue(this));
+        }
+
+        return dispatchPromise;
       }
     }
 
@@ -100,8 +136,12 @@ export default class DataLoader<K, V> {
       // queue changes from "empty" to "full".
       if (this._queue.length === 1) {
         if (shouldBatch) {
-          // If batching, schedule a task to dispatch the queue.
-          enqueuePostPromiseJob(() => dispatchQueue(this));
+          // No need to schedule a dispatch if the cached access map is not
+          // empty.
+          if (this._cacheAccess.size === 0) {
+            // If batching, schedule a task to dispatch the queue.
+            enqueuePostPromiseJob(() => dispatchQueue(this));
+          }
         } else {
           // Otherwise dispatch the (queue of one) immediately.
           dispatchQueue(this);
@@ -112,6 +152,12 @@ export default class DataLoader<K, V> {
     // If caching, cache this promise.
     if (shouldCache) {
       this._promiseCache.set(cacheKey, promise);
+
+      // If not batching, the _queue and _cacheAccess values have already been
+      // reset in the dispatchQueue() call above.
+      if (shouldBatch) {
+        this._cacheAccess.set(cacheKey, {dispatch: noop, promise});
+      }
     }
 
     return promise;
@@ -218,14 +264,26 @@ var resolvedPromise;
 // Private: given the current state of a Loader instance, perform a batch load
 // from its current queue.
 function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
-  // Take the current loader queue, replacing it with an empty queue.
+  // Take the current loader and queue and cache access map, replacing it with
+  // empty ones.
   var queue = loader._queue;
+  var cacheAccess = loader._cacheAccess;
   loader._queue = [];
+  loader._cacheAccess = new Map();
+
+  if (queue.length === 0) {
+    // Only need to dispatch cached values.
+    dispatchCachedValues(cacheAccess);
+    return;
+  }
 
   // If a maxBatchSize was provided and the queue is longer, then segment the
   // queue into multiple batches, otherwise treat the queue as a single batch.
   var maxBatchSize = loader._options && loader._options.maxBatchSize;
   if (maxBatchSize && maxBatchSize > 0 && maxBatchSize < queue.length) {
+    // Dispatch cached values immediately.
+    dispatchCachedValues(cacheAccess);
+
     for (var i = 0; i < queue.length / maxBatchSize; i++) {
       dispatchQueueBatch(
         loader,
@@ -233,13 +291,14 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
       );
     }
   } else {
-    dispatchQueueBatch(loader, queue);
+    dispatchQueueBatch(loader, queue, cacheAccess);
   }
 }
 
 function dispatchQueueBatch<K, V>(
   loader: DataLoader<K, V>,
-  queue: LoaderQueue<K, V>
+  queue: LoaderQueue<K, V>,
+  cacheAccess?: CacheAccessMap<K, V>
 ) {
   // Collect all keys to be loaded in this dispatch
   var keys = queue.map(({ key }) => key);
@@ -250,7 +309,7 @@ function dispatchQueueBatch<K, V>(
 
   // Assert the expected response from batchLoadFn
   if (!batchPromise || typeof batchPromise.then !== 'function') {
-    return failedDispatch(loader, queue, new TypeError(
+    return failedDispatch(loader, queue, cacheAccess, new TypeError(
       'DataLoader must be constructed with a function which accepts ' +
       'Array<key> and returns Promise<Array<value>>, but the function did ' +
       `not return a Promise: ${String(batchPromise)}.`
@@ -279,6 +338,12 @@ function dispatchQueueBatch<K, V>(
       );
     }
 
+    // Resolve promises for cached values in the same micro-task as those for
+    // freshly loaded values.
+    if (cacheAccess) {
+      dispatchCachedValues(cacheAccess);
+    }
+
     // Step through the values, resolving or rejecting each Promise in the
     // loaded queue.
     queue.forEach(({ key, resolve, reject }, index) => {
@@ -289,7 +354,7 @@ function dispatchQueueBatch<K, V>(
         resolve(value);
       }
     });
-  }).catch(error => failedDispatch(loader, queue, error));
+  }).catch(error => failedDispatch(loader, queue, cacheAccess, error));
 }
 
 // Private: do not cache individual loads if the entire batch dispatch fails,
@@ -297,12 +362,26 @@ function dispatchQueueBatch<K, V>(
 function failedDispatch<K, V>(
   loader: DataLoader<K, V>,
   queue: LoaderQueue<K, V>,
+  cacheAccess?: CacheAccessMap<K, V>,
   error: Error
 ) {
+  // Still need to resolve promises whose value was already cached, otherwise
+  // they'll hang.
+  if (cacheAccess) {
+    dispatchCachedValues(cacheAccess);
+  }
+
   queue.forEach(({ key, reject }) => {
     loader.clear(key);
     reject(error);
   });
+}
+
+function dispatchCachedValues<K, V>(cacheAccess: CacheAccessMap<K, V>) {
+  // Resolve promises whose value was already cached.
+  for (const { dispatch } of cacheAccess.values()) {
+    dispatch();
+  }
 }
 
 function getValidCacheMap<K, V>(
