@@ -76,7 +76,7 @@ userLoader.load(2)
   .then(lastInvited => console.log(`User 2 last invited ${lastInvited}`));
 ```
 
-A naive application may have issued four round-trips to a backend for the
+A native application may have issued four round-trips to a backend for the
 required information, but with DataLoader this application will make at most
 two.
 
