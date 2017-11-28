@@ -291,7 +291,7 @@ Create a new `DataLoader` given a batch loading function and options.
 
 Loads a key, returning a `Promise` for the value represented by that key.
 
-- *key*: An key value to load.
+- *key*: A key value to load.
 
 ##### `loadMany(keys)`
 
@@ -317,7 +317,7 @@ var [ a, b ] = await Promise.all([
 Clears the value at `key` from the cache, if it exists. Returns itself for
 method chaining.
 
-- *key*: An key value to clear.
+- *key*: A key value to clear.
 
 ##### `clearAll()`
 
