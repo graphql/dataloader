@@ -76,6 +76,29 @@ describe('Provides descriptive error messages for API abuse', () => {
     }).not.to.throw();
   });
 
+  it('ClearMany function requires a list of key', () => {
+    var idLoader = new DataLoader(keys => Promise.resolve(keys));
+
+    expect(() => {
+      idLoader.clearMany();
+    }).to.throw(
+      'The loader.clearMany() function must be called with Array<key> ' +
+      'but got: undefined.'
+    );
+
+    expect(() => {
+      idLoader.clearMany(1, 2, 3);
+    }).to.throw(
+      'The loader.clearMany() function must be called with Array<key> ' +
+      'but got: 1.'
+    );
+
+    // Empty array is acceptable
+    expect(() => {
+      idLoader.clearMany([]);
+    }).not.to.throw();
+  });
+
   it('Batch function must return a Promise, not null', async () => {
     var badLoader = new DataLoader(() => null);
 
