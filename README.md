@@ -468,6 +468,8 @@ Looking to get started with a specific back-end? Try the [loaders in the example
   * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
 * Java
   * [java-dataloader](https://github.com/graphql-java/java-dataloader)
+* Elixir
+  * [dataloader](https://github.com/absinthe-graphql/dataloader)
 
 ## Video Source Code Walkthrough
 
