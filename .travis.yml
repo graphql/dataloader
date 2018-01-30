@@ -1,33 +1,32 @@
 language: node_js
 
+# https://github.com/nodejs/LTS
 node_js:
-  - "7"
-  - "6"
-  - "5"
-  - "4"
+  - '9'
+  - '8'
+  - '6'
+  - '4'
+
+git:
+  depth: 5
 
 cache: yarn
 
-before_install:
-  - npm config set spin false --global
-
 script:
-  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then npm run lint && npm run check && npm run cover:lcov; else npm run testonly; fi
+  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then npm run test:ci; else npm run testonly; fi
 
-after_failure:
-  - (cd resources; python travis_after_all.py)
-
-after_success:
-  - (cd resources; python travis_after_all.py)
-  - export $(cat resources/.to_export_back)
-  - if [[ "$TRAVIS_JOB_NUMBER" == *.1 ]]; then cat ./coverage/lcov.info | ./node_modules/.bin/coveralls; fi
-
-deploy:
-  provider: npm
-  email: "lee@leebyron.com"
-  api_key:
-    secure: "LKgxA5+LSG1TPLlpE5mS4DGfirzBjNKO3UhDptXSXYR78QTs/lS0YlYKkNq/lCeTEMGKAgi9edVQfnsruKAsjiT4naZz/ZoSAzonRedO6ynHng+ec4WszJVew0xDPK1hJ2Gy+RdSyzRxGZUn6RDBZZR3Bj412azgwrgGf8x/HY6qBmVP9JZKPlpuRHM/lEL2IiKtJict7sFel0MH01t7n1rzsriUviPYsh6XElqLqSdeVe54iMu7PNp1A6p8hgt+I6IOree2km5TVC/MYn9iOIIK4kC6b+QCcE3jUOWioRIrQkI3DoN9QrxqeeOpx+i4ozsvjYcsl9b9TI6n66wNxkXJsDVRXA3oQ/0YjVlY4tznC/+3CI49gtLiKVeos2LsIdP6Xnnx7VvMOPvjEbl4386wLZAhbbc0VxjWilyVRJeErGsQvrujY/0JZwhxsXDAtGzqFXkiV7tTin+wivUgGW1VNf81q3ANOr8TG91yZMeYeRwTlECN0jQaFqNvagc8/Atp2akrbW4P46gh4+f/gp4hSLrYbjwybmZdM4zesHeBezA87PPIlm5INhe2Lgsgmw2Ipgn8x2cBzsHepbsfGcvxMxu4CAhPISRdB9nlnbZ6eEpU2o6caeJN/hjmiwDHOsSbCa2RxVbMPkxqjdGG6VJmUyDMFny7apzNAYSiIJ0="
-  on:
-    tags: true
-    branch: master
-    condition: "$BUILD_LEADER$BUILD_AGGREGATE_STATUS = YESothers_succeeded"
+jobs:
+  include:
+    - stage: deploy
+      if: branch = master AND tag IS present
+      script: echo "Deploying..."
+      node_js: '8'
+      deploy:
+        provider: npm
+        skip_cleanup: true
+        email: "lee@leebyron.com"
+        api_key:
+          secure: "LKgxA5+LSG1TPLlpE5mS4DGfirzBjNKO3UhDptXSXYR78QTs/lS0YlYKkNq/lCeTEMGKAgi9edVQfnsruKAsjiT4naZz/ZoSAzonRedO6ynHng+ec4WszJVew0xDPK1hJ2Gy+RdSyzRxGZUn6RDBZZR3Bj412azgwrgGf8x/HY6qBmVP9JZKPlpuRHM/lEL2IiKtJict7sFel0MH01t7n1rzsriUviPYsh6XElqLqSdeVe54iMu7PNp1A6p8hgt+I6IOree2km5TVC/MYn9iOIIK4kC6b+QCcE3jUOWioRIrQkI3DoN9QrxqeeOpx+i4ozsvjYcsl9b9TI6n66wNxkXJsDVRXA3oQ/0YjVlY4tznC/+3CI49gtLiKVeos2LsIdP6Xnnx7VvMOPvjEbl4386wLZAhbbc0VxjWilyVRJeErGsQvrujY/0JZwhxsXDAtGzqFXkiV7tTin+wivUgGW1VNf81q3ANOr8TG91yZMeYeRwTlECN0jQaFqNvagc8/Atp2akrbW4P46gh4+f/gp4hSLrYbjwybmZdM4zesHeBezA87PPIlm5INhe2Lgsgmw2Ipgn8x2cBzsHepbsfGcvxMxu4CAhPISRdB9nlnbZ6eEpU2o6caeJN/hjmiwDHOsSbCa2RxVbMPkxqjdGG6VJmUyDMFny7apzNAYSiIJ0="
+        on:
+          tags: true
+          branch: master
