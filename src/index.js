@@ -205,12 +205,20 @@ export default class DataLoader<K, V> {
 // In order to avoid the DataLoader dispatch Job occuring before "PromiseJobs",
 // A Promise Job is created with the sole purpose of enqueuing a global Job,
 // ensuring that it always occurs after "PromiseJobs" ends.
-function enqueuePostPromiseJob(fn) {
-  if (!resolvedPromise) {
-    resolvedPromise = Promise.resolve();
-  }
-  resolvedPromise.then(() => process.nextTick(fn));
-}
+//
+// Node.js's job queue is unique. Browsers do not have an equivalent mechanism
+// for enqueuing a job to be performed after promise microtasks and before the
+// next macrotask. For browser environments, a macrotask is used (via
+// setImmediate or setTimeout) at a potential performance penalty.
+var enqueuePostPromiseJob =
+  typeof process === 'object' && typeof process.nextTick === 'function' ?
+    function (fn) {
+      if (!resolvedPromise) {
+        resolvedPromise = Promise.resolve();
+      }
+      resolvedPromise.then(() => process.nextTick(fn));
+    } :
+    setImmediate || setTimeout;
 
 // Private: cached resolved Promise instance
 var resolvedPromise;
