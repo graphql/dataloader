@@ -155,6 +155,36 @@ describe('Primary API', () => {
     expect(loadCalls).to.deep.equal([ [ 'A', 'B' ], [ 'A' ] ]);
   });
 
+  it('clears many values in loader', async () => {
+    var [ identityLoader, loadCalls ] = idLoader();
+
+    var [ a, b, c ] = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('B'),
+      identityLoader.load('C')
+    ]);
+
+    expect(a).to.equal('A');
+    expect(b).to.equal('B');
+    expect(c).to.equal('C');
+
+    expect(loadCalls).to.deep.equal([ [ 'A', 'B', 'C' ] ]);
+
+    identityLoader.clearMany([ 'A', 'B' ]);
+
+    var [ a2, b2, c2 ] = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('B'),
+      identityLoader.load('C')
+    ]);
+
+    expect(a2).to.equal('A');
+    expect(b2).to.equal('B');
+    expect(c2).to.equal('C');
+
+    expect(loadCalls).to.deep.equal([ [ 'A', 'B', 'C' ], [ 'A', 'B' ] ]);
+  });
+
   it('clears all values in loader', async () => {
     var [ identityLoader, loadCalls ] = idLoader();
 

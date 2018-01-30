@@ -55,6 +55,12 @@ declare class DataLoader<K, V> {
   clearAll(): DataLoader<K, V>;
 
   /**
+   * Clears multiple values from the cache. Returns itself for
+   * method chaining.
+   */
+  clearMany(): DataLoader<K, V>;
+
+  /**
    * Adds the provied key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */

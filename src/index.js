@@ -152,6 +152,21 @@ export default class DataLoader<K, V> {
   }
 
   /**
+   * Clears multiple values from the cache. Returns itself for
+   * method chaining.
+   */
+  clearMany(keys: $ReadOnlyArray<K>): DataLoader<K, V> {
+    if (!Array.isArray(keys)) {
+      throw new TypeError(
+        'The loader.clearMany() function must be called with Array<key> ' +
+        `but got: ${keys}.`
+      );
+    }
+    keys.forEach(key => { this.clear(key); });
+    return this;
+  }
+
+  /**
    * Clears the entire cache. To be used when some event results in unknown
    * invalidations across this particular `DataLoader`. Returns itself for
    * method chaining.
