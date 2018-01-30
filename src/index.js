@@ -162,7 +162,7 @@ export default class DataLoader<K, V> {
         `but got: ${keys}.`
       );
     }
-    keys.forEach((key: K): DataLoader<K, V> => this.clear(key));
+    keys.forEach(key => { this.clear(key); });
     return this;
   }
 
