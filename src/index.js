@@ -56,6 +56,7 @@ export default class DataLoader<K, V> {
     this._options = options;
     this._promiseCache = getValidCacheMap(options);
     this._queue = [];
+    this._environment = new Environment();
   }
 
   // Private
@@ -63,7 +64,7 @@ export default class DataLoader<K, V> {
   _options: ?Options<K, V>;
   _promiseCache: CacheMap<K, Promise<V>>;
   _queue: LoaderQueue<K, V>;
-
+  _environment: Environment;
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
    */
@@ -101,7 +102,7 @@ export default class DataLoader<K, V> {
       if (this._queue.length === 1) {
         if (shouldBatch) {
           // If batching, schedule a task to dispatch the queue.
-          enqueuePostPromiseJob(() => dispatchQueue(this));
+          enqueuePostPromiseJob(() => dispatchQueue(this), this._environment);
         } else {
           // Otherwise dispatch the (queue of one) immediately.
           dispatchQueue(this);
@@ -205,11 +206,17 @@ export default class DataLoader<K, V> {
 // In order to avoid the DataLoader dispatch Job occuring before "PromiseJobs",
 // A Promise Job is created with the sole purpose of enqueuing a global Job,
 // ensuring that it always occurs after "PromiseJobs" ends.
-function enqueuePostPromiseJob(fn) {
+function enqueuePostPromiseJob(fn, _environment: Environment) {
   if (!resolvedPromise) {
     resolvedPromise = Promise.resolve();
   }
-  resolvedPromise.then(() => process.nextTick(fn));
+  resolvedPromise.then(() => {
+    if (_environment.isNode) {
+      process.nextTick(fn);
+    } else {
+      setTimeout(fn);
+    }
+  });
 }
 
 // Private: cached resolved Promise instance
@@ -329,3 +336,10 @@ type LoaderQueue<K, V> = Array<{
   resolve: (value: V) => void;
   reject: (error: Error) => void;
 }>;
+
+class Environment {
+  isNode: boolean;
+  constructor() {
+    this.isNode = (Boolean(process) && Boolean(process.nextTick));
+  }
+}
