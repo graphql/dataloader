@@ -41,7 +41,7 @@ export type CacheMap<K, V> = {
  * different access permissions and consider creating a new instance per
  * web request.
  */
-export default class DataLoader<K, V> {
+class DataLoader<K, V> {
   constructor(
     batchLoadFn: BatchLoadFn<K, V>,
     options?: Options<K, V>
@@ -337,3 +337,5 @@ type LoaderQueue<K, V> = Array<{
   resolve: (value: V) => void;
   reject: (error: Error) => void;
 }>;
+
+module.exports = DataLoader;
