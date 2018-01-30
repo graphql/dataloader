@@ -10,12 +10,12 @@
 
 // A Function, which when given an Array of keys, returns a Promise of an Array
 // of values or Errors.
-type BatchLoadFn<K, V> =
+export type BatchLoadFn<K, V> =
   (keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
-type Options<K, V> = {
+export type Options<K, V> = {
   batch?: boolean;
   maxBatchSize?: number;
   cache?: boolean;
@@ -24,7 +24,7 @@ type Options<K, V> = {
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
-type CacheMap<K, V> = {
+export type CacheMap<K, V> = {
   get(key: K): V | void;
   set(key: K, value: V): any;
   delete(key: K): any;
