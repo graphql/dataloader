@@ -17,6 +17,7 @@
     "url": "http://github.com/facebook/dataloader.git"
   },
   "main": "index.js",
+  "typings": "index.d.ts",
   "options": {
     "mocha": "--require resources/mocha-bootload src/**/__tests__/**/*.js"
   },
@@ -44,16 +45,9 @@
         }
       ],
       "transform-es2015-parameters",
-      [
-        "transform-es2015-destructuring",
-        {
-          "loose": true
-        }
-      ],
-      "add-module-exports",
       "transform-es2015-block-scoping",
       [
-        "transform-es2015-modules-commonjs",
+        "transform-es2015-destructuring",
         {
           "loose": true
         }
@@ -82,32 +76,28 @@
     "PATENTS"
   ],
   "devDependencies": {
-    "babel-cli": "6.14.0",
-    "babel-eslint": "6.1.2",
-    "babel-plugin-add-module-exports": "0.2.1",
-    "babel-plugin-transform-async-to-generator": "6.8.0",
-    "babel-plugin-transform-class-properties": "6.11.5",
-    "babel-plugin-transform-es2015-arrow-functions": "6.8.0",
-    "babel-plugin-transform-es2015-block-scoping": "6.15.0",
-    "babel-plugin-transform-es2015-classes": "6.14.0",
-    "babel-plugin-transform-es2015-destructuring": "6.9.0",
-    "babel-plugin-transform-es2015-function-name": "6.9.0",
-    "babel-plugin-transform-es2015-literals": "6.8.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "6.14.0",
-    "babel-plugin-transform-es2015-parameters": "6.11.4",
-    "babel-plugin-transform-es2015-shorthand-properties": "6.8.0",
-    "babel-plugin-transform-es2015-spread": "6.8.0",
-    "babel-plugin-transform-es2015-template-literals": "6.8.0",
-    "babel-plugin-transform-flow-strip-types": "6.14.0",
-    "babel-plugin-transform-regenerator": "6.14.0",
-    "chai": "3.5.0",
-    "coveralls": "2.11.14",
-    "eslint": "3.5.0",
-    "eslint-plugin-babel": "3.3.0",
-    "flow-bin": "0.53.0",
+    "babel-cli": "6.26.0",
+    "babel-eslint": "8.2.1",
+    "babel-plugin-transform-async-to-generator": "6.24.1",
+    "babel-plugin-transform-class-properties": "6.24.1",
+    "babel-plugin-transform-es2015-arrow-functions": "6.22.0",
+    "babel-plugin-transform-es2015-block-scoping": "6.26.0",
+    "babel-plugin-transform-es2015-classes": "6.24.1",
+    "babel-plugin-transform-es2015-destructuring": "6.23.0",
+    "babel-plugin-transform-es2015-function-name": "6.24.1",
+    "babel-plugin-transform-es2015-literals": "6.22.0",
+    "babel-plugin-transform-es2015-parameters": "6.24.1",
+    "babel-plugin-transform-es2015-shorthand-properties": "6.24.1",
+    "babel-plugin-transform-es2015-spread": "6.22.0",
+    "babel-plugin-transform-es2015-template-literals": "6.22.0",
+    "babel-plugin-transform-flow-strip-types": "6.22.0",
+    "babel-plugin-transform-regenerator": "6.26.0",
+    "chai": "4.1.2",
+    "coveralls": "3.0.0",
+    "eslint": "4.16.0",
+    "flow-bin": "0.64.0",
     "isparta": "4.0.0",
-    "mocha": "3.0.2",
-    "sane": "1.4.1"
-  },
-  "typings": "index.d.ts"
+    "mocha": "5.0.0",
+    "sane": "2.3.0"
+  }
 }
