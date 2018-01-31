@@ -8,9 +8,9 @@
  *  of patent rights can be found in the PATENTS file in the same directory.
  */
 
-import { expect } from 'chai';
-import { describe, it } from 'mocha';
-import DataLoader from '../';
+const { expect } = require('chai');
+const { describe, it } = require('mocha');
+const DataLoader = require('../');
 
 function idLoader(options) {
   var loadCalls = [];

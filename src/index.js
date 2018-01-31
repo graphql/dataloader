@@ -289,7 +289,7 @@ function dispatchQueueBatch<K, V>(
 
     // Step through the values, resolving or rejecting each Promise in the
     // loaded queue.
-    queue.forEach(({ key, resolve, reject }, index) => {
+    queue.forEach(({ resolve, reject }, index) => {
       var value = values[index];
       if (value instanceof Error) {
         reject(value);
