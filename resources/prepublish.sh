@@ -31,4 +31,4 @@ node -e "var package = require('./package.json'); \
   delete package.options; \
   delete package.babel; \
   delete package.devDependencies; \
-  require('fs').writeFileSync('package.json', JSON.stringify(package));"
+  require('fs').writeFileSync('package.json', JSON.stringify(package, null, 2));"
