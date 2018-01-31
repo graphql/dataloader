@@ -313,6 +313,7 @@ function failedDispatch<K, V>(
   });
 }
 
+// Private: given the DataLoader's options, produce a CacheMap to be used.
 function getValidCacheMap<K, V>(
   options: ?Options<K, V>
 ): CacheMap<K, Promise<V>> {
