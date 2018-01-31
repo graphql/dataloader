@@ -18,7 +18,7 @@ script:
 jobs:
   include:
     - stage: deploy
-      if: branch = master AND tag IS present
+      if: tag IS present
       script: echo "Deploying..."
       node_js: '8'
       deploy:
