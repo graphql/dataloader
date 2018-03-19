@@ -17,30 +17,14 @@ var db = new sqlite3.Database('./to/your/db.sql');
 
 // Dispatch a WHERE-IN query, ensuring response has rows in correct order.
 var userLoader = new DataLoader(ids => {
-  var params = ids.map(id => '?' ).join();
-  var query = `SELECT * FROM users WHERE id IN (${params})`;
-  return queryLoader.load([query, ids]).then(
-    rows => ids.map(
-      id => rows.find(row => row.id === id) || new Error(`Row not found: ${id}`)
-    )
-  );
-});
-
-// Parallelize all queries, but do not cache.
-var queryLoader = new DataLoader(queries => new Promise(resolve => {
-  var waitingOn = queries.length;
-  var results = [];
-  db.parallelize(() => {
-    queries.forEach((query, index) => {
-      db.all.apply(db, query.concat((error, result) => {
-        results[index] = error || result;
-        if (--waitingOn === 0) {
-          resolve(results);
-        }
-      }));
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM users WHERE id IN $ids', {$ids: ids}, (err, rows) => {
+      if (err) return reject(err);
+      const m = new Map(rows.map(r => [r.id, r])); // to allow a simpler reordering
+      resolve(ids.map(id => m.get(id)));
     });
   });
-}), { cache: false });
+});
 
 // Usage
 
@@ -50,6 +34,8 @@ var promise2 = userLoader.load('5678');
 Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
   console.log(user1, user2);
 });
+// or
+userLoader.loadMany(['1234', '5678']).then(console.log);
 ```
 
 [sqlite3]: https://github.com/mapbox/node-sqlite3
