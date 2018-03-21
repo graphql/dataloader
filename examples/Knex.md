@@ -17,16 +17,30 @@ const db = require('./db'); // an instance of Knex client
 const data = {
   user: new DataLoader(ids => db.table('users')
     .whereIn('id', ids).select()
-    .then(rows => ids.map(id => rows.find(x => x.id === id)))),
+    .then(mapTo(ids, row => row.id)),
 
   story: new DataLoader(ids => db.table('stories')
     .whereIn('id', ids).select()
-    .then(rows => ids.map(id => rows.find(x => x.id === id)))),
+    .then(mapTo(ids, row => row.id)),
 
   storiesByUserId: new DataLoader(ids => db.table('stories')
     .whereIn('author_id', ids).select()
-    .then(rows => ids.map(id => rows.filter(x => x.author_id === id)))),
+    .then(mapToMany(ids, row => row.author_id)),
 };
+
+const mapTo = (ids, selector) => rows => ids.map(id => rows.find(x => selector(x) === id));
+// or a faster version
+const mapTo = (ids, selector) => rows => {
+  const m = new Map(rows.map(row => [selector(row), row]));
+  return ids.map(id => m.get(id));
+};
+
+const mapToMany = (ids, selector) => rows => ids.map(id => rows.filter(x => selector(x) === id));
+// or a slightly faster version
+const mapToMany = (ids, selector) => rows => {
+  const m = rows.reduce((m, row) => m.set(selector(row), (m.get(selector(row)) || []).concat(row)), new Map());
+  return ids.map(id => m.get(id));
+}
 
 // Usage
 
