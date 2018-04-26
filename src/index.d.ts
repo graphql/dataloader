@@ -15,9 +15,9 @@
  * with different access permissions and consider creating a new instance
  * per web request.
  */
-declare class DataLoader<K, V> {
+declare class DataLoader<K, V, C = K> {
 
-  constructor(batchLoadFn: DataLoader.BatchLoadFn<K, V>, options?: DataLoader.Options<K, V>);
+  constructor(batchLoadFn: DataLoader.BatchLoadFn<K, V>, options?: DataLoader.Options<K, V, C>);
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -61,10 +61,10 @@ declare class DataLoader<K, V> {
 
 declare namespace DataLoader {
   // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
-  export type CacheMap<K, V> = {
-    get(key: K): V | void;
-    set(key: K, value: V): any;
-    delete(key: K): any;
+  export type CacheMap<C, V> = {
+    get(key: C): V | void;
+    set(key: C, value: V): any;
+    delete(key: C): any;
     clear(): any;
   }
 
@@ -74,7 +74,7 @@ declare namespace DataLoader {
 
   // Optionally turn off batching or caching or provide a cache key function or a
   // custom cache instance.
-  export type Options<K, V> = {
+  export type Options<K, V, C = K> = {
 
     /**
      * Default `true`. Set to `false` to disable batching,
@@ -102,14 +102,14 @@ declare namespace DataLoader {
      * objects are keys and two similarly shaped objects should
      * be considered equivalent.
      */
-    cacheKeyFn?: (key: any) => any,
+    cacheKeyFn?: (key: K) => C,
 
     /**
      * An instance of Map (or an object with a similar API) to
      * be used as the underlying cache for this loader.
      * Default `new Map()`.
      */
-    cacheMap?: CacheMap<K, Promise<V>>;
+    cacheMap?: CacheMap<C, Promise<V>>;
   }
 }
 
