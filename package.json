@@ -69,6 +69,9 @@
     "postinstall": "npm run build && cp dist/* ."
   },
   "files": [
+    "src/index.js",
+    "src/index.js.flow",
+    "src/index.d.ts",
     "index.js",
     "index.js.flow",
     "index.d.ts",
