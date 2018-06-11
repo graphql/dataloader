@@ -65,7 +65,8 @@
     "testonly:cover": "babel-node node_modules/.bin/isparta cover --root src --report html _mocha -- $npm_package_options_mocha",
     "testonly:coveralls": "babel-node node_modules/.bin/isparta cover --root src --report lcovonly _mocha -- $npm_package_options_mocha && cat ./coverage/lcov.info | coveralls",
     "preversion": ". ./resources/checkgit.sh && npm test",
-    "prepublish": ". ./resources/prepublish.sh"
+    "prepublish": ". ./resources/prepublish.sh",
+    "postinstall": "npm run build && cp dist/* ."
   },
   "files": [
     "index.js",
