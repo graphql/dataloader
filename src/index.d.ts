@@ -91,6 +91,14 @@ declare namespace DataLoader {
      */
     maxBatchSize?: number;
 
+
+    /**
+     * Default `0`. Instead of batching requests within the same tick,
+     * batch all requests that occur within `batchIntervalMs` of each other.
+     * Note that this adds always adds a latency of `batchIntervalMs` to resolution.
+     */
+    batchIntervalMs?: number;
+
     /**
      * Default `true`. Set to `false` to disable memoization caching,
      * instead creating a new Promise and new key in the `batchLoadFn` for every
