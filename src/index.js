@@ -217,7 +217,7 @@ var enqueuePostPromiseJob =
       if (!resolvedPromise) {
         resolvedPromise = Promise.resolve();
       }
-      if (options.batchIntervalMs) {
+      if (options && options.batchIntervalMs) {
         setTimeout(() => {
           resolvedPromise.then(() => process.nextTick(fn));
         }, options.batchIntervalMs);
@@ -225,7 +225,7 @@ var enqueuePostPromiseJob =
         resolvedPromise.then(() => process.nextTick(fn));
       }
     } :
-    (fn, options) => setTimeout(fn, options.batchIntervalMs || 0);
+    (fn, options) => setTimeout(fn, (!!options && options.batchIntervalMs) || 0);
 
 // Private: cached resolved Promise instance
 var resolvedPromise;
