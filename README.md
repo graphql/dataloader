@@ -330,6 +330,7 @@ method chaining.
 Primes the cache with the provided key and value. If the key already exists, no
 change is made. (To forcefully prime the cache, clear the key first with
 `loader.clear(key).prime(key, value)`.) Returns itself for method chaining.
+If the cache is disable, prime will do nothing.
 
 
 ## Using with GraphQL

@@ -170,7 +170,10 @@ class DataLoader<K, V> {
     var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
 
     // Only add the key if it does not already exist.
-    if (this._promiseCache.get(cacheKey) === undefined) {
+    if (
+      (!this._options || this._options.cache !== false) &&
+      this._promiseCache.get(cacheKey) === undefined
+    ) {
       // Cache a rejected promise if the value is an Error, in order to match
       // the behavior of load(key).
       var promise = value instanceof Error ?
