@@ -39,7 +39,7 @@ declare class DataLoader<K, V> {
    *     ]);
    *
    */
-  loadMany(keys: K[]): Promise<V[]>;
+  loadMany(keys: ReadonlyArray<K>): Promise<V[]>;
 
   /**
    * Clears the value at `key` from the cache, if it exists. Returns itself for
