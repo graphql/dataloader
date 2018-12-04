@@ -472,6 +472,8 @@ Looking to get started with a specific back-end? Try the [loaders in the example
   * [dataloader](https://github.com/absinthe-graphql/dataloader)
 * Golang
   * [Dataloader](https://github.com/nicksrandall/dataloader)
+* Python
+  * [aiodataloader](https://github.com/syrusakbary/aiodataloader)
 
 ## Video Source Code Walkthrough
 
