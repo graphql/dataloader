@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /**
  *  Copyright (c) 2015, Facebook, Inc.
  *  All rights reserved.
