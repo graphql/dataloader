@@ -214,18 +214,17 @@ class DataLoader<K, V> {
 // for enqueuing a job to be performed after promise microtasks and before the
 // next macrotask. For browser environments, a macrotask is used (via
 // setImmediate or setTimeout) at a potential performance penalty.
-var enqueuePostPromiseJob =
-  typeof process === 'object' && typeof process.nextTick === 'function' ?
-    function (fn) {
-      if (!resolvedPromise) {
-        resolvedPromise = Promise.resolve();
-      }
-      resolvedPromise.then(() => process.nextTick(fn));
-    } :
-    setImmediate || setTimeout;
+var enqueuePostPromiseJob;
+if (typeof process === 'object' && typeof process.nextTick === 'function') {
+  // Private: cached resolved Promise instance
+  var resolvedPromise = Promise.resolve();
 
-// Private: cached resolved Promise instance
-var resolvedPromise;
+  enqueuePostPromiseJob = function (fn) {
+    resolvedPromise.then(() => process.nextTick(fn));
+  };
+} else {
+  enqueuePostPromiseJob = setImmediate || setTimeout;
+}
 
 // Private: given the current state of a Loader instance, perform a batch load
 // from its current queue.
