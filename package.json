@@ -68,12 +68,12 @@
     "@babel/plugin-transform-flow-strip-types": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
     "babel-eslint": "10.0.1",
-    "chai": "4.1.2",
-    "coveralls": "3.0.0",
-    "eslint": "4.16.0",
-    "flow-bin": "0.64.0",
-    "isparta": "4.0.0",
-    "mocha": "5.0.0",
-    "sane": "2.3.0"
+    "chai": "4.2.0",
+    "coveralls": "3.0.3",
+    "eslint": "5.15.1",
+    "flow-bin": "0.94.0",
+    "isparta": "4.1.1",
+    "mocha": "6.0.2",
+    "sane": "4.0.3"
   }
 }
