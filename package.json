@@ -22,36 +22,22 @@
     "mocha": "--require resources/mocha-bootload src/**/__tests__/**/*.js"
   },
   "babel": {
-    "plugins": [
-      "transform-async-to-generator",
-      "transform-regenerator",
-      "transform-class-properties",
-      "transform-flow-strip-types",
-      "transform-es2015-template-literals",
-      "transform-es2015-literals",
-      "transform-es2015-function-name",
-      "transform-es2015-arrow-functions",
+    "presets": [
       [
-        "transform-es2015-classes",
+        "@babel/env",
         {
-          "loose": true
-        }
-      ],
-      "transform-es2015-shorthand-properties",
-      [
-        "transform-es2015-spread",
-        {
-          "loose": true
-        }
-      ],
-      "transform-es2015-parameters",
-      "transform-es2015-block-scoping",
-      [
-        "transform-es2015-destructuring",
-        {
-          "loose": true
+          "targets": {
+            "browsers": [
+              "ie >= 10"
+            ]
+          },
+          "loose": true,
+          "useBuiltIns": "entry"
         }
       ]
+    ],
+    "plugins": [
+      "@babel/plugin-transform-flow-strip-types"
     ]
   },
   "scripts": {
@@ -59,7 +45,7 @@
     "test:ci": "npm run lint && npm run check && npm run testonly:coveralls",
     "lint": "eslint src",
     "check": "flow check",
-    "build": "babel src --ignore __tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
+    "build": "babel src --ignore __tests__ --out-dir dist/ && cp src/index.js dist/index.js.flow && cp src/index.d.ts dist/",
     "watch": "babel resources/watch.js | node",
     "testonly": "babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha",
     "testonly:cover": "babel-node node_modules/.bin/isparta cover --root src --report html _mocha -- $npm_package_options_mocha",
@@ -76,22 +62,12 @@
     "PATENTS"
   ],
   "devDependencies": {
-    "babel-cli": "6.26.0",
-    "babel-eslint": "8.2.1",
-    "babel-plugin-transform-async-to-generator": "6.24.1",
-    "babel-plugin-transform-class-properties": "6.24.1",
-    "babel-plugin-transform-es2015-arrow-functions": "6.22.0",
-    "babel-plugin-transform-es2015-block-scoping": "6.26.0",
-    "babel-plugin-transform-es2015-classes": "6.24.1",
-    "babel-plugin-transform-es2015-destructuring": "6.23.0",
-    "babel-plugin-transform-es2015-function-name": "6.24.1",
-    "babel-plugin-transform-es2015-literals": "6.22.0",
-    "babel-plugin-transform-es2015-parameters": "6.24.1",
-    "babel-plugin-transform-es2015-shorthand-properties": "6.24.1",
-    "babel-plugin-transform-es2015-spread": "6.22.0",
-    "babel-plugin-transform-es2015-template-literals": "6.22.0",
-    "babel-plugin-transform-flow-strip-types": "6.22.0",
-    "babel-plugin-transform-regenerator": "6.26.0",
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.3.4",
+    "@babel/node": "^7.2.2",
+    "@babel/plugin-transform-flow-strip-types": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "babel-eslint": "10.0.1",
     "chai": "4.1.2",
     "coveralls": "3.0.0",
     "eslint": "4.16.0",
