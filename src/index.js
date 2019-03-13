@@ -13,13 +13,16 @@
 export type BatchLoadFn<K, V> =
   (keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
 
+export type CacheKeyFn =
+  (key: any) => any
+
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
 export type Options<K, V> = {
   batch?: boolean;
   maxBatchSize?: number;
   cache?: boolean;
-  cacheKeyFn?: (key: any) => any;
+  cacheKeyFn?: CacheKeyFn;
   cacheMap?: CacheMap<K, Promise<V>>;
 };
 
@@ -53,16 +56,24 @@ class DataLoader<K, V> {
       );
     }
     this._batchLoadFn = batchLoadFn;
-    this._options = options;
     this._promiseCache = getValidCacheMap(options);
     this._queue = [];
+
+    this._shouldBatch = !options || options.batch !== false;
+    this._shouldCache = !options || options.cache !== false;
+    this._maxBatchSize = options && options.maxBatchSize || 0;
+    this._cacheKeyFn = options && options.cacheKeyFn || defaultCacheKeyFn;
   }
 
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
-  _options: ?Options<K, V>;
   _promiseCache: CacheMap<K, Promise<V>>;
   _queue: LoaderQueue<K, V>;
+
+  _shouldBatch: boolean;
+  _shouldCache: boolean;
+  _maxBatchSize: number;
+  _cacheKeyFn: CacheKeyFn;
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -75,15 +86,10 @@ class DataLoader<K, V> {
       );
     }
 
-    // Determine options
-    var options = this._options;
-    var shouldBatch = !options || options.batch !== false;
-    var shouldCache = !options || options.cache !== false;
-    var cacheKeyFn = options && options.cacheKeyFn;
-    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+    var cacheKey = this._cacheKeyFn(key);
 
     // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache) {
+    if (this._shouldCache) {
       var cachedPromise = this._promiseCache.get(cacheKey);
       if (cachedPromise) {
         return cachedPromise;
@@ -99,7 +105,7 @@ class DataLoader<K, V> {
       // A single dispatch should be scheduled per queue at the time when the
       // queue changes from "empty" to "full".
       if (this._queue.length === 1) {
-        if (shouldBatch) {
+        if (this._shouldBatch) {
           // If batching, schedule a task to dispatch the queue.
           enqueuePostPromiseJob(() => dispatchQueue(this));
         } else {
@@ -110,7 +116,7 @@ class DataLoader<K, V> {
     });
 
     // If caching, cache this promise.
-    if (shouldCache) {
+    if (this._shouldCache) {
       this._promiseCache.set(cacheKey, promise);
     }
 
@@ -145,8 +151,7 @@ class DataLoader<K, V> {
    * method chaining.
    */
   clear(key: K): DataLoader<K, V> {
-    var cacheKeyFn = this._options && this._options.cacheKeyFn;
-    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+    var cacheKey = this._cacheKeyFn(key);
     this._promiseCache.delete(cacheKey);
     return this;
   }
@@ -166,8 +171,7 @@ class DataLoader<K, V> {
    * exists, no change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V): DataLoader<K, V> {
-    var cacheKeyFn = this._options && this._options.cacheKeyFn;
-    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+    var cacheKey = this._cacheKeyFn(key);
 
     // Only add the key if it does not already exist.
     if (this._promiseCache.get(cacheKey) === undefined) {
@@ -232,8 +236,8 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
 
   // If a maxBatchSize was provided and the queue is longer, then segment the
   // queue into multiple batches, otherwise treat the queue as a single batch.
-  var maxBatchSize = loader._options && loader._options.maxBatchSize;
-  if (maxBatchSize && maxBatchSize > 0 && maxBatchSize < queue.length) {
+  var maxBatchSize = loader._maxBatchSize;
+  if (maxBatchSize > 0 && maxBatchSize < queue.length) {
     for (var i = 0; i < queue.length / maxBatchSize; i++) {
       dispatchQueueBatch(
         loader,
@@ -330,6 +334,11 @@ function getValidCacheMap<K, V>(
     );
   }
   return cacheMap;
+}
+
+// Private
+function defaultCacheKeyFn(key) {
+  return key;
 }
 
 // Private
