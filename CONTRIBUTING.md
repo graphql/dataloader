@@ -42,4 +42,4 @@ outlined on that page and do not file a public issue.
 ## License
 
 By contributing to DataLoader, you agree that your contributions will be
-licensed under its BSD license.
+licensed under its MIT license.
