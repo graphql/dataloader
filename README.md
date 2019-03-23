@@ -444,7 +444,7 @@ let usernameLoader = new DataLoader(names => genUsernames(names).then(users => {
 
 ## Custom Caches
 
-DataLoader can optionaly be provided a custom Map instance to use as its
+DataLoader can optionally be provided a custom Map instance to use as its
 memoization cache. More specifically, any object that implements the methods `get()`,
 `set()`, `delete()` and `clear()` can be provided. This allows for custom Maps
 which implement various [cache algorithms][] to be provided. By default,
