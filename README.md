@@ -462,6 +462,7 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 * PHP
   * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
 * Ruby
+  * [GraphQL Batch](https://github.com/Shopify/graphql-batch)
   * [Dataloader](https://github.com/sheerun/dataloader)
   * [BatchLoader](https://github.com/exaspark/batch-loader)
 * ReasonML
