@@ -475,6 +475,8 @@ Looking to get started with a specific back-end? Try the [loaders in the example
   * [Dataloader](https://github.com/nicksrandall/dataloader)
 * Rust
   * [Dataloader](https://github.com/cksac/dataloader-rs)
+* Perl
+  * [perl-DataLoader](https://github.com/richardjharris/perl-DataLoader)
 
 ## Video Source Code Walkthrough
 
