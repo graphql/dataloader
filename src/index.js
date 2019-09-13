@@ -18,7 +18,7 @@ export type Options<K, V> = {
   batch?: boolean;
   maxBatchSize?: number;
   cache?: boolean;
-  cacheKeyFn?: (key: any) => any;
+  cacheKeyFn?: (key: K) => any;
   cacheMap?: CacheMap<K, Promise<V>>;
 };
 

@@ -557,7 +557,7 @@ describe('Accepts options', () => {
   });
 
   describe('Accepts object key in custom cacheKey function', () => {
-    function cacheKey(key) {
+    function cacheKey(key: any) {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();
     }
 

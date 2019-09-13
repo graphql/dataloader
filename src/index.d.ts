@@ -102,7 +102,7 @@ declare namespace DataLoader {
      * objects are keys and two similarly shaped objects should
      * be considered equivalent.
      */
-    cacheKeyFn?: (key: any) => any,
+    cacheKeyFn?: (key: K) => any,
 
     /**
      * An instance of Map (or an object with a similar API) to
