@@ -8,13 +8,13 @@
     "Nicholas Schrock <schrockn@fb.com>"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/facebook/dataloader",
+  "homepage": "https://github.com/graphql/dataloader",
   "bugs": {
-    "url": "https://github.com/facebook/dataloader/issues"
+    "url": "https://github.com/graphql/dataloader/issues"
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/facebook/dataloader.git"
+    "url": "http://github.com/graphql/dataloader.git"
   },
   "main": "index.js",
   "typings": "index.d.ts",
