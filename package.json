@@ -22,36 +22,14 @@
     "mocha": "--require resources/mocha-bootload src/**/__tests__/**/*.js"
   },
   "babel": {
-    "plugins": [
-      "transform-async-to-generator",
-      "transform-regenerator",
-      "transform-class-properties",
-      "transform-flow-strip-types",
-      "transform-es2015-template-literals",
-      "transform-es2015-literals",
-      "transform-es2015-function-name",
-      "transform-es2015-arrow-functions",
+    "presets": [
       [
-        "transform-es2015-classes",
+        "@babel/preset-env",
         {
           "loose": true
         }
       ],
-      "transform-es2015-shorthand-properties",
-      [
-        "transform-es2015-spread",
-        {
-          "loose": true
-        }
-      ],
-      "transform-es2015-parameters",
-      "transform-es2015-block-scoping",
-      [
-        "transform-es2015-destructuring",
-        {
-          "loose": true
-        }
-      ]
+      "@babel/preset-flow"
     ]
   },
   "scripts": {
@@ -76,28 +54,18 @@
     "PATENTS"
   ],
   "devDependencies": {
-    "babel-cli": "6.26.0",
-    "babel-eslint": "8.2.1",
-    "babel-plugin-transform-async-to-generator": "6.24.1",
-    "babel-plugin-transform-class-properties": "6.24.1",
-    "babel-plugin-transform-es2015-arrow-functions": "6.22.0",
-    "babel-plugin-transform-es2015-block-scoping": "6.26.0",
-    "babel-plugin-transform-es2015-classes": "6.24.1",
-    "babel-plugin-transform-es2015-destructuring": "6.23.0",
-    "babel-plugin-transform-es2015-function-name": "6.24.1",
-    "babel-plugin-transform-es2015-literals": "6.22.0",
-    "babel-plugin-transform-es2015-parameters": "6.24.1",
-    "babel-plugin-transform-es2015-shorthand-properties": "6.24.1",
-    "babel-plugin-transform-es2015-spread": "6.22.0",
-    "babel-plugin-transform-es2015-template-literals": "6.22.0",
-    "babel-plugin-transform-flow-strip-types": "6.22.0",
-    "babel-plugin-transform-regenerator": "6.26.0",
-    "chai": "4.1.2",
-    "coveralls": "3.0.0",
-    "eslint": "4.16.0",
+    "@babel/cli": "7.7.0",
+    "@babel/core": "7.7.2",
+    "@babel/node": "7.7.0",
+    "@babel/preset-env": "7.7.1",
+    "@babel/preset-flow": "7.0.0",
+    "babel-eslint": "10.0.3",
+    "chai": "4.2.0",
+    "coveralls": "3.0.7",
+    "eslint": "6.6.0",
     "flow-bin": "0.64.0",
-    "isparta": "4.0.0",
-    "mocha": "5.0.0",
-    "sane": "2.3.0"
+    "isparta": "4.1.1",
+    "mocha": "6.2.2",
+    "sane": "4.1.0"
   }
 }
