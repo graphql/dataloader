@@ -5,7 +5,7 @@ fetching layer to provide a simplified and consistent API over various remote
 data sources such as databases or web services via batching and caching.
 
 [![Build Status](https://travis-ci.org/graphql/dataloader.svg)](https://travis-ci.org/graphql/dataloader)
-[![Coverage Status](https://coveralls.io/repos/facebook/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/facebook/dataloader?branch=master)
+[![Coverage Status](https://coveralls.io/repos/graphql/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql/dataloader?branch=master)
 
 A port of the "Loader" API originally developed by [@schrockn][] at Facebook in
 2010 as a simplifying force to coalesce the sundry key-value store back-end
