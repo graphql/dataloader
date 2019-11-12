@@ -63,7 +63,7 @@
     "chai": "4.2.0",
     "coveralls": "3.0.7",
     "eslint": "6.6.0",
-    "flow-bin": "0.64.0",
+    "flow-bin": "0.112.0",
     "isparta": "4.1.1",
     "mocha": "6.2.2",
     "sane": "4.1.0"
