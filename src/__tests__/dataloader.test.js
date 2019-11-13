@@ -7,9 +7,12 @@
  * @flow
  */
 
+import type { Options } from '..';
 const DataLoader = require('..');
 
-function idLoader(options) {
+function idLoader<K, C>(
+  options?: Options<K, K, C>
+): [ DataLoader<K, K, C>, Array<$ReadOnlyArray<K>> ] {
   const loadCalls = [];
   const identityLoader = new DataLoader(keys => {
     loadCalls.push(keys);
@@ -568,7 +571,7 @@ describe('Accepts options', () => {
   });
 
   describe('Accepts object key in custom cacheKey function', () => {
-    function cacheKey(key) {
+    function cacheKey(key: {[string]: any}): string {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();
     }
 

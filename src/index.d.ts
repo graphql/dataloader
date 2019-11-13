@@ -43,28 +43,28 @@ declare class DataLoader<K, V, C = K> {
    * Clears the value at `key` from the cache, if it exists. Returns itself for
    * method chaining.
    */
-  clear(key: K): DataLoader<K, V>;
+  clear(key: K): this;
 
   /**
    * Clears the entire cache. To be used when some event results in unknown
    * invalidations across this particular `DataLoader`. Returns itself for
    * method chaining.
    */
-  clearAll(): DataLoader<K, V>;
+  clearAll(): this;
 
   /**
    * Adds the provied key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */
-  prime(key: K, value: V): DataLoader<K, V>;
+  prime(key: K, value: V): this;
 }
 
 declare namespace DataLoader {
   // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
-  export type CacheMap<C, V> = {
-    get(key: C): V | void;
-    set(key: C, value: V): any;
-    delete(key: C): any;
+  export type CacheMap<K, V> = {
+    get(key: K): V | void;
+    set(key: K, value: V): any;
+    delete(key: K): any;
     clear(): any;
   }
 
