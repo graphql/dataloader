@@ -53,9 +53,9 @@ Batching is not an advanced feature, it's DataLoader's primary feature.
 Create loaders by providing a batch loading function.
 
 ```js
-var DataLoader = require('dataloader')
+const DataLoader = require('dataloader')
 
-var userLoader = new DataLoader(keys => myBatchGetUsers(keys));
+const userLoader = new DataLoader(keys => myBatchGetUsers(keys))
 ```
 
 A batch loading function accepts an Array of keys, and returns a Promise which
@@ -66,14 +66,14 @@ individual loads which occur within a single frame of execution (a single tick
 of the event loop) and then call your batch function with all requested keys.
 
 ```js
-userLoader.load(1)
-  .then(user => userLoader.load(user.invitedByID))
-  .then(invitedBy => console.log(`User 1 was invited by ${invitedBy}`));
+const user = await userLoader.load(1)
+const invitedBy = await userLoader.load(user.invitedByID)
+console.log(`User 1 was invited by ${invitedBy}`)
 
 // Elsewhere in your application
-userLoader.load(2)
-  .then(user => userLoader.load(user.lastInvitedID))
-  .then(lastInvited => console.log(`User 2 last invited ${lastInvited}`));
+const user = await userLoader.load(2)
+const lastInvited = await userLoader.load(user.lastInvitedID)
+console.log(`User 2 last invited ${lastInvited}`)
 ```
 
 A naive application may have issued four round-trips to a backend for the
@@ -144,9 +144,9 @@ In addition to relieving pressure on your data storage, caching results per-requ
 also creates fewer objects which may relieve memory pressure on your application:
 
 ```js
-var userLoader = new DataLoader(...)
-var promise1A = userLoader.load(1)
-var promise1B = userLoader.load(1)
+const userLoader = new DataLoader(...)
+const promise1A = userLoader.load(1)
+const promise1B = userLoader.load(1)
 assert(promise1A === promise1B)
 ```
 
@@ -172,11 +172,11 @@ function createLoaders(authToken) {
   }
 }
 
-var app = express()
+const app = express()
 
 app.get('/', function(req, res) {
-  var authToken = authenticateUser(req)
-  var loaders = createLoaders(authToken)
+  const authToken = authenticateUser(req)
+  const loaders = createLoaders(authToken)
   res.send(renderPage(req, loaders))
 })
 
@@ -195,18 +195,17 @@ Here's a simple example using SQL UPDATE to illustrate.
 
 ```js
 // Request begins...
-var userLoader = new DataLoader(...)
+const userLoader = new DataLoader(...)
 
 // And a value happens to be loaded (and cached).
-userLoader.load(4).then(...)
+const user = await userLoader.load(4)
 
 // A mutation occurs, invalidating what might be in cache.
-sqlRun('UPDATE users WHERE id=4 SET username="zuck"').then(
-  () => userLoader.clear(4)
-)
+await sqlRun('UPDATE users WHERE id=4 SET username="zuck"')
+userLoader.clear(4)
 
 // Later the value load is loaded again so the mutated data appears.
-userLoader.load(4).then(...)
+const user = await userLoader.load(4)
 
 // Request completes.
 ```
@@ -221,12 +220,14 @@ be cached to avoid frequently loading the same `Error`.
 In some circumstances you may wish to clear the cache for these individual Errors:
 
 ```js
-userLoader.load(1).catch(error => {
-  if (/* determine if should clear error */) {
-    userLoader.clear(1);
+try {
+  const user = await userLoader.load(1)
+} catch (error) {
+  if (/* determine if the error should not be cached */) {
+    userLoader.clear(1)
   }
-  throw error;
-});
+  throw error
+}
 ```
 
 #### Disabling Cache
@@ -244,7 +245,7 @@ for each instance of the requested key.
 For example:
 
 ```js
-var myLoader = new DataLoader(keys => {
+const myLoader = new DataLoader(keys => {
   console.log(keys)
   return someBatchLoadFn(keys)
 }, { cache: false })
@@ -263,7 +264,7 @@ enabled, but will immediately clear its cache when the batch function is called
 so later requests will load new values.
 
 ```js
-var myLoader = new DataLoader(keys => {
+const myLoader = new DataLoader(keys => {
   identityLoader.clearAll()
   return someBatchLoadFn(keys)
 })
@@ -310,16 +311,16 @@ Loads a key, returning a `Promise` for the value represented by that key.
 Loads multiple keys, promising an array of values:
 
 ```js
-var [ a, b ] = await myLoader.loadMany([ 'a', 'b' ]);
+const [ a, b ] = await myLoader.loadMany([ 'a', 'b' ])
 ```
 
 This is equivalent to the more verbose:
 
 ```js
-var [ a, b ] = await Promise.all([
+const [ a, b ] = await Promise.all([
   myLoader.load('a'),
   myLoader.load('b')
-]);
+])
 ```
 
 - *keys*: An array of key values to load.
@@ -378,7 +379,7 @@ When using DataLoader, we could define the `User` type using the
 and possibly fewer if there are cache hits.
 
 ```js
-var UserType = new GraphQLObjectType({
+const UserType = new GraphQLObjectType({
   name: 'User',
   fields: () => ({
     name: { type: GraphQLString },
@@ -391,9 +392,12 @@ var UserType = new GraphQLObjectType({
         first: { type: GraphQLInt }
       },
       type: new GraphQLList(UserType),
-      resolve: (user, { first }) => queryLoader.load([
-        'SELECT toID FROM friends WHERE fromID=? LIMIT ?', user.id, first
-      ]).then(rows => rows.map(row => userLoader.load(row.toID)))
+      resolve: async (user, { first }) => {
+        const rows = await queryLoader.load([
+          'SELECT toID FROM friends WHERE fromID=? LIMIT ?', user.id, first
+        ])
+        return rows.map(row => userLoader.load(row.toID))
+      }
     }
   })
 })
@@ -415,15 +419,15 @@ function createLoaders(authToken) {
     users: new DataLoader(ids => genUsers(authToken, ids)),
     cdnUrls: new DataLoader(rawUrls => genCdnUrls(authToken, rawUrls)),
     stories: new DataLoader(keys => genStories(authToken, keys)),
-  };
+  }
 }
 
 // When handling an incoming web request:
-var loaders = createLoaders(request.query.authToken);
+const loaders = createLoaders(request.query.authToken)
 
 // Then, within application logic:
-var user = await loaders.users.load(4);
-var pic = await loaders.cdnUrls.load(user.rawPicUrl);
+const user = await loaders.users.load(4)
+const pic = await loaders.cdnUrls.load(user.rawPicUrl)
 ```
 
 Creating an object where each key is a `DataLoader` is one common pattern which
@@ -438,19 +442,21 @@ value. If the same user is loaded by both keys, then it may be useful to fill
 both caches when a user is loaded from either source:
 
 ```js
-let userByIDLoader = new DataLoader(ids => genUsersByID(ids).then(users => {
+const userByIDLoader = new DataLoader(async ids => {
+  const users = await genUsersByID(ids)
   for (let user of users) {
-    usernameLoader.prime(user.username, user);
+    usernameLoader.prime(user.username, user)
   }
-  return users;
-}));
+  return users
+})
 
-let usernameLoader = new DataLoader(names => genUsernames(names).then(users => {
+const usernameLoader = new DataLoader(async names => {
+  const users = await genUsernames(names)
   for (let user of users) {
-    userByIDLoader.prime(user.id, user);
+    userByIDLoader.prime(user.id, user)
   }
-  return users;
-}));
+  return users
+})
 ```
 
 
