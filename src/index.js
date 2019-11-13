@@ -253,7 +253,8 @@ function dispatchQueueBatch<K, V>(
 
   // Call the provided batchLoadFn for this loader with the loader queue's keys.
   var batchLoadFn = loader._batchLoadFn;
-  var batchPromise = batchLoadFn.apply(loader, [ keys ]);
+  // Call with the loader as the `this` context.
+  var batchPromise = batchLoadFn.call(loader, keys);
 
   // Assert the expected response from batchLoadFn
   if (!batchPromise || typeof batchPromise.then !== 'function') {
