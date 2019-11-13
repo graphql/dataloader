@@ -491,6 +491,8 @@ Listed in alphabetical order
   * [perl-DataLoader](https://github.com/richardjharris/perl-DataLoader)
 * PHP
   * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
+* Python
+  * [aiodataloader](https://github.com/syrusakbary/aiodataloader)
 * ReasonML
   * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
 * Ruby
