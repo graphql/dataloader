@@ -14,7 +14,7 @@ const db = require('./db'); // an instance of Knex client
 
 // The list of data loaders
 
-const data = {
+const loaders = {
   user: new DataLoader(ids => db.table('users')
     .whereIn('id', ids).select()
     .then(rows => ids.map(id => rows.find(x => x.id === id)))),
@@ -30,10 +30,10 @@ const data = {
 
 // Usage
 
-Promise.all([
-  data.user.load('1234'),
-  data.storiesByUserId.load('1234'),
-]).then(([user, stories]) => {/* ... */});
+const [user, stories] = await Promise.all([
+  loaders.user.load('1234'),
+  loaders.storiesByUserId.load('1234'),
+])
 ```
 
 For a complete example visit [kriasoft/nodejs-api-starter][nsk].

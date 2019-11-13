@@ -7,12 +7,12 @@ with DataLoader.
 Here we build an example Redis DataLoader using [node_redis][].
 
 ```js
-var DataLoader = require('dataloader');
-var redis = require('redis');
+const DataLoader = require('dataloader');
+const redis = require('redis');
 
-var client = redis.createClient();
+const client = redis.createClient();
 
-var redisLoader = new DataLoader(keys => new Promise((resolve, reject) => {
+const redisLoader = new DataLoader(keys => new Promise((resolve, reject) => {
   client.mget(keys, (error, results) => {
     if (error) {
       return reject(error);
