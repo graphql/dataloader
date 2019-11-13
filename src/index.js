@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) 2019-present, GraphQL Foundation
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,12 +14,12 @@ export type BatchLoadFn<K, V> =
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
-export type Options<K, V> = {
+export type Options<K, V, C = K> = {
   batch?: boolean;
   maxBatchSize?: number;
   cache?: boolean;
-  cacheKeyFn?: (key: any) => any;
-  cacheMap?: CacheMap<K, Promise<V>>;
+  cacheKeyFn?: (key: K) => C;
+  cacheMap?: CacheMap<C, Promise<V>>;
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -40,10 +40,10 @@ export type CacheMap<K, V> = {
  * different access permissions and consider creating a new instance per
  * web request.
  */
-class DataLoader<K, V> {
+class DataLoader<K, V, C = K> {
   constructor(
     batchLoadFn: BatchLoadFn<K, V>,
-    options?: Options<K, V>
+    options?: Options<K, V, C>
   ) {
     if (typeof batchLoadFn !== 'function') {
       throw new TypeError(
@@ -59,8 +59,8 @@ class DataLoader<K, V> {
 
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
-  _options: ?Options<K, V>;
-  _promiseCache: CacheMap<K, Promise<V>>;
+  _options: ?Options<K, V, C>;
+  _promiseCache: CacheMap<C, Promise<V>>;
   _queue: LoaderQueue<K, V>;
 
   /**
@@ -78,8 +78,7 @@ class DataLoader<K, V> {
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
     var shouldCache = !options || options.cache !== false;
-    var cacheKeyFn = options && options.cacheKeyFn;
-    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+    var cacheKey = getCacheKey(options, key);
 
     // If caching and there is a cache-hit, return cached Promise.
     if (shouldCache) {
@@ -143,9 +142,8 @@ class DataLoader<K, V> {
    * Clears the value at `key` from the cache, if it exists. Returns itself for
    * method chaining.
    */
-  clear(key: K): DataLoader<K, V> {
-    var cacheKeyFn = this._options && this._options.cacheKeyFn;
-    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+  clear(key: K): this {
+    var cacheKey = getCacheKey(this._options, key);
     this._promiseCache.delete(cacheKey);
     return this;
   }
@@ -155,7 +153,7 @@ class DataLoader<K, V> {
    * invalidations across this particular `DataLoader`. Returns itself for
    * method chaining.
    */
-  clearAll(): DataLoader<K, V> {
+  clearAll(): this {
     this._promiseCache.clear();
     return this;
   }
@@ -164,9 +162,8 @@ class DataLoader<K, V> {
    * Adds the provided key and value to the cache. If the key already
    * exists, no change is made. Returns itself for method chaining.
    */
-  prime(key: K, value: V): DataLoader<K, V> {
-    var cacheKeyFn = this._options && this._options.cacheKeyFn;
-    var cacheKey = cacheKeyFn ? cacheKeyFn(key) : key;
+  prime(key: K, value: V): this {
+    var cacheKey = getCacheKey(this._options, key);
 
     // Only add the key if it does not already exist.
     if (this._promiseCache.get(cacheKey) === undefined) {
@@ -224,7 +221,7 @@ var resolvedPromise;
 
 // Private: given the current state of a Loader instance, perform a batch load
 // from its current queue.
-function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
+function dispatchQueue<K, V>(loader: DataLoader<K, V, any>) {
   // Take the current loader queue, replacing it with an empty queue.
   var queue = loader._queue;
   loader._queue = [];
@@ -245,7 +242,7 @@ function dispatchQueue<K, V>(loader: DataLoader<K, V>) {
 }
 
 function dispatchQueueBatch<K, V>(
-  loader: DataLoader<K, V>,
+  loader: DataLoader<K, V, any>,
   queue: LoaderQueue<K, V>
 ) {
   // Collect all keys to be loaded in this dispatch
@@ -253,7 +250,8 @@ function dispatchQueueBatch<K, V>(
 
   // Call the provided batchLoadFn for this loader with the loader queue's keys.
   var batchLoadFn = loader._batchLoadFn;
-  var batchPromise = batchLoadFn(keys);
+  // Call with the loader as the `this` context.
+  var batchPromise = batchLoadFn.call(loader, keys);
 
   // Assert the expected response from batchLoadFn
   if (!batchPromise || typeof batchPromise.then !== 'function') {
@@ -302,7 +300,7 @@ function dispatchQueueBatch<K, V>(
 // Private: do not cache individual loads if the entire batch dispatch fails,
 // but still reject each request so they do not hang.
 function failedDispatch<K, V>(
-  loader: DataLoader<K, V>,
+  loader: DataLoader<K, V, any>,
   queue: LoaderQueue<K, V>,
   error: Error
 ) {
@@ -312,10 +310,19 @@ function failedDispatch<K, V>(
   });
 }
 
+// Private: produce a cache key for a given key (and options)
+function getCacheKey<K, V, C>(
+  options: ?Options<K, V, C>,
+  key: K
+): C {
+  var cacheKeyFn = options && options.cacheKeyFn;
+  return cacheKeyFn ? cacheKeyFn(key) : (key: any);
+}
+
 // Private: given the DataLoader's options, produce a CacheMap to be used.
-function getValidCacheMap<K, V>(
-  options: ?Options<K, V>
-): CacheMap<K, Promise<V>> {
+function getValidCacheMap<K, V, C>(
+  options: ?Options<K, V, C>
+): CacheMap<C, Promise<V>> {
   var cacheMap = options && options.cacheMap;
   if (!cacheMap) {
     return new Map();
