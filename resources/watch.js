@@ -1,12 +1,3 @@
-/**
- *  Copyright (c) 2015, Facebook, Inc.
- *  All rights reserved.
- *
- *  This source code is licensed under the BSD-style license found in the
- *  LICENSE file in the root directory of this source tree. An additional grant
- *  of patent rights can be found in the PATENTS file in the same directory.
- */
-
 import sane from 'sane';
 import { resolve as resolvePath } from 'path';
 import { spawn } from 'child_process';
@@ -130,12 +121,10 @@ function parseFiles(filepaths) {
 function runTests(filepaths) {
   console.log('\nRunning Tests');
 
-  return exec('mocha', [
-    '--reporter', 'progress',
-    '--require', 'resources/mocha-bootload'
-  ].concat(
-    allTests(filepaths) ? filepaths.map(srcPath) : ['src/**/__tests__/**/*.js']
-  )).catch(() => false);
+  return exec(
+    'jest',
+    allTests(filepaths) ? filepaths.map(srcPath) : ['src']
+  ).catch(() => false);
 }
 
 function lintFiles(filepaths) {
