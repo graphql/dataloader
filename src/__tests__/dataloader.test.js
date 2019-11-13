@@ -30,6 +30,19 @@ describe('Primary API', () => {
     expect(value1).toBe(1);
   });
 
+  it('references the loader as "this" in the batch function', async () => {
+    let that;
+    const loader = new DataLoader(async function (keys) {
+      that = this;
+      return keys;
+    });
+
+    // Trigger the batch function
+    await loader.load(1);
+
+    expect(that).toBe(loader);
+  });
+
   it('supports loading multiple keys in one call', async () => {
     const identityLoader = new DataLoader(keys => Promise.resolve(keys));
 

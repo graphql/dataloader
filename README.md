@@ -90,7 +90,19 @@ minimal outgoing data requests.
 #### Batch Function
 
 A batch loading function accepts an Array of keys, and returns a Promise which
-resolves to an Array of values. There are a few constraints that must be upheld:
+resolves to an Array of values or Error instances. The loader itself is provided
+as the `this` context.
+
+```js
+async function batchFunction(keys) {
+  const results = await db.fetchAllKeys(keys)
+  return keys.map(key => results[key] || new Error(`No result for ${key}`))
+}
+
+const loader = new DataLoader(batchFunction)
+```
+
+There are a few constraints this function must uphold:
 
  * The Array of values must be the same length as the Array of keys.
  * Each index in the Array of values must correspond to the same index in the Array of keys.
@@ -116,7 +128,7 @@ with the original keys `[ 2, 9, 6, 1 ]`:
 [
   { id: 2, name: 'San Francisco' },
   { id: 9, name: 'Chicago' },
-  null,
+  null, // or perhaps `new Error()`
   { id: 1, name: 'New York' }
 ]
 ```
