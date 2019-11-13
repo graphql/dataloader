@@ -502,7 +502,6 @@ Listed in alphabetical order
 * Swift
   * [SwiftDataLoader](https://github.com/kimdv/SwiftDataLoader)
 
-
 ## Video Source Code Walkthrough
 
 **DataLoader Source Code Walkthrough (YouTube):**
