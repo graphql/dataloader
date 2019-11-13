@@ -1,10 +1,8 @@
 /**
- *  Copyright (c) 2015, Facebook, Inc.
- *  All rights reserved.
+ * Copyright (c) 2019-present, GraphQL Foundation
  *
- *  This source code is licensed under the BSD-style license found in the
- *  LICENSE file in the root directory of this source tree. An additional grant
- *  of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 /**
@@ -17,9 +15,9 @@
  * with different access permissions and consider creating a new instance
  * per web request.
  */
-declare class DataLoader<K, V> {
+declare class DataLoader<K, V, C = K> {
 
-  constructor(batchLoadFn: DataLoader.BatchLoadFn<K, V>, options?: DataLoader.Options<K, V>);
+  constructor(batchLoadFn: DataLoader.BatchLoadFn<K, V>, options?: DataLoader.Options<K, V, C>);
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -39,26 +37,26 @@ declare class DataLoader<K, V> {
    *     ]);
    *
    */
-  loadMany(keys: K[]): Promise<V[]>;
+  loadMany(keys: ArrayLike<K>): Promise<V[]>;
 
   /**
    * Clears the value at `key` from the cache, if it exists. Returns itself for
    * method chaining.
    */
-  clear(key: K): DataLoader<K, V>;
+  clear(key: K): this;
 
   /**
    * Clears the entire cache. To be used when some event results in unknown
    * invalidations across this particular `DataLoader`. Returns itself for
    * method chaining.
    */
-  clearAll(): DataLoader<K, V>;
+  clearAll(): this;
 
   /**
    * Adds the provied key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */
-  prime(key: K, value: V): DataLoader<K, V>;
+  prime(key: K, value: V): this;
 }
 
 declare namespace DataLoader {
@@ -72,11 +70,12 @@ declare namespace DataLoader {
 
   // A Function, which when given an Array of keys, returns a Promise of an Array
   // of values or Errors.
-  export type BatchLoadFn<K, V> = (keys: K[]) => Promise<Array<V | Error>>;
+  export type BatchLoadFn<K, V> =
+    (keys: ArrayLike<K>) => PromiseLike<ArrayLike<V | Error>>;
 
   // Optionally turn off batching or caching or provide a cache key function or a
   // custom cache instance.
-  export type Options<K, V> = {
+  export type Options<K, V, C = K> = {
 
     /**
      * Default `true`. Set to `false` to disable batching,
@@ -104,14 +103,14 @@ declare namespace DataLoader {
      * objects are keys and two similarly shaped objects should
      * be considered equivalent.
      */
-    cacheKeyFn?: (key: any) => any,
+    cacheKeyFn?: (key: K) => C,
 
     /**
      * An instance of Map (or an object with a similar API) to
      * be used as the underlying cache for this loader.
      * Default `new Map()`.
      */
-    cacheMap?: CacheMap<K, Promise<V>>;
+    cacheMap?: CacheMap<C, Promise<V>>;
   }
 }
 
