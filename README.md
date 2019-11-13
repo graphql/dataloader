@@ -486,6 +486,7 @@ Listed in alphabetical order
 * Java
   * [java-dataloader](https://github.com/graphql-java/java-dataloader)
 * .Net
+  * [GraphQL .NET DataLoader](https://graphql-dotnet.github.io/docs/guides/dataloader/)
   * [GreenDonut](https://github.com/ChilliCream/greendonut)
 * Perl
   * [perl-DataLoader](https://github.com/richardjharris/perl-DataLoader)
