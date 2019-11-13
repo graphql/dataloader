@@ -542,6 +542,19 @@ describe('Accepts options', () => {
     ]);
   });
 
+  it('Does not interact with a cache when cache is disabled', () => {
+    const promiseX = Promise.resolve('X');
+    const cacheMap = new Map([ [ 'X', promiseX ] ]);
+    const [ identityLoader ] = idLoader({ cache: false, cacheMap });
+
+    identityLoader.prime('A', 'A');
+    expect(cacheMap.get('A')).toBe(undefined);
+    identityLoader.clear('X');
+    expect(cacheMap.get('X')).toBe(promiseX);
+    identityLoader.clearAll();
+    expect(cacheMap.get('X')).toBe(promiseX);
+  });
+
   it('Complex cache behavior via clearAll()', async () => {
     // This loader clears its cache as soon as a batch function is dispatched.
     const loadCalls = [];
