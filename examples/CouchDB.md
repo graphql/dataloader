@@ -8,13 +8,13 @@ This example uses the [nano][] CouchDB client which offers a `fetch` method
 supporting the bulk document API.
 
 ```js
-var DataLoader = require('dataloader');
-var nano = require('nano');
+const DataLoader = require('dataloader');
+const nano = require('nano');
 
-var couch = nano('http://localhost:5984');
+const couch = nano('http://localhost:5984');
 
-var userDB = couch.use('users');
-var userLoader = new DataLoader(keys => new Promise((resolve, reject) => {
+const userDB = couch.use('users');
+const userLoader = new DataLoader(keys => new Promise((resolve, reject) => {
   userDB.fetch({ keys: keys }, (error, docs) => {
     if (error) {
       return reject(error);
@@ -25,12 +25,10 @@ var userLoader = new DataLoader(keys => new Promise((resolve, reject) => {
 
 // Usage
 
-var promise1 = userLoader.load('8fce1902834ac6458e9886fa7f89c0ef');
-var promise2 = userLoader.load('00a271787f89c0ef2e10e88a0c00048b');
-
-Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
-  console.log(user1, user2);
-});
+const promise1 = userLoader.load('8fce1902834ac6458e9886fa7f89c0ef');
+const promise2 = userLoader.load('00a271787f89c0ef2e10e88a0c00048b');
+const [ user1, user2 ] = await Promise.all([ promise1, promise2 ])
+console.log(user1, user2);
 ```
 
 [nano]: https://github.com/dscape/nano
