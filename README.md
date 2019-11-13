@@ -150,7 +150,7 @@ var promise1B = userLoader.load(1)
 assert(promise1A === promise1B)
 ```
 
-#### Caching per-Request
+#### Caching Per-Request
 
 DataLoader caching *does not* replace Redis, Memcache, or any other shared
 application-level cache. DataLoader is first and foremost a data loading mechanism,
@@ -469,7 +469,7 @@ short-lived.
 
 Looking to get started with a specific back-end? Try the [loaders in the examples directory](/examples).
 
-## Other implementations
+## Other Implementations
 
 * PHP
   * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
