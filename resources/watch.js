@@ -121,12 +121,10 @@ function parseFiles(filepaths) {
 function runTests(filepaths) {
   console.log('\nRunning Tests');
 
-  return exec('mocha', [
-    '--reporter', 'progress',
-    '--require', 'resources/mocha-bootload'
-  ].concat(
-    allTests(filepaths) ? filepaths.map(srcPath) : ['src/**/__tests__/**/*.js']
-  )).catch(() => false);
+  return exec(
+    'jest',
+    allTests(filepaths) ? filepaths.map(srcPath) : ['src']
+  ).catch(() => false);
 }
 
 function lintFiles(filepaths) {

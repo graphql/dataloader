@@ -18,30 +18,15 @@
   },
   "main": "index.js",
   "typings": "index.d.ts",
-  "options": {
-    "mocha": "--require resources/mocha-bootload src/**/__tests__/**/*.js"
-  },
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "loose": true
-        }
-      ],
-      "@babel/preset-flow"
-    ]
-  },
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly:coveralls",
     "lint": "eslint src",
     "check": "flow check",
-    "build": "babel src --ignore __tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
+    "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
     "watch": "babel resources/watch.js | node",
-    "testonly": "babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha",
-    "testonly:cover": "babel-node node_modules/.bin/isparta cover --root src --report html _mocha -- $npm_package_options_mocha",
-    "testonly:coveralls": "babel-node node_modules/.bin/isparta cover --root src --report lcovonly _mocha -- $npm_package_options_mocha && cat ./coverage/lcov.info | coveralls",
+    "testonly": "jest src",
+    "testonly:coveralls": "jest src --coverage && cat ./coverage/lcov.info | coveralls",
     "preversion": ". ./resources/checkgit.sh && npm test",
     "prepublish": ". ./resources/prepublish.sh"
   },
@@ -60,12 +45,10 @@
     "@babel/preset-env": "7.7.1",
     "@babel/preset-flow": "7.0.0",
     "babel-eslint": "10.0.3",
-    "chai": "4.2.0",
     "coveralls": "3.0.7",
     "eslint": "6.6.0",
     "flow-bin": "0.112.0",
-    "isparta": "4.1.1",
-    "mocha": "6.2.2",
+    "jest": "24.9.0",
     "sane": "4.1.0"
   }
 }
