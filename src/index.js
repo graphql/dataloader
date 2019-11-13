@@ -129,13 +129,18 @@ class DataLoader<K, V, C = K> {
    *
    */
   loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V>> {
-    if (!Array.isArray(keys)) {
+    if (!isArrayLike(keys)) {
       throw new TypeError(
         'The loader.loadMany() function must be called with Array<key> ' +
-        `but got: ${keys}.`
+        `but got: ${(keys: any)}.`
       );
     }
-    return Promise.all(keys.map(key => this.load(key)));
+    // Support ArrayLike by using only minimal property access
+    const loadPromises = [];
+    for (let i = 0; i < keys.length; i++) {
+      loadPromises.push(this.load(keys[i]));
+    }
+    return Promise.all(loadPromises);
   }
 
   /**
@@ -266,7 +271,7 @@ function dispatchQueueBatch<K, V>(
   batchPromise.then(values => {
 
     // Assert the expected resolution from batchLoadFn.
-    if (!Array.isArray(values)) {
+    if (!isArrayLike(values)) {
       throw new TypeError(
         'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
@@ -344,5 +349,16 @@ type LoaderQueue<K, V> = Array<{
   resolve: (value: V) => void;
   reject: (error: Error) => void;
 }>;
+
+// Private
+function isArrayLike(x: mixed): boolean {
+  return (
+    typeof x === 'object' &&
+    x !== null &&
+    typeof x.length === 'number' &&
+    (x.length === 0 ||
+      (x.length > 0 && Object.prototype.hasOwnProperty.call(x, x.length - 1)))
+  );
+}
 
 module.exports = DataLoader;
