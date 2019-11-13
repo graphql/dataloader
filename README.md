@@ -477,26 +477,28 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 
 ## Other Implementations
 
-* PHP
-  * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
-* Ruby
-  * [GraphQL Batch](https://github.com/Shopify/graphql-batch)
-  * [Dataloader](https://github.com/sheerun/dataloader)
-  * [BatchLoader](https://github.com/exaspark/batch-loader)
-* ReasonML
-  * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
-* Java
-  * [java-dataloader](https://github.com/graphql-java/java-dataloader)
+Listed in alphabetical order
+
 * Elixir
   * [dataloader](https://github.com/absinthe-graphql/dataloader)
 * Golang
   * [Dataloader](https://github.com/nicksrandall/dataloader)
-* Swift
-  * [SwiftDataLoader](https://github.com/kimdv/SwiftDataLoader)
-* Rust
-  * [Dataloader](https://github.com/cksac/dataloader-rs)
+* Java
+  * [java-dataloader](https://github.com/graphql-java/java-dataloader)
 * Perl
   * [perl-DataLoader](https://github.com/richardjharris/perl-DataLoader)
+* PHP
+  * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
+* ReasonML
+  * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
+* Ruby
+  * [BatchLoader](https://github.com/exaspark/batch-loader)
+  * [Dataloader](https://github.com/sheerun/dataloader)
+  * [GraphQL Batch](https://github.com/Shopify/graphql-batch)
+* Rust
+  * [Dataloader](https://github.com/cksac/dataloader-rs)
+* Swift
+  * [SwiftDataLoader](https://github.com/kimdv/SwiftDataLoader)
 
 ## Video Source Code Walkthrough
 
