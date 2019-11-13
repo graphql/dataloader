@@ -60,7 +60,7 @@ class DataLoader<K, V, C = K> {
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
   _options: ?Options<K, V, C>;
-  _promiseCache: CacheMap<C, Promise<V>>;
+  _promiseCache: ?CacheMap<C, Promise<V>>;
   _queue: LoaderQueue<K, V>;
 
   /**
@@ -77,12 +77,12 @@ class DataLoader<K, V, C = K> {
     // Determine options
     var options = this._options;
     var shouldBatch = !options || options.batch !== false;
-    var shouldCache = !options || options.cache !== false;
+    var cache = this._promiseCache;
     var cacheKey = getCacheKey(options, key);
 
     // If caching and there is a cache-hit, return cached Promise.
-    if (shouldCache) {
-      var cachedPromise = this._promiseCache.get(cacheKey);
+    if (cache) {
+      var cachedPromise = cache.get(cacheKey);
       if (cachedPromise) {
         return cachedPromise;
       }
@@ -108,8 +108,8 @@ class DataLoader<K, V, C = K> {
     });
 
     // If caching, cache this promise.
-    if (shouldCache) {
-      this._promiseCache.set(cacheKey, promise);
+    if (cache) {
+      cache.set(cacheKey, promise);
     }
 
     return promise;
@@ -148,8 +148,11 @@ class DataLoader<K, V, C = K> {
    * method chaining.
    */
   clear(key: K): this {
-    var cacheKey = getCacheKey(this._options, key);
-    this._promiseCache.delete(cacheKey);
+    var cache = this._promiseCache;
+    if (cache) {
+      var cacheKey = getCacheKey(this._options, key);
+      cache.delete(cacheKey);
+    }
     return this;
   }
 
@@ -159,7 +162,10 @@ class DataLoader<K, V, C = K> {
    * method chaining.
    */
   clearAll(): this {
-    this._promiseCache.clear();
+    var cache = this._promiseCache;
+    if (cache) {
+      cache.clear();
+    }
     return this;
   }
 
@@ -168,19 +174,21 @@ class DataLoader<K, V, C = K> {
    * exists, no change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V): this {
-    var cacheKey = getCacheKey(this._options, key);
+    var cache = this._promiseCache;
+    if (cache) {
+      var cacheKey = getCacheKey(this._options, key);
 
-    // Only add the key if it does not already exist.
-    if (this._promiseCache.get(cacheKey) === undefined) {
-      // Cache a rejected promise if the value is an Error, in order to match
-      // the behavior of load(key).
-      var promise = value instanceof Error ?
-        Promise.reject(value) :
-        Promise.resolve(value);
+      // Only add the key if it does not already exist.
+      if (cache.get(cacheKey) === undefined) {
+        // Cache a rejected promise if the value is an Error, in order to match
+        // the behavior of load(key).
+        var promise = value instanceof Error ?
+          Promise.reject(value) :
+          Promise.resolve(value);
 
-      this._promiseCache.set(cacheKey, promise);
+        cache.set(cacheKey, promise);
+      }
     }
-
     return this;
   }
 }
@@ -327,7 +335,11 @@ function getCacheKey<K, V, C>(
 // Private: given the DataLoader's options, produce a CacheMap to be used.
 function getValidCacheMap<K, V, C>(
   options: ?Options<K, V, C>
-): CacheMap<C, Promise<V>> {
+): ?CacheMap<C, Promise<V>> {
+  var shouldCache = !options || options.cache !== false;
+  if (!shouldCache) {
+    return null;
+  }
   var cacheMap = options && options.cacheMap;
   if (!cacheMap) {
     return new Map();
