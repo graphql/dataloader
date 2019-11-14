@@ -341,6 +341,9 @@ describe('Represents Errors', () => {
 
     identityLoader.prime(1, new Error('Error: 1'));
 
+    // Wait a bit.
+    await new Promise(setImmediate);
+
     let caughtErrorA;
     try {
       await identityLoader.load(1);
@@ -352,6 +355,35 @@ describe('Represents Errors', () => {
 
     expect(loadCalls).toEqual([]);
   });
+
+  // TODO: #224
+  /*
+  it('Not catching a primed error is an unhandled rejection', async () => {
+    let hadUnhandledRejection = false;
+    function onUnhandledRejection() {
+      hadUnhandledRejection = true;
+    }
+    process.on('unhandledRejection', onUnhandledRejection);
+    try {
+      const [ identityLoader ] = idLoader<number>();
+
+      identityLoader.prime(1, new Error('Error: 1'));
+
+      // Wait a bit.
+      await new Promise(setImmediate);
+
+      // Ignore result.
+      identityLoader.load(1);
+
+      // Wait a bit.
+      await new Promise(setImmediate);
+
+      expect(hadUnhandledRejection).toBe(true);
+    } finally {
+      process.removeListener('unhandledRejection', onUnhandledRejection);
+    }
+  });
+  */
 
   it('Can clear values from cache after errors', async () => {
     const loadCalls = [];

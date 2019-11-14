@@ -184,10 +184,15 @@ class DataLoader<K, V, C = K> {
       if (cache.get(cacheKey) === undefined) {
         // Cache a rejected promise if the value is an Error, in order to match
         // the behavior of load(key).
-        var promise = value instanceof Error ?
-          Promise.reject(value) :
-          Promise.resolve(value);
-
+        var promise;
+        if (value instanceof Error) {
+          promise = Promise.reject(value);
+          // Since this is a case where an Error is intentionally being primed
+          // for a given key, we want to disable unhandled promise rejection.
+          promise.catch(() => {});
+        } else {
+          promise = Promise.resolve(value);
+        }
         cache.set(cacheKey, promise);
       }
     }
