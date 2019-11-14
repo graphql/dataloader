@@ -106,6 +106,24 @@ describe('Primary API', () => {
     expect(loadCalls).toEqual([ [ 1 ] ]);
   });
 
+  it('coalesces identical requests across sized batches', async () => {
+    const [ identityLoader, loadCalls ] = idLoader<number>({ maxBatchSize: 2 });
+
+    const promise1a = identityLoader.load(1);
+    const promise2 = identityLoader.load(2);
+    const promise1b = identityLoader.load(1);
+    const promise3 = identityLoader.load(3);
+
+    const [ value1a, value2, value1b, value3 ] =
+      await Promise.all([ promise1a, promise2, promise1b, promise3 ]);
+    expect(value1a).toBe(1);
+    expect(value2).toBe(2);
+    expect(value1b).toBe(1);
+    expect(value3).toBe(3);
+
+    expect(loadCalls).toEqual([ [ 1, 2 ], [ 3 ] ]);
+  });
+
   it('caches repeated requests', async () => {
     const [ identityLoader, loadCalls ] = idLoader<string>();
 
