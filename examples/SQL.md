@@ -10,32 +10,28 @@ further batch queries together. Another non-caching `DataLoader` utilizes this
 method to provide a similar API. `DataLoaders` can access other `DataLoaders`.
 
 ```js
-var DataLoader = require('dataloader');
-var sqlite3 = require('sqlite3');
+const DataLoader = require('dataloader')
+const sqlite3 = require('sqlite3')
 
-var db = new sqlite3.Database('./to/your/db.sql');
+const db = new sqlite3.Database('./to/your/db.sql')
 
 // Dispatch a WHERE-IN query, ensuring response has rows in correct order.
-var userLoader = new DataLoader(ids => {
-  return new Promise((resolve, reject) => {
-    db.all('SELECT * FROM users WHERE id IN $ids', {$ids: ids}, (err, rows) => {
-      if (err) return reject(err);
-      const m = new Map(rows.map(r => [r.id, r])); // to allow a simpler reordering
-      resolve(ids.map(id => m.get(id)));
-    });
+const userLoader = new DataLoader(ids => new Promise((resolve, reject) => {
+  db.all('SELECT * FROM users WHERE id IN $ids', {$ids: ids}, (error, rows) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(ids.map(id => rows.find(row => rows.id === id)));
+    }
   });
-});
+}));
 
 // Usage
 
-var promise1 = userLoader.load('1234');
-var promise2 = userLoader.load('5678');
-
-Promise.all([ promise1, promise2 ]).then(([ user1, user2]) => {
-  console.log(user1, user2);
-});
-// or
-userLoader.loadMany(['1234', '5678']).then(console.log);
+const promise1 = userLoader.load('1234')
+const promise2 = userLoader.load('5678')
+const [ user1, user2 ] = await Promise.all([promise1, promise2])
+console.log(user1, user2)
 ```
 
 [sqlite3]: https://github.com/mapbox/node-sqlite3
