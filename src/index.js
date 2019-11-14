@@ -172,8 +172,10 @@ class DataLoader<K, V, C = K> {
   /**
    * Adds the provided key and value to the cache. If the key already
    * exists, no change is made. Returns itself for method chaining.
+   *
+   * To prime the cache with an error at a key, provide an Error instance.
    */
-  prime(key: K, value: V): this {
+  prime(key: K, value: V | Error): this {
     var cache = this._promiseCache;
     if (cache) {
       var cacheKey = getCacheKey(this._options, key);
