@@ -17,8 +17,8 @@ const userLoader = new DataLoader(ids => new Promise((resolve, reject) => {
     if (error) {
       reject(error);
     } else {
-      resolve(ids.map(id => 
-        rows.find(row => rows.id === id) || new Error(`Row not found: ${id}`)
+      resolve(ids.map(
+        id => rows.find(row => rows.id === id) || new Error(`Row not found: ${id}`)
       ));
     }
   });
