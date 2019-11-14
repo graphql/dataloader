@@ -5,10 +5,6 @@ While not a key-value store, SQL offers a natural batch mechanism with
 stores, it is still suited for SQL when queries remain simple. This example
 requests the entire row at a given `id`, however your usage may differ.
 
-This example uses the [sqlite3][] client which offers a `parallelize` method to
-further batch queries together. Another non-caching `DataLoader` utilizes this
-method to provide a similar API. `DataLoaders` can access other `DataLoaders`.
-
 ```js
 const DataLoader = require('dataloader')
 const sqlite3 = require('sqlite3')
