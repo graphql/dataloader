@@ -62,6 +62,20 @@ describe('Primary API', () => {
     expect(empty).toEqual([]);
   });
 
+  it('supports loading multiple keys in one call with errors', async () => {
+    const identityLoader = new DataLoader(keys =>
+      Promise.resolve(
+        keys.map(key => (key === 'bad' ? new Error('Bad Key') : key))
+      )
+    );
+
+    const promiseAll = identityLoader.loadMany([ 'a', 'b', 'bad' ]);
+    expect(promiseAll).toBeInstanceOf(Promise);
+
+    const values = await promiseAll;
+    expect(values).toEqual([ 'a', 'b', new Error('Bad Key') ]);
+  });
+
   it('batches multiple requests', async () => {
     const [ identityLoader, loadCalls ] = idLoader<number>();
 

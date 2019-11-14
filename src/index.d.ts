@@ -37,7 +37,7 @@ declare class DataLoader<K, V, C = K> {
    *     ]);
    *
    */
-  loadMany(keys: ArrayLike<K>): Promise<V[]>;
+  loadMany(keys: ArrayLike<K>): Promise<Array<V | Error>>;
 
   /**
    * Clears the value at `key` from the cache, if it exists. Returns itself for
