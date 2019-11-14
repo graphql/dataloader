@@ -344,6 +344,7 @@ Primes the cache with the provided key and value. If the key already exists, no
 change is made. (To forcefully prime the cache, clear the key first with
 `loader.clear(key).prime(key, value)`.) Returns itself for method chaining.
 
+To prime the cache with an error at a key, provide an Error instance.
 
 ## Using with GraphQL
 
