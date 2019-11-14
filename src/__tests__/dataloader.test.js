@@ -105,13 +105,94 @@ describe('Primary API', () => {
     expect(loadCalls).toEqual([ [ 1, 2 ], [ 3 ] ]);
   });
 
+  it('batches cached requests', async () => {
+    const loadCalls = [];
+    let resolveBatch = () => {};
+    const identityLoader = new DataLoader<number, number>(keys => {
+      loadCalls.push(keys);
+      return new Promise(resolve => {
+        resolveBatch = () => resolve(keys);
+      });
+    });
+
+    identityLoader.prime(1, 1);
+
+    const promise1 = identityLoader.load(1);
+    const promise2 = identityLoader.load(2);
+
+    // Track when each resolves.
+    let promise1Resolved = false;
+    let promise2Resolved = false;
+    promise1.then(() => { promise1Resolved = true; });
+    promise2.then(() => { promise2Resolved = true; });
+
+    // Move to next macro-task (tick)
+    await new Promise(setImmediate);
+
+    expect(promise1Resolved).toBe(false);
+    expect(promise2Resolved).toBe(false);
+
+    resolveBatch();
+    // Move to next macro-task (tick)
+    await new Promise(setImmediate);
+
+    expect(promise1Resolved).toBe(true);
+    expect(promise2Resolved).toBe(true);
+
+    const [ value1, value2 ] = await Promise.all([ promise1, promise2 ]);
+    expect(value1).toBe(1);
+    expect(value2).toBe(2);
+
+    expect(loadCalls).toEqual([ [ 2 ] ]);
+  });
+
+  it('max batch size respects cached results', async () => {
+    const loadCalls = [];
+    let resolveBatch = () => {};
+    const identityLoader = new DataLoader<number, number>(keys => {
+      loadCalls.push(keys);
+      return new Promise(resolve => {
+        resolveBatch = () => resolve(keys);
+      });
+    }, { maxBatchSize: 1 });
+
+    identityLoader.prime(1, 1);
+
+    const promise1 = identityLoader.load(1);
+    const promise2 = identityLoader.load(2);
+
+    // Track when each resolves.
+    let promise1Resolved = false;
+    let promise2Resolved = false;
+    promise1.then(() => { promise1Resolved = true; });
+    promise2.then(() => { promise2Resolved = true; });
+
+    // Move to next macro-task (tick)
+    await new Promise(setImmediate);
+
+    // Promise 1 resolves first since max batch size is 1
+    expect(promise1Resolved).toBe(true);
+    expect(promise2Resolved).toBe(false);
+
+    resolveBatch();
+    // Move to next macro-task (tick)
+    await new Promise(setImmediate);
+
+    expect(promise1Resolved).toBe(true);
+    expect(promise2Resolved).toBe(true);
+
+    const [ value1, value2 ] = await Promise.all([ promise1, promise2 ]);
+    expect(value1).toBe(1);
+    expect(value2).toBe(2);
+
+    expect(loadCalls).toEqual([ [ 2 ] ]);
+  });
+
   it('coalesces identical requests', async () => {
     const [ identityLoader, loadCalls ] = idLoader<number>();
 
     const promise1a = identityLoader.load(1);
     const promise1b = identityLoader.load(1);
-
-    expect(promise1a).toBe(promise1b);
 
     const [ value1a, value1b ] = await Promise.all([ promise1a, promise1b ]);
     expect(value1a).toBe(1);
@@ -387,35 +468,6 @@ describe('Represents Errors', () => {
 
     expect(loadCalls).toEqual([]);
   });
-
-  // TODO: #224
-  /*
-  it('Not catching a primed error is an unhandled rejection', async () => {
-    let hadUnhandledRejection = false;
-    function onUnhandledRejection() {
-      hadUnhandledRejection = true;
-    }
-    process.on('unhandledRejection', onUnhandledRejection);
-    try {
-      const [ identityLoader ] = idLoader<number>();
-
-      identityLoader.prime(1, new Error('Error: 1'));
-
-      // Wait a bit.
-      await new Promise(setImmediate);
-
-      // Ignore result.
-      identityLoader.load(1);
-
-      // Wait a bit.
-      await new Promise(setImmediate);
-
-      expect(hadUnhandledRejection).toBe(true);
-    } finally {
-      process.removeListener('unhandledRejection', onUnhandledRejection);
-    }
-  });
-  */
 
   it('Can clear values from cache after errors', async () => {
     const loadCalls = [];
