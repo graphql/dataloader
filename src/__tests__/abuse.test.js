@@ -30,9 +30,10 @@ describe('Provides descriptive error messages for API abuse', () => {
   });
 
   it('Load function requires an key', () => {
-    const idLoader = new DataLoader(keys => Promise.resolve(keys));
+    const idLoader = new DataLoader<number, number>(async keys => keys);
 
     expect(() => {
+      // $FlowExpectError
       idLoader.load();
     }).toThrow(
       'The loader.load() function must be called with a value,' +
@@ -40,6 +41,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
 
     expect(() => {
+      // $FlowExpectError
       idLoader.load(null);
     }).toThrow(
       'The loader.load() function must be called with a value,' +
@@ -53,7 +55,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   });
 
   it('LoadMany function requires a list of key', () => {
-    const idLoader = new DataLoader(keys => Promise.resolve(keys));
+    const idLoader = new DataLoader<number, number>(async keys => keys);
 
     expect(() => {
       // $FlowExpectError
@@ -79,7 +81,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Batch function must return a Promise, not null', async () => {
     // $FlowExpectError
-    const badLoader = new DataLoader(() => null);
+    const badLoader = new DataLoader<number, number>(() => null);
 
     let caughtError;
     try {
@@ -98,7 +100,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   it('Batch function must return a Promise, not a value', async () => {
     // Note: this is returning the keys directly, rather than a promise to keys.
     // $FlowExpectError
-    const badLoader = new DataLoader(keys => keys);
+    const badLoader = new DataLoader<number, number>(keys => keys);
 
     let caughtError;
     try {
@@ -117,7 +119,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   it('Batch function must return a Promise of an Array, not null', async () => {
     // Note: this resolves to undefined
     // $FlowExpectError
-    const badLoader = new DataLoader(() => Promise.resolve(undefined));
+    const badLoader = new DataLoader<number, number>(async () => null);
 
     let caughtError;
     try {
@@ -129,13 +131,13 @@ describe('Provides descriptive error messages for API abuse', () => {
     expect((caughtError: any).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
       'Array<key> and returns Promise<Array<value>>, but the function did ' +
-      'not return a Promise of an Array: undefined.'
+      'not return a Promise of an Array: null.'
     );
   });
 
   it('Batch function must promise an Array of correct length', async () => {
     // Note: this resolves to empty array
-    const badLoader = new DataLoader(() => Promise.resolve([]));
+    const badLoader = new DataLoader<number, number>(async () => []);
 
     let caughtError;
     try {

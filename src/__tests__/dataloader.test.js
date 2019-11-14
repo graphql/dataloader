@@ -10,7 +10,7 @@
 import type { Options } from '..';
 const DataLoader = require('..');
 
-function idLoader<K, C>(
+function idLoader<K, C = K>(
   options?: Options<K, K, C>
 ): [ DataLoader<K, K, C>, Array<$ReadOnlyArray<K>> ] {
   const loadCalls = [];
@@ -24,7 +24,7 @@ function idLoader<K, C>(
 describe('Primary API', () => {
 
   it('builds a really really simple data loader', async () => {
-    const identityLoader = new DataLoader(keys => Promise.resolve(keys));
+    const identityLoader = new DataLoader<number, number>(async keys => keys);
 
     const promise1 = identityLoader.load(1);
     expect(promise1).toBeInstanceOf(Promise);
@@ -35,7 +35,7 @@ describe('Primary API', () => {
 
   it('references the loader as "this" in the batch function', async () => {
     let that;
-    const loader = new DataLoader(async function (keys) {
+    const loader = new DataLoader<number, number>(async function (keys) {
       that = this;
       return keys;
     });
@@ -47,7 +47,7 @@ describe('Primary API', () => {
   });
 
   it('supports loading multiple keys in one call', async () => {
-    const identityLoader = new DataLoader(keys => Promise.resolve(keys));
+    const identityLoader = new DataLoader<number, number>(async keys => keys);
 
     const promiseAll = identityLoader.loadMany([ 1, 2 ]);
     expect(promiseAll).toBeInstanceOf(Promise);
@@ -63,7 +63,7 @@ describe('Primary API', () => {
   });
 
   it('batches multiple requests', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<number>();
 
     const promise1 = identityLoader.load(1);
     const promise2 = identityLoader.load(2);
@@ -76,7 +76,7 @@ describe('Primary API', () => {
   });
 
   it('batches multiple requests with max batch sizes', async () => {
-    const [ identityLoader, loadCalls ] = idLoader({ maxBatchSize: 2 });
+    const [ identityLoader, loadCalls ] = idLoader<number>({ maxBatchSize: 2 });
 
     const promise1 = identityLoader.load(1);
     const promise2 = identityLoader.load(2);
@@ -92,7 +92,7 @@ describe('Primary API', () => {
   });
 
   it('coalesces identical requests', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<number>();
 
     const promise1a = identityLoader.load(1);
     const promise1b = identityLoader.load(1);
@@ -107,7 +107,7 @@ describe('Primary API', () => {
   });
 
   it('caches repeated requests', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     const [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -143,7 +143,7 @@ describe('Primary API', () => {
   });
 
   it('clears single value in loader', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     const [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -169,7 +169,7 @@ describe('Primary API', () => {
   });
 
   it('clears all values in loader', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     const [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -195,7 +195,7 @@ describe('Primary API', () => {
   });
 
   it('allows priming the cache', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     identityLoader.prime('A', 'A');
 
@@ -211,7 +211,7 @@ describe('Primary API', () => {
   });
 
   it('does not prime keys that already exist', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     identityLoader.prime('A', 'X');
 
@@ -232,7 +232,7 @@ describe('Primary API', () => {
   });
 
   it('allows forcefully priming the cache', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     identityLoader.prime('A', 'X');
 
@@ -337,7 +337,7 @@ describe('Represents Errors', () => {
   });
 
   it('Handles priming the cache with an error', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<number>();
 
     identityLoader.prime(1, new Error('Error: 1'));
 
@@ -427,7 +427,7 @@ describe('Represents Errors', () => {
 describe('Accepts any kind of key', () => {
 
   it('Accepts objects as keys', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<{}>();
 
     const keyA = {};
     const keyB = {};
@@ -471,7 +471,7 @@ describe('Accepts options', () => {
 
   // Note: mirrors 'batches multiple requests' above.
   it('May disable batching', async () => {
-    const [ identityLoader, loadCalls ] = idLoader({ batch: false });
+    const [ identityLoader, loadCalls ] = idLoader<number>({ batch: false });
 
     const promise1 = identityLoader.load(1);
     const promise2 = identityLoader.load(2);
@@ -485,7 +485,7 @@ describe('Accepts options', () => {
 
   // Note: mirror's 'caches repeated requests' above.
   it('May disable caching', async () => {
-    const [ identityLoader, loadCalls ] = idLoader({ cache: false });
+    const [ identityLoader, loadCalls ] = idLoader<string>({ cache: false });
 
     const [ a, b ] = await Promise.all([
       identityLoader.load('A'),
@@ -523,7 +523,7 @@ describe('Accepts options', () => {
   });
 
   it('Keys are repeated in batch when cache disabled', async () => {
-    const [ identityLoader, loadCalls ] = idLoader({ cache: false });
+    const [ identityLoader, loadCalls ] = idLoader<string>({ cache: false });
 
     const [ values1, values2, values3, values4 ] = await Promise.all([
       identityLoader.load('A'),
@@ -545,7 +545,7 @@ describe('Accepts options', () => {
   it('Does not interact with a cache when cache is disabled', () => {
     const promiseX = Promise.resolve('X');
     const cacheMap = new Map([ [ 'X', promiseX ] ]);
-    const [ identityLoader ] = idLoader({ cache: false, cacheMap });
+    const [ identityLoader ] = idLoader<string>({ cache: false, cacheMap });
 
     identityLoader.prime('A', 'A');
     expect(cacheMap.get('A')).toBe(undefined);
@@ -558,7 +558,7 @@ describe('Accepts options', () => {
   it('Complex cache behavior via clearAll()', async () => {
     // This loader clears its cache as soon as a batch function is dispatched.
     const loadCalls = [];
-    const identityLoader = new DataLoader(keys => {
+    const identityLoader = new DataLoader<string, string>(keys => {
       identityLoader.clearAll();
       loadCalls.push(keys);
       return Promise.resolve(keys);
@@ -588,9 +588,11 @@ describe('Accepts options', () => {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();
     }
 
+    type Obj = { [string]: number };
+
     it('Accepts objects with a complex key', async () => {
       const identityLoadCalls = [];
-      const identityLoader = new DataLoader(keys => {
+      const identityLoader = new DataLoader<Obj, Obj, string>(keys => {
         identityLoadCalls.push(keys);
         return Promise.resolve(keys);
       }, { cacheKeyFn: cacheKey });
@@ -608,7 +610,7 @@ describe('Accepts options', () => {
 
     it('Clears objects with complex key', async () => {
       const identityLoadCalls = [];
-      const identityLoader = new DataLoader(keys => {
+      const identityLoader = new DataLoader<Obj, Obj, string>(keys => {
         identityLoadCalls.push(keys);
         return Promise.resolve(keys);
       }, { cacheKeyFn: cacheKey });
@@ -627,7 +629,7 @@ describe('Accepts options', () => {
 
     it('Accepts objects with different order of keys', async () => {
       const identityLoadCalls = [];
-      const identityLoader = new DataLoader(keys => {
+      const identityLoader = new DataLoader<Obj, Obj, string>(keys => {
         identityLoadCalls.push(keys);
         return Promise.resolve(keys);
       }, { cacheKeyFn: cacheKey });
@@ -651,7 +653,8 @@ describe('Accepts options', () => {
     });
 
     it('Allows priming the cache with an object key', async () => {
-      const [ identityLoader, loadCalls ] = idLoader({ cacheKeyFn: cacheKey });
+      const [ identityLoader, loadCalls ] =
+        idLoader<Obj, string>({ cacheKeyFn: cacheKey });
 
       const key1 = { id: 123 };
       const key2 = { id: 123 };
@@ -693,7 +696,7 @@ describe('Accepts options', () => {
     it('Accepts a custom cache map implementation', async () => {
       const aCustomMap = new SimpleMap();
       const identityLoadCalls = [];
-      const identityLoader = new DataLoader(keys => {
+      const identityLoader = new DataLoader<string, string>(keys => {
         identityLoadCalls.push(keys);
         return Promise.resolve(keys);
       }, { cacheMap: aCustomMap });
@@ -747,7 +750,7 @@ describe('Accepts options', () => {
 describe('It is resilient to job queue ordering', () => {
 
   it('batches loads occuring within promises', async () => {
-    const [ identityLoader, loadCalls ] = idLoader();
+    const [ identityLoader, loadCalls ] = idLoader<string>();
 
     await Promise.all([
       identityLoader.load('A'),
@@ -767,19 +770,22 @@ describe('It is resilient to job queue ordering', () => {
 
   it('can call a loader from a loader', async () => {
     const deepLoadCalls = [];
-    const deepLoader = new DataLoader(keys => {
+    const deepLoader = new DataLoader<
+      $ReadOnlyArray<string>,
+      $ReadOnlyArray<string>
+    >(keys => {
       deepLoadCalls.push(keys);
       return Promise.resolve(keys);
     });
 
     const aLoadCalls = [];
-    const aLoader = new DataLoader(keys => {
+    const aLoader = new DataLoader<string, string>(keys => {
       aLoadCalls.push(keys);
       return deepLoader.load(keys);
     });
 
     const bLoadCalls = [];
-    const bLoader = new DataLoader(keys => {
+    const bLoader = new DataLoader<string, string>(keys => {
       bLoadCalls.push(keys);
       return deepLoader.load(keys);
     });
