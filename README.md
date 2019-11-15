@@ -487,6 +487,21 @@ const usernameLoader = new DataLoader(async names => {
 })
 ```
 
+### Freezing results to enforce immutability
+
+Since DataLoader caches values, it's typically assumed these values will be
+treated as if they were immutable. While DataLoader itself doesn't enforce
+this, you can create a higher-order function to enforce immutability
+with Object.freeze():
+
+```js
+function freezeResults(batchLoader) {
+  return keys => batchLoader(keys).then(values => values.map(Object.freeze))
+}
+
+const myLoader = new DataLoader(freezeResults(myBatchLoader))
+```
+
 
 ## Common Back-ends
 
