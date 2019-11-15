@@ -270,6 +270,29 @@ const myLoader = new DataLoader(keys => {
 })
 ```
 
+#### Custom Cache
+
+As mentioned above, DataLoader is intended to be used as a per-request cache.
+Since requests are short-lived, DataLoader uses an infinitely growing [Map][] as
+a memoization cache. This should not pose a problem as most requests are
+short-lived and the entire cache can be discarded after the request completes.
+
+However this memoization caching strategy isn't safe when using a long-lived
+DataLoader, since it could consume too much memory. If using DataLoader in this
+way, you can provide a custom Cache instance with whatever behavior you prefer,
+as long as it follows the same API as [Map][].
+
+The example below uses an LRU (least recently used) cache to limit total memory
+to hold at most 100 cached values via the [lru_map][] npm package.
+
+```js
+import { LRUMap } from 'lru_map'
+
+const myLoader = new DataLoader(someBatchLoadFn, {
+  cacheMap: new LRUMap(100)
+})
+```
+
 
 ## API
 
@@ -519,3 +542,4 @@ Listed in alphabetical order
 [cache algorithms]: https://en.wikipedia.org/wiki/Cache_algorithms
 [express]: http://expressjs.com/
 [babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
+[lru_map]: https://github.com/rsms/js-lru
