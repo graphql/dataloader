@@ -120,15 +120,22 @@ class DataLoader<K, V, C = K> {
    *
    *     var [ a, b ] = await myLoader.loadMany([ 'a', 'b' ]);
    *
-   * This is equivalent to the more verbose:
+   * This is similar to the more verbose:
    *
    *     var [ a, b ] = await Promise.all([
    *       myLoader.load('a'),
    *       myLoader.load('b')
    *     ]);
    *
+   * However it is different in the case where any load fails. Where
+   * Promise.all() would reject, loadMany() always resolves, however each result
+   * is either a value or an Error instance.
+   *
+   *     var [ a, b, c ] = await myLoader.loadMany([ 'a', 'b', 'badkey' ]);
+   *     // c instanceof Error
+   *
    */
-  loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V>> {
+  loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V | Error>> {
     if (!isArrayLike(keys)) {
       throw new TypeError(
         'The loader.loadMany() function must be called with Array<key> ' +
@@ -138,7 +145,7 @@ class DataLoader<K, V, C = K> {
     // Support ArrayLike by using only minimal property access
     const loadPromises = [];
     for (let i = 0; i < keys.length; i++) {
-      loadPromises.push(this.load(keys[i]));
+      loadPromises.push(this.load(keys[i]).catch(error => error));
     }
     return Promise.all(loadPromises);
   }

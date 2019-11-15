@@ -341,13 +341,22 @@ Loads multiple keys, promising an array of values:
 const [ a, b ] = await myLoader.loadMany([ 'a', 'b' ])
 ```
 
-This is equivalent to the more verbose:
+This is similar to the more verbose:
 
 ```js
 const [ a, b ] = await Promise.all([
   myLoader.load('a'),
   myLoader.load('b')
 ])
+```
+
+However it is different in the case where any load fails. Where
+Promise.all() would reject, loadMany() always resolves, however each result
+is either a value or an Error instance.
+
+```js
+var [ a, b, c ] = await myLoader.loadMany([ 'a', 'b', 'badkey' ]);
+// c instanceof Error
 ```
 
 - *keys*: An array of key values to load.
