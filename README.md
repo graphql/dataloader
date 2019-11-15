@@ -293,6 +293,10 @@ const myLoader = new DataLoader(someBatchLoadFn, {
 })
 ```
 
+More specifically, any object that implements the methods `get()`, `set()`,
+`delete()` and `clear()` methods can be provided. This allows for custom Maps
+which implement various [cache algorithms][] to be provided.
+
 
 ## API
 
@@ -482,17 +486,6 @@ const usernameLoader = new DataLoader(async names => {
   return users
 })
 ```
-
-
-## Custom Caches
-
-DataLoader can optionally be provided a custom Map instance to use as its
-memoization cache. More specifically, any object that implements the methods `get()`,
-`set()`, `delete()` and `clear()` can be provided. This allows for custom Maps
-which implement various [cache algorithms][] to be provided. By default,
-DataLoader uses the standard [Map][] which simply grows until the DataLoader
-is released. The default is appropriate when requests to your application are
-short-lived.
 
 
 ## Common Back-ends
