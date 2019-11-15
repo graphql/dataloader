@@ -502,6 +502,23 @@ function freezeResults(batchLoader) {
 const myLoader = new DataLoader(freezeResults(myBatchLoader))
 ```
 
+### Batch functions which return Objects instead of Arrays
+
+DataLoader expects batch functions which return an Array of the same length as
+the provided keys. However this is not always a common return format from other
+libraries. A DataLoader higher-order function can convert from one format to another. The example below converts a `{ key: value }` result to the format
+DataLoader expects.
+
+```js
+function objResults(batchLoader) {
+  return keys => batchLoader(keys).then(objValues => keys.map(
+    key => objValues[key] || new Error(`No value for ${key}`)
+  ))
+}
+
+const myLoader = new DataLoader(objResults(myBatchLoader))
+```
+
 
 ## Common Back-ends
 
