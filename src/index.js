@@ -84,7 +84,10 @@ class DataLoader<K, V, C = K> {
     if (cache) {
       var cachedPromise = cache.get(cacheKey);
       if (cachedPromise) {
-        return cachedPromise;
+        var cacheHits = batch.cacheHits || (batch.cacheHits = []);
+        return new Promise(resolve => {
+          cacheHits.push(() => resolve(cachedPromise));
+        });
       }
     }
 
@@ -241,7 +244,8 @@ type Batch<K, V> = {
   callbacks: Array<{
     resolve: (value: V) => void;
     reject: (error: Error) => void;
-  }>
+  }>,
+  cacheHits?: Array<() => void>
 }
 
 // Private: Either returns the current batch, or creates and schedules a
@@ -258,7 +262,10 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
   if (
     existingBatch !== null &&
     !existingBatch.hasDispatched &&
-    (maxBatchSize === 0 || existingBatch.keys.length < maxBatchSize)
+    (maxBatchSize === 0 ||
+      (existingBatch.keys.length < maxBatchSize &&
+        (!existingBatch.cacheHits ||
+          existingBatch.cacheHits.length < maxBatchSize)))
   ) {
     return existingBatch;
   }
@@ -281,6 +288,12 @@ function dispatchBatch<K, V>(
 ) {
   // Mark this batch as having been dispatched.
   batch.hasDispatched = true;
+
+  // If there's nothing to load, resolve any cache hits and return early.
+  if (batch.keys.length === 0) {
+    resolveCacheHits(batch);
+    return;
+  }
 
   // Call the provided batchLoadFn for this loader with the batch's keys and
   // with the loader as the `this` context.
@@ -317,6 +330,9 @@ function dispatchBatch<K, V>(
       );
     }
 
+    // Resolve all cache hits in the same micro-task as freshly loaded values.
+    resolveCacheHits(batch);
+
     // Step through values, resolving or rejecting each Promise in the batch.
     for (var i = 0; i < batch.callbacks.length; i++) {
       var value = values[i];
@@ -336,9 +352,20 @@ function failedDispatch<K, V>(
   batch: Batch<K, V>,
   error: Error
 ) {
+  // Cache hits are resolved, even though the batch failed.
+  resolveCacheHits(batch);
   for (var i = 0; i < batch.keys.length; i++) {
     loader.clear(batch.keys[i]);
     batch.callbacks[i].reject(error);
+  }
+}
+
+// Private: Resolves the Promises for any cache hits in this batch.
+function resolveCacheHits(batch: Batch<any, any>) {
+  if (batch.cacheHits) {
+    for (var i = 0; i < batch.cacheHits.length; i++) {
+      batch.cacheHits[i]();
+    }
   }
 }
 

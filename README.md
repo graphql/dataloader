@@ -140,16 +140,6 @@ DataLoader provides a memoization cache for all loads which occur in a single
 request to your application. After `.load()` is called once with a given key,
 the resulting value is cached to eliminate redundant loads.
 
-In addition to relieving pressure on your data storage, caching results per-request
-also creates fewer objects which may relieve memory pressure on your application:
-
-```js
-const userLoader = new DataLoader(...)
-const promise1A = userLoader.load(1)
-const promise1B = userLoader.load(1)
-assert(promise1A === promise1B)
-```
-
 #### Caching Per-Request
 
 DataLoader caching *does not* replace Redis, Memcache, or any other shared
@@ -182,6 +172,38 @@ app.get('/', function(req, res) {
 
 app.listen()
 ```
+
+#### Caching and Batching
+
+Subsequent calls to `.load()` with the same key will result in that key not
+appearing in the keys provided to your batch function. *However*, the resulting
+Promise will still wait on the current batch to complete. This way both cached
+and uncached requests will resolve at the same time, allowing DataLoader
+optimizations for subsequent dependent loads.
+
+In the example below, User `1` happens to be cached. However, because User `1`
+and `2` are loaded in the same tick, they will resolve at the same time. This
+means both `user.bestFriendID` loads will also happen in the same tick which
+results in two total requests (the same as if User `1` had not been cached).
+
+```js
+userLoader.prime(1, { bestFriend: 3 })
+
+async function getBestFriend(userID) {
+  const user = await userLoader.load(userID)
+  return await userLoader.load(user.bestFriendID)
+}
+
+// In one part of your application
+getBestFriend(1)
+
+// Elsewhere
+getBestFriend(2)
+```
+
+Without this optimization, if the cached User `1` resolved immediately, this
+could result in three total requests since each `user.bestFriendID` load would
+happen at different times.
 
 #### Clearing Cache
 
