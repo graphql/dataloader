@@ -133,6 +133,58 @@ with the original keys `[ 2, 9, 6, 1 ]`:
 ]
 ```
 
+#### Batch Scheduling
+
+By default DataLoader will coalesce all individual loads which occur within a
+single frame of execution before calling your batch function with all requested
+keys. This ensures no additional latency while capturing many related requests
+into a single batch. In fact, this is the same behavior used in Facebook's
+original PHP implementation in 2010. See `enqueuePostPromiseJob` in the
+[source code][] for more details about how this works.
+
+However sometimes this behavior is not desirable or optimal. Perhaps you expect
+requests to be spread out over a few subsequent ticks because of an existing use
+of `setTimeout`, or you just want manual control over dispatching regardless of
+the run loop. DataLoader allows providing a custom batch scheduler to provide
+these or any other behaviors.
+
+A custom scheduler is provided as `batchScheduleFn` in options. It must be a
+function which is passed a callback and is expected to call that callback in the
+immediate future to execute the batch request.
+
+As an example, here is a batch scheduler which collects all requests over a
+100ms window of time (and as a consequence, adds 100ms of latency):
+
+```js
+const myLoader = new DataLoader(myBatchFn, {
+  batchScheduleFn: callback => setTimeout(callback, 100)
+})
+```
+
+As another example, here is a manually dispatched batch scheduler:
+
+```js
+function createScheduler() {
+  let callbacks = []
+  return {
+    schedule(callback) {
+      callbacks.push(callback)
+    },
+    dispatch() {
+      callbacks.forEach(callback => callback())
+      callbacks = []
+    }
+  }
+}
+
+const { schedule, dispatch } = createScheduler()
+const myLoader = new DataLoader(myBatchFn, { batchScheduleFn: schedule })
+
+myLoader.load(1)
+myLoader.load(2)
+dispatch()
+```
+
 
 ## Caching
 
@@ -345,6 +397,7 @@ Create a new `DataLoader` given a batch loading function and options.
   | ---------- | ---- | ------- | ----------- |
   | *batch*  | Boolean | `true` | Set to `false` to disable batching, invoking `batchLoadFn` with a single load key. This is equivalent to setting `maxBatchSize` to `1`.
   | *maxBatchSize* | Number | `Infinity` | Limits the number of items that get passed in to the `batchLoadFn`. May be set to `1` to disable batching.
+  | *batchScheduleFn* | Function | See [Batch scheduling](#batch-scheduling) | A function to schedule the later execution of a batch. The function is expected to call the provided callback in the immediate future.
   | *cache* | Boolean | `true` | Set to `false` to disable memoization caching, creating a new Promise and new key in the `batchLoadFn` for every load of the same key. This is equivalent to setting `cacheMap` to `null`.
   | *cacheKeyFn* | Function | `key => key` | Produces cache key for a given load key. Useful when objects are keys and two objects should be considered equivalent.
   | *cacheMap* | Object | `new Map()` | Instance of [Map][] (or an object with a similar API) to be used as cache. May be set to `null` to disable caching.
@@ -603,3 +656,4 @@ DataLoader and how it works.
 [express]: http://expressjs.com/
 [babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
 [lru_map]: https://github.com/rsms/js-lru
+[source code]: https://github.com/graphql/dataloader/blob/master/src/index.js
