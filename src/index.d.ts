@@ -78,39 +78,36 @@ declare namespace DataLoader {
   export type Options<K, V, C = K> = {
 
     /**
-     * Default `true`. Set to `false` to disable batching,
-     * instead immediately invoking `batchLoadFn` with a
-     * single load key.
+     * Default `true`. Set to `false` to disable batching, invoking
+     * `batchLoadFn` with a single load key. This is equivalent to setting
+     * `maxBatchSize` to `1`.
      */
     batch?: boolean,
 
     /**
-     * Default `Infinity`. Limits the number of items that get
-     * passed in to the `batchLoadFn`.
+     * Default `Infinity`. Limits the number of items that get passed in to the
+     * `batchLoadFn`. May be set to `1` to disable batching.
      */
     maxBatchSize?: number;
 
     /**
-     * Default `true`. Set to `false` to disable memoization caching,
-     * instead creating a new Promise and new key in the `batchLoadFn` for every
-     * load of the same key.
+     * Default `true`. Set to `false` to disable memoization caching, creating a
+     * new Promise and new key in the `batchLoadFn` for every load of the same
+     * key. This is equivalent to setting `cacheMap` to `null`.
      */
     cache?: boolean,
 
     /**
-     * A function to produce a cache key for a given load key.
-     * Defaults to `key => key`. Useful to provide when JavaScript
-     * objects are keys and two similarly shaped objects should
-     * be considered equivalent.
+     * Default `key => key`. Produces cache key for a given load key. Useful
+     * when objects are keys and two objects should be considered equivalent.
      */
     cacheKeyFn?: (key: K) => C,
 
     /**
-     * An instance of Map (or an object with a similar API) to
-     * be used as the underlying cache for this loader.
-     * Default `new Map()`.
+     * Default `new Map()`. Instance of `Map` (or an object with a similar API)
+     * to be used as cache. May be set to `null` to disable caching.
      */
-    cacheMap?: CacheMap<C, Promise<V>>;
+    cacheMap?: CacheMap<C, Promise<V>> | null;
   }
 }
 

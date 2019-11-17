@@ -46,6 +46,21 @@ describe('Primary API', () => {
     expect(that).toBe(loader);
   });
 
+  it('references the loader as "this" in the cache key function', async () => {
+    let that;
+    const loader = new DataLoader<number, number>(async keys => keys, {
+      cacheKeyFn(key) {
+        that = this;
+        return key;
+      }
+    });
+
+    // Trigger the cache key function
+    await loader.load(1);
+
+    expect(that).toBe(loader);
+  });
+
   it('supports loading multiple keys in one call', async () => {
     const identityLoader = new DataLoader<number, number>(async keys => keys);
 
@@ -656,6 +671,15 @@ describe('Accepts options', () => {
     expect(loadCalls).toEqual([
       [ 'A', 'C', 'D', 'C', 'D', 'A', 'A', 'B' ]
     ]);
+  });
+
+  it('cacheMap may be set to null to disable cache', async () => {
+    const [ identityLoader, loadCalls ] = idLoader<string>({ cacheMap: null });
+
+    await identityLoader.load('A');
+    await identityLoader.load('A');
+
+    expect(loadCalls).toEqual([ [ 'A' ], [ 'A' ] ]);
   });
 
   it('Does not interact with a cache when cache is disabled', () => {

@@ -19,7 +19,7 @@ export type Options<K, V, C = K> = {
   maxBatchSize?: number;
   cache?: boolean;
   cacheKeyFn?: (key: K) => C;
-  cacheMap?: CacheMap<C, Promise<V>>;
+  cacheMap?: CacheMap<C, Promise<V>> | null;
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -52,15 +52,17 @@ class DataLoader<K, V, C = K> {
       );
     }
     this._batchLoadFn = batchLoadFn;
-    this._options = options;
-    this._promiseCache = getValidCacheMap(options);
+    this._maxBatchSize = getValidMaxBatchSize(options);
+    this._cacheKeyFn = getValidCacheKeyFn(options);
+    this._cacheMap = getValidCacheMap(options);
     this._batch = null;
   }
 
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
-  _options: ?Options<K, V, C>;
-  _promiseCache: ?CacheMap<C, Promise<V>>;
+  _maxBatchSize: number;
+  _cacheKeyFn: K => C;
+  _cacheMap: CacheMap<C, Promise<V>> | null;
   _batch: Batch<K, V> | null;
 
   /**
@@ -74,15 +76,13 @@ class DataLoader<K, V, C = K> {
       );
     }
 
-    // Determine options
-    var options = this._options;
     var batch = getCurrentBatch(this);
-    var cache = this._promiseCache;
-    var cacheKey = getCacheKey(options, key);
+    var cacheMap = this._cacheMap;
+    var cacheKey = this._cacheKeyFn(key);
 
     // If caching and there is a cache-hit, return cached Promise.
-    if (cache) {
-      var cachedPromise = cache.get(cacheKey);
+    if (cacheMap) {
+      var cachedPromise = cacheMap.get(cacheKey);
       if (cachedPromise) {
         var cacheHits = batch.cacheHits || (batch.cacheHits = []);
         return new Promise(resolve => {
@@ -99,8 +99,8 @@ class DataLoader<K, V, C = K> {
     });
 
     // If caching, cache this promise.
-    if (cache) {
-      cache.set(cacheKey, promise);
+    if (cacheMap) {
+      cacheMap.set(cacheKey, promise);
     }
 
     return promise;
@@ -146,10 +146,10 @@ class DataLoader<K, V, C = K> {
    * method chaining.
    */
   clear(key: K): this {
-    var cache = this._promiseCache;
-    if (cache) {
-      var cacheKey = getCacheKey(this._options, key);
-      cache.delete(cacheKey);
+    var cacheMap = this._cacheMap;
+    if (cacheMap) {
+      var cacheKey = this._cacheKeyFn(key);
+      cacheMap.delete(cacheKey);
     }
     return this;
   }
@@ -160,9 +160,9 @@ class DataLoader<K, V, C = K> {
    * method chaining.
    */
   clearAll(): this {
-    var cache = this._promiseCache;
-    if (cache) {
-      cache.clear();
+    var cacheMap = this._cacheMap;
+    if (cacheMap) {
+      cacheMap.clear();
     }
     return this;
   }
@@ -174,12 +174,12 @@ class DataLoader<K, V, C = K> {
    * To prime the cache with an error at a key, provide an Error instance.
    */
   prime(key: K, value: V | Error): this {
-    var cache = this._promiseCache;
-    if (cache) {
-      var cacheKey = getCacheKey(this._options, key);
+    var cacheMap = this._cacheMap;
+    if (cacheMap) {
+      var cacheKey = this._cacheKeyFn(key);
 
       // Only add the key if it does not already exist.
-      if (cache.get(cacheKey) === undefined) {
+      if (cacheMap.get(cacheKey) === undefined) {
         // Cache a rejected promise if the value is an Error, in order to match
         // the behavior of load(key).
         var promise;
@@ -191,7 +191,7 @@ class DataLoader<K, V, C = K> {
         } else {
           promise = Promise.resolve(value);
         }
-        cache.set(cacheKey, promise);
+        cacheMap.set(cacheKey, promise);
       }
     }
     return this;
@@ -251,21 +251,15 @@ type Batch<K, V> = {
 // Private: Either returns the current batch, or creates and schedules a
 // dispatch of a new batch for the given loader.
 function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
-  var options = loader._options;
-  var maxBatchSize =
-    (options && options.maxBatchSize) ||
-    (options && options.batch === false ? 1 : 0);
-
   // If there is an existing batch which has not yet dispatched and is within
   // the limit of the batch size, then return it.
   var existingBatch = loader._batch;
   if (
     existingBatch !== null &&
     !existingBatch.hasDispatched &&
-    (maxBatchSize === 0 ||
-      (existingBatch.keys.length < maxBatchSize &&
-        (!existingBatch.cacheHits ||
-          existingBatch.cacheHits.length < maxBatchSize)))
+    existingBatch.keys.length < loader._maxBatchSize &&
+    (!existingBatch.cacheHits ||
+      existingBatch.cacheHits.length < loader._maxBatchSize)
   ) {
     return existingBatch;
   }
@@ -369,34 +363,57 @@ function resolveCacheHits(batch: Batch<any, any>) {
   }
 }
 
-// Private: produce a cache key for a given key (and options)
-function getCacheKey<K, V, C>(
-  options: ?Options<K, V, C>,
-  key: K
-): C {
+// Private: given the DataLoader's options, produce a valid max batch size.
+function getValidMaxBatchSize(options: ?Options<any, any, any>): number {
+  var shouldBatch = !options || options.batch !== false;
+  if (!shouldBatch) {
+    return 1;
+  }
+  var maxBatchSize = options && options.maxBatchSize;
+  if (maxBatchSize === undefined) {
+    return Infinity;
+  }
+  if (typeof maxBatchSize !== 'number' || maxBatchSize < 1) {
+    throw new TypeError(
+      `maxBatchSize must be a positive number: ${(maxBatchSize: any)}`
+    );
+  }
+  return maxBatchSize;
+}
+
+// Private: given the DataLoader's options, produce a cache key function.
+function getValidCacheKeyFn<K, C>(options: ?Options<K, any, C>): (K => C) {
   var cacheKeyFn = options && options.cacheKeyFn;
-  return cacheKeyFn ? cacheKeyFn(key) : (key: any);
+  if (cacheKeyFn === undefined) {
+    return (key => key: any);
+  }
+  if (typeof cacheKeyFn !== 'function') {
+    throw new TypeError(`cacheKeyFn must be a function: ${(cacheKeyFn: any)}`);
+  }
+  return cacheKeyFn;
 }
 
 // Private: given the DataLoader's options, produce a CacheMap to be used.
 function getValidCacheMap<K, V, C>(
   options: ?Options<K, V, C>
-): ?CacheMap<C, Promise<V>> {
+): CacheMap<C, Promise<V>> | null {
   var shouldCache = !options || options.cache !== false;
   if (!shouldCache) {
     return null;
   }
   var cacheMap = options && options.cacheMap;
-  if (!cacheMap) {
+  if (cacheMap === undefined) {
     return new Map();
   }
-  var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
-  var missingFunctions = cacheFunctions
-    .filter(fnName => cacheMap && typeof cacheMap[fnName] !== 'function');
-  if (missingFunctions.length !== 0) {
-    throw new TypeError(
-      'Custom cacheMap missing methods: ' + missingFunctions.join(', ')
-    );
+  if (cacheMap !== null) {
+    var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
+    var missingFunctions = cacheFunctions
+      .filter(fnName => cacheMap && typeof cacheMap[fnName] !== 'function');
+    if (missingFunctions.length !== 0) {
+      throw new TypeError(
+        'Custom cacheMap missing methods: ' + missingFunctions.join(', ')
+      );
+    }
   }
   return cacheMap;
 }
