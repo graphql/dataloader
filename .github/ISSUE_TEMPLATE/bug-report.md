@@ -3,8 +3,6 @@ name: Bug report
 about: Create a report to help us improve
 title: "[BUG]"
 labels: bug
-assignees: ''
-
 ---
 
 <!-- Before filing a bug, please consider submitting a pull request with a failing test -->
