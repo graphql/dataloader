@@ -170,4 +170,24 @@ describe('Provides descriptive error messages for API abuse', () => {
       'Custom cacheMap missing methods: set, delete, clear'
     );
   });
+
+  it('Requires a number for maxBatchSize', () => {
+    expect(() =>
+      // $FlowExpectError
+      new DataLoader(async keys => keys, { maxBatchSize: null })
+    ).toThrow('maxBatchSize must be a positive number: null');
+  });
+
+  it('Requires a positive number for maxBatchSize', () => {
+    expect(() =>
+      new DataLoader(async keys => keys, { maxBatchSize: 0 })
+    ).toThrow('maxBatchSize must be a positive number: 0');
+  });
+
+  it('Requires a function for cacheKeyFn', () => {
+    expect(() =>
+      // $FlowExpectError
+      new DataLoader(async keys => keys, { cacheKeyFn: null })
+    ).toThrow('cacheKeyFn must be a function: null');
+  });
 });
