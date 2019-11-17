@@ -91,6 +91,13 @@ declare namespace DataLoader {
     maxBatchSize?: number;
 
     /**
+     * Default see https://github.com/graphql/dataloader#batch-scheduling.
+     * A function to schedule the later execution of a batch. The function is
+     * expected to call the provided callback in the immediate future.
+     */
+    batchScheduleFn?: (callback: () => void) => void;
+
+    /**
      * Default `true`. Set to `false` to disable memoization caching, creating a
      * new Promise and new key in the `batchLoadFn` for every load of the same
      * key. This is equivalent to setting `cacheMap` to `null`.

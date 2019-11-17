@@ -190,4 +190,11 @@ describe('Provides descriptive error messages for API abuse', () => {
       new DataLoader(async keys => keys, { cacheKeyFn: null })
     ).toThrow('cacheKeyFn must be a function: null');
   });
+
+  it('Requires a function for batchScheduleFn', () => {
+    expect(() =>
+      // $FlowExpectError
+      new DataLoader(async keys => keys, { batchScheduleFn: null })
+    ).toThrow('batchScheduleFn must be a function: null');
+  });
 });

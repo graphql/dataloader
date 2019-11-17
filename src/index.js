@@ -17,6 +17,7 @@ export type BatchLoadFn<K, V> =
 export type Options<K, V, C = K> = {
   batch?: boolean;
   maxBatchSize?: number;
+  batchScheduleFn?: (callback: () => void) => void;
   cache?: boolean;
   cacheKeyFn?: (key: K) => C;
   cacheMap?: CacheMap<C, Promise<V>> | null;
@@ -53,6 +54,7 @@ class DataLoader<K, V, C = K> {
     }
     this._batchLoadFn = batchLoadFn;
     this._maxBatchSize = getValidMaxBatchSize(options);
+    this._batchScheduleFn = getValidBatchScheduleFn(options);
     this._cacheKeyFn = getValidCacheKeyFn(options);
     this._cacheMap = getValidCacheMap(options);
     this._batch = null;
@@ -61,6 +63,7 @@ class DataLoader<K, V, C = K> {
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
   _maxBatchSize: number;
+  _batchScheduleFn: (() => void) => void;
   _cacheKeyFn: K => C;
   _cacheMap: CacheMap<C, Promise<V>> | null;
   _batch: Batch<K, V> | null;
@@ -271,7 +274,7 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
   loader._batch = newBatch;
 
   // Then schedule a task to dispatch this batch of requests.
-  enqueuePostPromiseJob(() => dispatchBatch(loader, newBatch));
+  loader._batchScheduleFn(() => dispatchBatch(loader, newBatch));
 
   return newBatch;
 }
@@ -379,6 +382,22 @@ function getValidMaxBatchSize(options: ?Options<any, any, any>): number {
     );
   }
   return maxBatchSize;
+}
+
+// Private
+function getValidBatchScheduleFn(
+  options: ?Options<any, any, any>
+): (() => void) => void {
+  var batchScheduleFn = options && options.batchScheduleFn;
+  if (batchScheduleFn === undefined) {
+    return enqueuePostPromiseJob;
+  }
+  if (typeof batchScheduleFn !== 'function') {
+    throw new TypeError(
+      `batchScheduleFn must be a function: ${(batchScheduleFn: any)}`
+    );
+  }
+  return batchScheduleFn;
 }
 
 // Private: given the DataLoader's options, produce a cache key function.
