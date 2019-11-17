@@ -3,8 +3,6 @@ name: Question
 about: Not a bug or feature request?
 title: "[QUESTION]"
 labels: help wanted
-assignees: ''
-
 ---
 
 <!-- 
