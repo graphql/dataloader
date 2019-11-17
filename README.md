@@ -589,6 +589,10 @@ Listed in alphabetical order
 
 **DataLoader Source Code Walkthrough (YouTube):**
 
+A walkthrough of the DataLoader v1 source code. While the source has changed
+since this video was made, it is still a good overview of the rationale of
+DataLoader and how it works.
+
 <a href="https://youtu.be/OQTnXNCDywA" target="_blank" alt="DataLoader Source Code Walkthrough"><img src="https://img.youtube.com/vi/OQTnXNCDywA/0.jpg" /></a>
 
 
