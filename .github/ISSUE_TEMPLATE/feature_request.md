@@ -3,8 +3,6 @@ name: Feature request
 about: Suggest an idea for this project
 title: "[REQUEST]"
 labels: enhancement
-assignees: ''
-
 ---
 
 ## What problem are you trying to solve?
