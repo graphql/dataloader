@@ -89,7 +89,9 @@ class DataLoader<K, V, C = K> {
       if (cachedPromise) {
         var cacheHits = batch.cacheHits || (batch.cacheHits = []);
         return new Promise(resolve => {
-          cacheHits.push(() => resolve(cachedPromise));
+          cacheHits.push(() => {
+            resolve(cachedPromise);
+          });
         });
       }
     }
@@ -233,7 +235,9 @@ var enqueuePostPromiseJob =
       if (!resolvedPromise) {
         resolvedPromise = Promise.resolve();
       }
-      resolvedPromise.then(() => process.nextTick(fn));
+      resolvedPromise.then(() => {
+        process.nextTick(fn);
+      });
     } :
     setImmediate || setTimeout;
 
@@ -274,7 +278,9 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
   loader._batch = newBatch;
 
   // Then schedule a task to dispatch this batch of requests.
-  loader._batchScheduleFn(() => dispatchBatch(loader, newBatch));
+  loader._batchScheduleFn(() => {
+    dispatchBatch(loader, newBatch);
+  });
 
   return newBatch;
 }
@@ -339,7 +345,9 @@ function dispatchBatch<K, V>(
         batch.callbacks[i].resolve(value);
       }
     }
-  }).catch(error => failedDispatch(loader, batch, error));
+  }).catch(error => {
+    failedDispatch(loader, batch, error);
+  });
 }
 
 // Private: do not cache individual loads if the entire batch dispatch fails,
