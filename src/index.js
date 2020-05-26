@@ -74,7 +74,7 @@ class DataLoader<K, V, C = K> {
   load(key: K): Promise<V> {
     if (key === null || key === undefined) {
       throw new TypeError(
-        'The loader.load() function must be called with a value,' +
+        'The loader.load() function must be called with a value, ' +
         `but got: ${String(key)}.`
       );
     }

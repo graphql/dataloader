@@ -36,7 +36,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       // $FlowExpectError
       idLoader.load();
     }).toThrow(
-      'The loader.load() function must be called with a value,' +
+      'The loader.load() function must be called with a value, ' +
       'but got: undefined.'
     );
 
@@ -44,7 +44,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       // $FlowExpectError
       idLoader.load(null);
     }).toThrow(
-      'The loader.load() function must be called with a value,' +
+      'The loader.load() function must be called with a value, ' +
       'but got: null.'
     );
 
