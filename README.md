@@ -4,8 +4,8 @@ DataLoader is a generic utility to be used as part of your application's data
 fetching layer to provide a simplified and consistent API over various remote
 data sources such as databases or web services via batching and caching.
 
-[![Build Status](https://travis-ci.org/facebook/dataloader.svg)](https://travis-ci.org/facebook/dataloader)
-[![Coverage Status](https://coveralls.io/repos/facebook/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/facebook/dataloader?branch=master)
+[![Build Status](https://travis-ci.org/graphql/dataloader.svg)](https://travis-ci.org/graphql/dataloader)
+[![Coverage Status](https://coveralls.io/repos/graphql/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql/dataloader?branch=master)
 
 A port of the "Loader" API originally developed by [@schrockn][] at Facebook in
 2010 as a simplifying force to coalesce the sundry key-value store back-end
@@ -53,9 +53,9 @@ Batching is not an advanced feature, it's DataLoader's primary feature.
 Create loaders by providing a batch loading function.
 
 ```js
-var DataLoader = require('dataloader')
+const DataLoader = require('dataloader')
 
-var userLoader = new DataLoader(keys => myBatchGetUsers(keys));
+const userLoader = new DataLoader(keys => myBatchGetUsers(keys))
 ```
 
 A batch loading function accepts an Array of keys, and returns a Promise which
@@ -66,14 +66,14 @@ individual loads which occur within a single frame of execution (a single tick
 of the event loop) and then call your batch function with all requested keys.
 
 ```js
-userLoader.load(1)
-  .then(user => userLoader.load(user.invitedByID))
-  .then(invitedBy => console.log(`User 1 was invited by ${invitedBy}`));
+const user = await userLoader.load(1)
+const invitedBy = await userLoader.load(user.invitedByID)
+console.log(`User 1 was invited by ${invitedBy}`)
 
 // Elsewhere in your application
-userLoader.load(2)
-  .then(user => userLoader.load(user.lastInvitedID))
-  .then(lastInvited => console.log(`User 2 last invited ${lastInvited}`));
+const user = await userLoader.load(2)
+const lastInvited = await userLoader.load(user.lastInvitedID)
+console.log(`User 2 last invited ${lastInvited}`)
 ```
 
 A naive application may have issued four round-trips to a backend for the
@@ -90,7 +90,19 @@ minimal outgoing data requests.
 #### Batch Function
 
 A batch loading function accepts an Array of keys, and returns a Promise which
-resolves to an Array of values. There are a few constraints that must be upheld:
+resolves to an Array of values or Error instances. The loader itself is provided
+as the `this` context.
+
+```js
+async function batchFunction(keys) {
+  const results = await db.fetchAllKeys(keys)
+  return keys.map(key => results[key] || new Error(`No result for ${key}`))
+}
+
+const loader = new DataLoader(batchFunction)
+```
+
+There are a few constraints this function must uphold:
 
  * The Array of values must be the same length as the Array of keys.
  * Each index in the Array of values must correspond to the same index in the Array of keys.
@@ -116,9 +128,61 @@ with the original keys `[ 2, 9, 6, 1 ]`:
 [
   { id: 2, name: 'San Francisco' },
   { id: 9, name: 'Chicago' },
-  null,
+  null, // or perhaps `new Error()`
   { id: 1, name: 'New York' }
 ]
+```
+
+#### Batch Scheduling
+
+By default DataLoader will coalesce all individual loads which occur within a
+single frame of execution before calling your batch function with all requested
+keys. This ensures no additional latency while capturing many related requests
+into a single batch. In fact, this is the same behavior used in Facebook's
+original PHP implementation in 2010. See `enqueuePostPromiseJob` in the
+[source code][] for more details about how this works.
+
+However sometimes this behavior is not desirable or optimal. Perhaps you expect
+requests to be spread out over a few subsequent ticks because of an existing use
+of `setTimeout`, or you just want manual control over dispatching regardless of
+the run loop. DataLoader allows providing a custom batch scheduler to provide
+these or any other behaviors.
+
+A custom scheduler is provided as `batchScheduleFn` in options. It must be a
+function which is passed a callback and is expected to call that callback in the
+immediate future to execute the batch request.
+
+As an example, here is a batch scheduler which collects all requests over a
+100ms window of time (and as a consequence, adds 100ms of latency):
+
+```js
+const myLoader = new DataLoader(myBatchFn, {
+  batchScheduleFn: callback => setTimeout(callback, 100)
+})
+```
+
+As another example, here is a manually dispatched batch scheduler:
+
+```js
+function createScheduler() {
+  let callbacks = []
+  return {
+    schedule(callback) {
+      callbacks.push(callback)
+    },
+    dispatch() {
+      callbacks.forEach(callback => callback())
+      callbacks = []
+    }
+  }
+}
+
+const { schedule, dispatch } = createScheduler()
+const myLoader = new DataLoader(myBatchFn, { batchScheduleFn: schedule })
+
+myLoader.load(1)
+myLoader.load(2)
+dispatch()
 ```
 
 
@@ -128,17 +192,7 @@ DataLoader provides a memoization cache for all loads which occur in a single
 request to your application. After `.load()` is called once with a given key,
 the resulting value is cached to eliminate redundant loads.
 
-In addition to relieving pressure on your data storage, caching results per-request
-also creates fewer objects which may relieve memory pressure on your application:
-
-```js
-var userLoader = new DataLoader(...)
-var promise1A = userLoader.load(1)
-var promise1B = userLoader.load(1)
-assert(promise1A === promise1B)
-```
-
-#### Caching per-Request
+#### Caching Per-Request
 
 DataLoader caching *does not* replace Redis, Memcache, or any other shared
 application-level cache. DataLoader is first and foremost a data loading mechanism,
@@ -160,16 +214,48 @@ function createLoaders(authToken) {
   }
 }
 
-var app = express()
+const app = express()
 
 app.get('/', function(req, res) {
-  var authToken = authenticateUser(req)
-  var loaders = createLoaders(authToken)
+  const authToken = authenticateUser(req)
+  const loaders = createLoaders(authToken)
   res.send(renderPage(req, loaders))
 })
 
 app.listen()
 ```
+
+#### Caching and Batching
+
+Subsequent calls to `.load()` with the same key will result in that key not
+appearing in the keys provided to your batch function. *However*, the resulting
+Promise will still wait on the current batch to complete. This way both cached
+and uncached requests will resolve at the same time, allowing DataLoader
+optimizations for subsequent dependent loads.
+
+In the example below, User `1` happens to be cached. However, because User `1`
+and `2` are loaded in the same tick, they will resolve at the same time. This
+means both `user.bestFriendID` loads will also happen in the same tick which
+results in two total requests (the same as if User `1` had not been cached).
+
+```js
+userLoader.prime(1, { bestFriend: 3 })
+
+async function getBestFriend(userID) {
+  const user = await userLoader.load(userID)
+  return await userLoader.load(user.bestFriendID)
+}
+
+// In one part of your application
+getBestFriend(1)
+
+// Elsewhere
+getBestFriend(2)
+```
+
+Without this optimization, if the cached User `1` resolved immediately, this
+could result in three total requests since each `user.bestFriendID` load would
+happen at different times.
 
 #### Clearing Cache
 
@@ -183,18 +269,17 @@ Here's a simple example using SQL UPDATE to illustrate.
 
 ```js
 // Request begins...
-var userLoader = new DataLoader(...)
+const userLoader = new DataLoader(...)
 
 // And a value happens to be loaded (and cached).
-userLoader.load(4).then(...)
+const user = await userLoader.load(4)
 
 // A mutation occurs, invalidating what might be in cache.
-sqlRun('UPDATE users WHERE id=4 SET username="zuck"').then(
-  () => userLoader.clear(4)
-)
+await sqlRun('UPDATE users WHERE id=4 SET username="zuck"')
+userLoader.clear(4)
 
 // Later the value load is loaded again so the mutated data appears.
-userLoader.load(4).then(...)
+const user = await userLoader.load(4)
 
 // Request completes.
 ```
@@ -209,12 +294,14 @@ be cached to avoid frequently loading the same `Error`.
 In some circumstances you may wish to clear the cache for these individual Errors:
 
 ```js
-userLoader.load(1).catch(error => {
-  if (/* determine if should clear error */) {
-    userLoader.clear(1);
+try {
+  const user = await userLoader.load(1)
+} catch (error) {
+  if (/* determine if the error should not be cached */) {
+    userLoader.clear(1)
   }
-  throw error;
-});
+  throw error
+}
 ```
 
 #### Disabling Cache
@@ -232,7 +319,7 @@ for each instance of the requested key.
 For example:
 
 ```js
-var myLoader = new DataLoader(keys => {
+const myLoader = new DataLoader(keys => {
   console.log(keys)
   return someBatchLoadFn(keys)
 }, { cache: false })
@@ -251,11 +338,38 @@ enabled, but will immediately clear its cache when the batch function is called
 so later requests will load new values.
 
 ```js
-var myLoader = new DataLoader(keys => {
+const myLoader = new DataLoader(keys => {
   identityLoader.clearAll()
   return someBatchLoadFn(keys)
 })
 ```
+
+#### Custom Cache
+
+As mentioned above, DataLoader is intended to be used as a per-request cache.
+Since requests are short-lived, DataLoader uses an infinitely growing [Map][] as
+a memoization cache. This should not pose a problem as most requests are
+short-lived and the entire cache can be discarded after the request completes.
+
+However this memoization caching strategy isn't safe when using a long-lived
+DataLoader, since it could consume too much memory. If using DataLoader in this
+way, you can provide a custom Cache instance with whatever behavior you prefer,
+as long as it follows the same API as [Map][].
+
+The example below uses an LRU (least recently used) cache to limit total memory
+to hold at most 100 cached values via the [lru_map][] npm package.
+
+```js
+import { LRUMap } from 'lru_map'
+
+const myLoader = new DataLoader(someBatchLoadFn, {
+  cacheMap: new LRUMap(100)
+})
+```
+
+More specifically, any object that implements the methods `get()`, `set()`,
+`delete()` and `clear()` methods can be provided. This allows for custom Maps
+which implement various [cache algorithms][] to be provided.
 
 
 ## API
@@ -281,11 +395,12 @@ Create a new `DataLoader` given a batch loading function and options.
 
   | Option Key | Type | Default | Description |
   | ---------- | ---- | ------- | ----------- |
-  | *batch*  | Boolean | `true` | Set to `false` to disable batching, invoking `batchLoadFn` with a single load key.
-  | *maxBatchSize* | Number | `Infinity` | Limits the number of items that get passed in to the `batchLoadFn`.
-  | *cache* | Boolean | `true` | Set to `false` to disable memoization caching, creating a new Promise and new key in the `batchLoadFn` for every load of the same key. 
+  | *batch*  | Boolean | `true` | Set to `false` to disable batching, invoking `batchLoadFn` with a single load key. This is equivalent to setting `maxBatchSize` to `1`.
+  | *maxBatchSize* | Number | `Infinity` | Limits the number of items that get passed in to the `batchLoadFn`. May be set to `1` to disable batching.
+  | *batchScheduleFn* | Function | See [Batch scheduling](#batch-scheduling) | A function to schedule the later execution of a batch. The function is expected to call the provided callback in the immediate future.
+  | *cache* | Boolean | `true` | Set to `false` to disable memoization caching, creating a new Promise and new key in the `batchLoadFn` for every load of the same key. This is equivalent to setting `cacheMap` to `null`.
   | *cacheKeyFn* | Function | `key => key` | Produces cache key for a given load key. Useful when objects are keys and two objects should be considered equivalent.
-  | *cacheMap* | Object | `new Map()` | Instance of [Map][] (or an object with a similar API) to be used as cache.
+  | *cacheMap* | Object | `new Map()` | Instance of [Map][] (or an object with a similar API) to be used as cache. May be set to `null` to disable caching.
 
 ##### `load(key)`
 
@@ -298,16 +413,25 @@ Loads a key, returning a `Promise` for the value represented by that key.
 Loads multiple keys, promising an array of values:
 
 ```js
-var [ a, b ] = await myLoader.loadMany([ 'a', 'b' ]);
+const [ a, b ] = await myLoader.loadMany([ 'a', 'b' ])
 ```
 
-This is equivalent to the more verbose:
+This is similar to the more verbose:
 
 ```js
-var [ a, b ] = await Promise.all([
+const [ a, b ] = await Promise.all([
   myLoader.load('a'),
   myLoader.load('b')
-]);
+])
+```
+
+However it is different in the case where any load fails. Where
+Promise.all() would reject, loadMany() always resolves, however each result
+is either a value or an Error instance.
+
+```js
+var [ a, b, c ] = await myLoader.loadMany([ 'a', 'b', 'badkey' ]);
+// c instanceof Error
 ```
 
 - *keys*: An array of key values to load.
@@ -331,6 +455,7 @@ Primes the cache with the provided key and value. If the key already exists, no
 change is made. (To forcefully prime the cache, clear the key first with
 `loader.clear(key).prime(key, value)`.) Returns itself for method chaining.
 
+To prime the cache with an error at a key, provide an Error instance.
 
 ## Using with GraphQL
 
@@ -366,7 +491,7 @@ When using DataLoader, we could define the `User` type using the
 and possibly fewer if there are cache hits.
 
 ```js
-var UserType = new GraphQLObjectType({
+const UserType = new GraphQLObjectType({
   name: 'User',
   fields: () => ({
     name: { type: GraphQLString },
@@ -379,9 +504,12 @@ var UserType = new GraphQLObjectType({
         first: { type: GraphQLInt }
       },
       type: new GraphQLList(UserType),
-      resolve: (user, { first }) => queryLoader.load([
-        'SELECT toID FROM friends WHERE fromID=? LIMIT ?', user.id, first
-      ]).then(rows => rows.map(row => userLoader.load(row.toID)))
+      resolve: async (user, { first }) => {
+        const rows = await queryLoader.load([
+          'SELECT toID FROM friends WHERE fromID=? LIMIT ?', user.id, first
+        ])
+        return rows.map(row => userLoader.load(row.toID))
+      }
     }
   })
 })
@@ -403,15 +531,15 @@ function createLoaders(authToken) {
     users: new DataLoader(ids => genUsers(authToken, ids)),
     cdnUrls: new DataLoader(rawUrls => genCdnUrls(authToken, rawUrls)),
     stories: new DataLoader(keys => genStories(authToken, keys)),
-  };
+  }
 }
 
 // When handling an incoming web request:
-var loaders = createLoaders(request.query.authToken);
+const loaders = createLoaders(request.query.authToken)
 
 // Then, within application logic:
-var user = await loaders.users.load(4);
-var pic = await loaders.cdnUrls.load(user.rawPicUrl);
+const user = await loaders.users.load(4)
+const pic = await loaders.cdnUrls.load(user.rawPicUrl)
 ```
 
 Creating an object where each key is a `DataLoader` is one common pattern which
@@ -426,56 +554,97 @@ value. If the same user is loaded by both keys, then it may be useful to fill
 both caches when a user is loaded from either source:
 
 ```js
-let userByIDLoader = new DataLoader(ids => genUsersByID(ids).then(users => {
+const userByIDLoader = new DataLoader(async ids => {
+  const users = await genUsersByID(ids)
   for (let user of users) {
-    usernameLoader.prime(user.username, user);
+    usernameLoader.prime(user.username, user)
   }
-  return users;
-}));
+  return users
+})
 
-let usernameLoader = new DataLoader(names => genUsernames(names).then(users => {
+const usernameLoader = new DataLoader(async names => {
+  const users = await genUsernames(names)
   for (let user of users) {
-    userByIDLoader.prime(user.id, user);
+    userByIDLoader.prime(user.id, user)
   }
-  return users;
-}));
+  return users
+})
 ```
 
+### Freezing results to enforce immutability
 
-## Custom Caches
+Since DataLoader caches values, it's typically assumed these values will be
+treated as if they were immutable. While DataLoader itself doesn't enforce
+this, you can create a higher-order function to enforce immutability
+with Object.freeze():
 
-DataLoader can optionaly be provided a custom Map instance to use as its
-memoization cache. More specifically, any object that implements the methods `get()`,
-`set()`, `delete()` and `clear()` can be provided. This allows for custom Maps
-which implement various [cache algorithms][] to be provided. By default,
-DataLoader uses the standard [Map][] which simply grows until the DataLoader
-is released. The default is appropriate when requests to your application are
-short-lived.
+```js
+function freezeResults(batchLoader) {
+  return keys => batchLoader(keys).then(values => values.map(Object.freeze))
+}
+
+const myLoader = new DataLoader(freezeResults(myBatchLoader))
+```
+
+### Batch functions which return Objects instead of Arrays
+
+DataLoader expects batch functions which return an Array of the same length as
+the provided keys. However this is not always a common return format from other
+libraries. A DataLoader higher-order function can convert from one format to another. The example below converts a `{ key: value }` result to the format
+DataLoader expects.
+
+```js
+function objResults(batchLoader) {
+  return keys => batchLoader(keys).then(objValues => keys.map(
+    key => objValues[key] || new Error(`No value for ${key}`)
+  ))
+}
+
+const myLoader = new DataLoader(objResults(myBatchLoader))
+```
 
 
 ## Common Back-ends
 
 Looking to get started with a specific back-end? Try the [loaders in the examples directory](/examples).
 
-## Other implementations
+## Other Implementations
 
-* PHP
-  * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
-* Ruby
-  * [Dataloader](https://github.com/sheerun/dataloader)
-  * [BatchLoader](https://github.com/exaspark/batch-loader)
-* ReasonML
-  * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
-* Java
-  * [java-dataloader](https://github.com/graphql-java/java-dataloader)
+Listed in alphabetical order
+
 * Elixir
   * [dataloader](https://github.com/absinthe-graphql/dataloader)
 * Golang
   * [Dataloader](https://github.com/nicksrandall/dataloader)
+* Java
+  * [java-dataloader](https://github.com/graphql-java/java-dataloader)
+* .Net
+  * [GraphQL .NET DataLoader](https://graphql-dotnet.github.io/docs/guides/dataloader/)
+  * [GreenDonut](https://github.com/ChilliCream/greendonut)
+* Perl
+  * [perl-DataLoader](https://github.com/richardjharris/perl-DataLoader)
+* PHP
+  * [DataLoaderPHP](https://github.com/overblog/dataloader-php)
+* Python
+  * [aiodataloader](https://github.com/syrusakbary/aiodataloader)
+* ReasonML
+  * [bs-dataloader](https://github.com/ulrikstrid/bs-dataloader)
+* Ruby
+  * [BatchLoader](https://github.com/exaspark/batch-loader)
+  * [Dataloader](https://github.com/sheerun/dataloader)
+  * [GraphQL Batch](https://github.com/Shopify/graphql-batch)
+* Rust
+  * [Dataloader](https://github.com/cksac/dataloader-rs)
+* Swift
+  * [SwiftDataLoader](https://github.com/kimdv/SwiftDataLoader)
 
 ## Video Source Code Walkthrough
 
 **DataLoader Source Code Walkthrough (YouTube):**
+
+A walkthrough of the DataLoader v1 source code. While the source has changed
+since this video was made, it is still a good overview of the rationale of
+DataLoader and how it works.
 
 <a href="https://youtu.be/OQTnXNCDywA" target="_blank" alt="DataLoader Source Code Walkthrough"><img src="https://img.youtube.com/vi/OQTnXNCDywA/0.jpg" /></a>
 
@@ -486,3 +655,5 @@ Looking to get started with a specific back-end? Try the [loaders in the example
 [cache algorithms]: https://en.wikipedia.org/wiki/Cache_algorithms
 [express]: http://expressjs.com/
 [babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
+[lru_map]: https://github.com/rsms/js-lru
+[source code]: https://github.com/graphql/dataloader/blob/master/src/index.js
