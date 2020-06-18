@@ -2,10 +2,9 @@ language: node_js
 
 # https://github.com/nodejs/LTS
 node_js:
-  - '9'
+  - '12'
+  - '10'
   - '8'
-  - '6'
-  - '4'
 
 git:
   depth: 5
@@ -20,13 +19,14 @@ jobs:
     - stage: deploy
       if: tag IS present
       script: echo "Deploying..."
-      node_js: '8'
+      node_js: '12'
       deploy:
         provider: npm
         skip_cleanup: true
-        email: "lee@leebyron.com"
+        email: lee@leebyron.com
         api_key:
-          secure: "LKgxA5+LSG1TPLlpE5mS4DGfirzBjNKO3UhDptXSXYR78QTs/lS0YlYKkNq/lCeTEMGKAgi9edVQfnsruKAsjiT4naZz/ZoSAzonRedO6ynHng+ec4WszJVew0xDPK1hJ2Gy+RdSyzRxGZUn6RDBZZR3Bj412azgwrgGf8x/HY6qBmVP9JZKPlpuRHM/lEL2IiKtJict7sFel0MH01t7n1rzsriUviPYsh6XElqLqSdeVe54iMu7PNp1A6p8hgt+I6IOree2km5TVC/MYn9iOIIK4kC6b+QCcE3jUOWioRIrQkI3DoN9QrxqeeOpx+i4ozsvjYcsl9b9TI6n66wNxkXJsDVRXA3oQ/0YjVlY4tznC/+3CI49gtLiKVeos2LsIdP6Xnnx7VvMOPvjEbl4386wLZAhbbc0VxjWilyVRJeErGsQvrujY/0JZwhxsXDAtGzqFXkiV7tTin+wivUgGW1VNf81q3ANOr8TG91yZMeYeRwTlECN0jQaFqNvagc8/Atp2akrbW4P46gh4+f/gp4hSLrYbjwybmZdM4zesHeBezA87PPIlm5INhe2Lgsgmw2Ipgn8x2cBzsHepbsfGcvxMxu4CAhPISRdB9nlnbZ6eEpU2o6caeJN/hjmiwDHOsSbCa2RxVbMPkxqjdGG6VJmUyDMFny7apzNAYSiIJ0="
+          secure: nSGc6vlrEBM7vngiA1YdwlZsFLPVkmXuoVnHpFLmlQ8602Fg10yBJhab6a5SzJO11OGZCF58pUOK5VZn+gz5QLZn+MsOvCl8q8Y+wwtEe6vDtGuD3LI1Hw7zjBXGAlkZ418/MLye2aXAShrYzGOtbnFn2AYYZTyR6hqFSBBqktXsG3E6ZHNe4paJz09YTslD7Yk/mv4uitbxXRwNKe4GX3gddKiGRc5EgKSIrSqBg19lhaOvL30HvMybosJAHEs0Er/U4SQiKaYOd3bdeABPe4syBpo76YfgQJQNZdXq2MRZxEnCs8hniCw8rAPm1Q/yv3FVG6N9IPk23BEezk6ah4vp6p1uMCiwpS1+LQ3/hYs7sjiswWkK2Tg4WN6jmTYMfPfEGpPDsgwyCRcL9I9ovDl/nbDLlXiseRqFsSkM49SJXBMJa+EuQNgfPbT+zEdZFdKCFe9fmD2f2yPaVG5tvF7j/HyZE0FTfLkAeKdPLvnM7U3w81Bfpzfuz2KywjiR/C6LqjV1J8ioBlhpBtbnahCTj5d+jIfeR0Oc00np9w0DJAFSfHTXSBXzhvTHtZ0AKdvalzimJKREfy50ABPPbtbUlNnSkoyLjlxKUpp0kbZBnlu+kVcoEyIFiNhg8T+s28Wv8fYVUiJ7PihpUxB9QVD6iTvmYFftusNZJnfZZTk=
         on:
           tags: true
           branch: master
+          repo: graphql/dataloader
