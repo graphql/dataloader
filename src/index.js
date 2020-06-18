@@ -71,44 +71,27 @@ class DataLoader<K, V, C = K> {
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
    */
-  load(key: K): Promise<V> {
+  async load(key: K): Promise<V> {
     if (key === null || key === undefined) {
-      throw new TypeError(
-        'The loader.load() function must be called with a value, ' +
-        `but got: ${String(key)}.`
-      );
+      throw new TypeError('The loader.load() function must be called with a value,' + (" but got: " + String(key) + "."));
     }
 
     var batch = getCurrentBatch(this);
-    var cacheMap = this._cacheMap;
-    var cacheKey = this._cacheKeyFn(key);
 
-    // If caching and there is a cache-hit, return cached Promise.
-    if (cacheMap) {
-      var cachedPromise = cacheMap.get(cacheKey);
-      if (cachedPromise) {
-        var cacheHits = batch.cacheHits || (batch.cacheHits = []);
-        return new Promise(resolve => {
-          cacheHits.push(() => {
-            resolve(cachedPromise);
-          });
-        });
-      }
+    const { valueIndex, cached } = this.__prepOneKey(batch, key);
+
+    if (valueIndex === undefined) {
+      return cached;
+    }
+    const values = await batch.thePromise;
+    const value = values[valueIndex];
+
+    if (this._cacheMap) {
+      const cacheKey = this._cacheKeyFn(key);
+      this._cacheMap.set(cacheKey, value);
     }
 
-    // Otherwise, produce a new Promise for this key, and enqueue it to be
-    // dispatched along with the current batch.
-    batch.keys.push(key);
-    var promise = new Promise((resolve, reject) => {
-      batch.callbacks.push({ resolve, reject });
-    });
-
-    // If caching, cache this promise.
-    if (cacheMap) {
-      cacheMap.set(cacheKey, promise);
-    }
-
-    return promise;
+    return values[valueIndex];
   }
 
   /**
@@ -131,19 +114,61 @@ class DataLoader<K, V, C = K> {
    *     // c instanceof Error
    *
    */
-  loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V | Error>> {
+  async loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V | Error>> {
     if (!isArrayLike(keys)) {
-      throw new TypeError(
-        'The loader.loadMany() function must be called with Array<key> ' +
-        `but got: ${(keys: any)}.`
-      );
+      throw new TypeError('The loader.loadMany() function must be called with Array<key> ' + ("but got: " + keys + "."));
+    } // Support ArrayLike by using only minimal property access
+
+    const batch = getCurrentBatch(this);
+
+    const keyPreps = keys.map(key => {
+      return this.__prepOneKey(batch, key);
+    });
+
+    // If all results are already in the cache, return immediately
+    if (keyPreps.every(x => x.valueIndex === undefined)) {
+      return keyPreps.map(x => x.cached);
     }
-    // Support ArrayLike by using only minimal property access
-    const loadPromises = [];
-    for (let i = 0; i < keys.length; i++) {
-      loadPromises.push(this.load(keys[i]).catch(error => error));
+
+    const values = await batch.thePromise;
+
+    return keyPreps.map((x, index) => {
+      if (x.valueIndex === undefined) {
+        return x.cached;
+      }
+
+      const value = values[x.valueIndex];
+      if (this._cacheMap) {
+        const key = keys[index];
+        const cacheKey = this._cacheKeyFn(key);
+        this._cacheMap.set(cacheKey, value);
+      }
+      return value;
+    });
+  }
+
+  __prepOneKey(batch, key): { cached?: any, valueIndex?: Number } {
+    if (this._cacheMap) {
+      const cacheKey = this._cacheKeyFn(key);
+      if (this._cacheMap.has(cacheKey)) {
+        return { cached: this._cacheMap.get(cacheKey) };
+      }
+
+      batch.indexByCacheKey = batch.indexByCacheKey || {};
+      const existingIndex = batch.indexByCacheKey[cacheKey];
+      if (existingIndex !== undefined) {
+        return { valueIndex: existingIndex };
+      }
+
+      const valueIndex = batch.keys.length;
+      batch.indexByCacheKey[cacheKey] = valueIndex;
+      batch.keys.push(key);
+      return { valueIndex };
     }
-    return Promise.all(loadPromises);
+
+    const valueIndex = batch.keys.length;
+    batch.keys.push(key);
+    return { valueIndex };
   }
 
   /**
@@ -181,22 +206,10 @@ class DataLoader<K, V, C = K> {
   prime(key: K, value: V | Error): this {
     var cacheMap = this._cacheMap;
     if (cacheMap) {
-      var cacheKey = this._cacheKeyFn(key);
-
+      const cacheKey = this._cacheKeyFn(key);
       // Only add the key if it does not already exist.
-      if (cacheMap.get(cacheKey) === undefined) {
-        // Cache a rejected promise if the value is an Error, in order to match
-        // the behavior of load(key).
-        var promise;
-        if (value instanceof Error) {
-          promise = Promise.reject(value);
-          // Since this is a case where an Error is intentionally being primed
-          // for a given key, we want to disable unhandled promise rejection.
-          promise.catch(() => {});
-        } else {
-          promise = Promise.resolve(value);
-        }
-        cacheMap.set(cacheKey, promise);
+      if (!cacheMap.has(cacheKey)) {
+        cacheMap.set(cacheKey, value);
       }
     }
     return this;
@@ -271,8 +284,15 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
     return existingBatch;
   }
 
+  let doResolve;
+  let doReject;
+  const thePromise = new Promise((resolve, reject) => {
+    doResolve = resolve;
+    doReject = reject;
+  });
+
   // Otherwise, create a new batch for this loader.
-  var newBatch = { hasDispatched: false, keys: [], callbacks: [] };
+  var newBatch = { hasDispatched: false, keys: [], thePromise, doResolve, doReject, };
 
   // Store it on the loader so it may be reused.
   loader._batch = newBatch;
@@ -294,7 +314,7 @@ function dispatchBatch<K, V>(
 
   // If there's nothing to load, resolve any cache hits and return early.
   if (batch.keys.length === 0) {
-    resolveCacheHits(batch);
+    batch.doResolve([]);
     return;
   }
 
@@ -333,18 +353,7 @@ function dispatchBatch<K, V>(
       );
     }
 
-    // Resolve all cache hits in the same micro-task as freshly loaded values.
-    resolveCacheHits(batch);
-
-    // Step through values, resolving or rejecting each Promise in the batch.
-    for (var i = 0; i < batch.callbacks.length; i++) {
-      var value = values[i];
-      if (value instanceof Error) {
-        batch.callbacks[i].reject(value);
-      } else {
-        batch.callbacks[i].resolve(value);
-      }
-    }
+    batch.doResolve(values);
   }).catch(error => {
     failedDispatch(loader, batch, error);
   });
@@ -357,21 +366,10 @@ function failedDispatch<K, V>(
   batch: Batch<K, V>,
   error: Error
 ) {
-  // Cache hits are resolved, even though the batch failed.
-  resolveCacheHits(batch);
   for (var i = 0; i < batch.keys.length; i++) {
     loader.clear(batch.keys[i]);
-    batch.callbacks[i].reject(error);
   }
-}
-
-// Private: Resolves the Promises for any cache hits in this batch.
-function resolveCacheHits(batch: Batch<any, any>) {
-  if (batch.cacheHits) {
-    for (var i = 0; i < batch.cacheHits.length; i++) {
-      batch.cacheHits[i]();
-    }
-  }
+  batch.doReject(error);
 }
 
 // Private: given the DataLoader's options, produce a valid max batch size.

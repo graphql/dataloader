@@ -29,54 +29,54 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
   });
 
-  it('Load function requires an key', () => {
+  it('Load function requires an key', async () => {
     const idLoader = new DataLoader<number, number>(async keys => keys);
 
-    expect(() => {
+    await expect(
       // $FlowExpectError
-      idLoader.load();
-    }).toThrow(
+      idLoader.load()
+    ).rejects.toThrow(
       'The loader.load() function must be called with a value, ' +
       'but got: undefined.'
     );
 
-    expect(() => {
+    await expect(
       // $FlowExpectError
-      idLoader.load(null);
-    }).toThrow(
+      idLoader.load(null)
+    ).rejects.toThrow(
       'The loader.load() function must be called with a value, ' +
       'but got: null.'
     );
 
     // Falsey values like the number 0 is acceptable
-    expect(() => {
-      idLoader.load(0);
-    }).not.toThrow();
+    await expect(
+      idLoader.load(0)
+    ).resolves.toEqual(0);
   });
 
-  it('LoadMany function requires a list of key', () => {
+  it('LoadMany function requires a list of key', async () => {
     const idLoader = new DataLoader<number, number>(async keys => keys);
 
-    expect(() => {
+    await expect(
       // $FlowExpectError
-      idLoader.loadMany();
-    }).toThrow(
+      idLoader.loadMany()
+    ).rejects.toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
       'but got: undefined.'
     );
 
-    expect(() => {
+    await expect(
       // $FlowExpectError
-      idLoader.loadMany(1, 2, 3);
-    }).toThrow(
+      idLoader.loadMany(1, 2, 3)
+    ).rejects.toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
       'but got: 1.'
     );
 
     // Empty array is acceptable
-    expect(() => {
-      idLoader.loadMany([]);
-    }).not.toThrow();
+    await expect(
+      idLoader.loadMany([])
+    ).resolves.toEqual([]);
   });
 
   it('Batch function must return a Promise, not null', async () => {
