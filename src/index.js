@@ -78,20 +78,20 @@ class DataLoader<K, V, C = K> {
 
     var batch = getCurrentBatch(this);
 
-    const { valueIndex, cached } = this.__prepOneKey(batch, key);
+    const { valuesIndex, valuesPromise, resolvedValue } = this.__prepOneKey(batch, key);
 
-    if (valueIndex === undefined) {
-      return cached;
+    if (valuesIndex === undefined) {
+      return resolvedValue;
     }
-    const values = await batch.thePromise;
-    const value = values[valueIndex];
+    const values = await valuesPromise;
+    const value = values[valuesIndex];
 
     if (this._cacheMap) {
       const cacheKey = this._cacheKeyFn(key);
-      this._cacheMap.set(cacheKey, value);
+      this._cacheMap.set(cacheKey, { resolvedValue: value });
     }
 
-    return values[valueIndex];
+    return values[valuesIndex];
   }
 
   /**
@@ -126,49 +126,51 @@ class DataLoader<K, V, C = K> {
     });
 
     // If all results are already in the cache, return immediately
-    if (keyPreps.every(x => x.valueIndex === undefined)) {
-      return keyPreps.map(x => x.cached);
+    if (keyPreps.every(struct => struct.valuesIndex === undefined)) {
+      return keyPreps.map(struct => struct.resolvedValue);
     }
 
-    const values = await batch.thePromise;
+    const promiseSet = new Set(keyPreps.map(struct => struct.valuesPromise).filter(x => x)); // dedup promises
+    const promises = Array.from(promiseSet);
 
-    return keyPreps.map((x, index) => {
-      if (x.valueIndex === undefined) {
-        return x.cached;
+    const results = await Promise.all(promises);
+
+    results.forEach((result, index) => {
+      const promise = promises[index];
+      promise.__resolvedValue = result;
+    });
+
+    return keyPreps.map((struct, index) => {
+      if (struct.valuesIndex === undefined) {
+        return struct.resolvedValue;
       }
 
-      const value = values[x.valueIndex];
+      const value = struct.valuesPromise.__resolvedValue[struct.valuesIndex];
+
       if (this._cacheMap) {
         const key = keys[index];
         const cacheKey = this._cacheKeyFn(key);
-        this._cacheMap.set(cacheKey, value);
+        this._cacheMap.set(cacheKey, { resolvedValue: value });
       }
       return value;
     });
   }
 
-  __prepOneKey(batch, key): { cached?: any, valueIndex?: Number } {
+  __prepOneKey(batch, key): { value?: any, valuesIndex?: Number, valuesPromise?: Promise } {
+    const valuesIndex = batch.keys.length;
+
     if (this._cacheMap) {
       const cacheKey = this._cacheKeyFn(key);
-      if (this._cacheMap.has(cacheKey)) {
-        return { cached: this._cacheMap.get(cacheKey) };
+      const cachedStruct = this._cacheMap.get(cacheKey);
+      if (cachedStruct) {
+        return cachedStruct; // { valuesIndex, valuesPromise } OR { value }
       }
 
-      batch.indexByCacheKey = batch.indexByCacheKey || new Map();
-      const existingIndex = batch.indexByCacheKey.get(cacheKey);
-      if (existingIndex !== undefined) {
-        return { valueIndex: existingIndex };
-      }
-
-      const valueIndex = batch.keys.length;
-      batch.indexByCacheKey.set(cacheKey, valueIndex);
-      batch.keys.push(key);
-      return { valueIndex };
+      this._cacheMap.set(cacheKey, { valuesIndex, valuesPromise: batch.thePromise });
     }
 
-    const valueIndex = batch.keys.length;
     batch.keys.push(key);
-    return { valueIndex };
+    return { valuesIndex, valuesPromise: batch.thePromise };
   }
 
   /**
@@ -208,8 +210,8 @@ class DataLoader<K, V, C = K> {
     if (cacheMap) {
       const cacheKey = this._cacheKeyFn(key);
       // Only add the key if it does not already exist.
-      if (!cacheMap.has(cacheKey)) {
-        cacheMap.set(cacheKey, value);
+      if (!cacheMap.get(cacheKey)) {
+        cacheMap.set(cacheKey, { resolvedValue: value });
       }
     }
     return this;
