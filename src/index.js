@@ -18,7 +18,6 @@ export type BatchLoadFn<K, V> =
 export type Options<K, V> = {
   batch?: boolean;
   maxBatchSize?: number;
-  batchIntervalMs?: number;
   cache?: boolean;
   cacheKeyFn?: (key: any) => any;
   cacheMap?: CacheMap<K, Promise<V>>;
@@ -102,7 +101,7 @@ class DataLoader<K, V> {
       if (this._queue.length === 1) {
         if (shouldBatch) {
           // If batching, schedule a task to dispatch the queue.
-          enqueuePostPromiseJob(() => dispatchQueue(this), options);
+          enqueuePostPromiseJob(() => dispatchQueue(this));
         } else {
           // Otherwise dispatch the (queue of one) immediately.
           dispatchQueue(this);
@@ -213,19 +212,13 @@ class DataLoader<K, V> {
 // setImmediate or setTimeout) at a potential performance penalty.
 var enqueuePostPromiseJob =
   typeof process === 'object' && typeof process.nextTick === 'function' ?
-    function (fn, options) {
+    function (fn) {
       if (!resolvedPromise) {
         resolvedPromise = Promise.resolve();
       }
-      if (options && options.batchIntervalMs) {
-        setTimeout(() => {
-          resolvedPromise.then(() => process.nextTick(fn));
-        }, options.batchIntervalMs);
-      } else {
-        resolvedPromise.then(() => process.nextTick(fn));
-      }
+      resolvedPromise.then(() => process.nextTick(fn));
     } :
-    (fn, options) => setTimeout(fn, (!!options && options.batchIntervalMs) || 0);
+    setImmediate || setTimeout;
 
 // Private: cached resolved Promise instance
 var resolvedPromise;
