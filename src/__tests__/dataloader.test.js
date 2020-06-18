@@ -383,9 +383,9 @@ describe('Primary API', () => {
 
 });
 
+// TODO: figure out if we need to support simultaneous errors and successes
 describe('Represents Errors', () => {
 
-  // TODO: figure out if we need to support simultaneous errors and successes
   // it('Resolves to error to indicate failure', async () => {
   //   const loadCalls = [];
   //   const evenLoader = new DataLoader(keys => {
@@ -409,7 +409,7 @@ describe('Represents Errors', () => {
   //
   //   expect(loadCalls).toEqual([ [ 1 ], [ 2 ] ]);
   // });
-
+  //
   // it('Can represent failures and successes simultaneously', async () => {
   //   const loadCalls = [];
   //   const evenLoader = new DataLoader(keys => {
@@ -435,95 +435,95 @@ describe('Represents Errors', () => {
   //
   //   expect(loadCalls).toEqual([ [ 1, 2 ] ]);
   // });
+  //
+  // it('Caches failed fetches', async () => {
+  //   const loadCalls = [];
+  //   const errorLoader = new DataLoader(keys => {
+  //     loadCalls.push(keys);
+  //     return Promise.resolve(
+  //       keys.map(key => new Error(`Error: ${key}`))
+  //     );
+  //   });
+  //
+  //   let caughtErrorA;
+  //   try {
+  //     await errorLoader.load(1);
+  //   } catch (error) {
+  //     caughtErrorA = error;
+  //   }
+  //   expect(caughtErrorA).toBeInstanceOf(Error);
+  //   expect((caughtErrorA: any).message).toBe('Error: 1');
+  //
+  //   let caughtErrorB;
+  //   try {
+  //     await errorLoader.load(1);
+  //   } catch (error) {
+  //     caughtErrorB = error;
+  //   }
+  //   expect(caughtErrorB).toBeInstanceOf(Error);
+  //   expect((caughtErrorB: any).message).toBe('Error: 1');
+  //
+  //   expect(loadCalls).toEqual([ [ 1 ] ]);
+  // });
+  //
+  // it('Handles priming the cache with an error', async () => {
+  //   const [ identityLoader, loadCalls ] = idLoader<number>();
+  //
+  //   identityLoader.prime(1, new Error('Error: 1'));
+  //
+  //   // Wait a bit.
+  //   await new Promise(setImmediate);
+  //
+  //   let caughtErrorA;
+  //   try {
+  //     await identityLoader.load(1);
+  //   } catch (error) {
+  //     caughtErrorA = error;
+  //   }
+  //   expect(caughtErrorA).toBeInstanceOf(Error);
+  //   expect((caughtErrorA: any).message).toBe('Error: 1');
+  //
+  //   expect(loadCalls).toEqual([]);
+  // });
 
-  it('Caches failed fetches', async () => {
-    const loadCalls = [];
-    const errorLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(
-        keys.map(key => new Error(`Error: ${key}`))
-      );
-    });
-
-    let caughtErrorA;
-    try {
-      await errorLoader.load(1);
-    } catch (error) {
-      caughtErrorA = error;
-    }
-    expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('Error: 1');
-
-    let caughtErrorB;
-    try {
-      await errorLoader.load(1);
-    } catch (error) {
-      caughtErrorB = error;
-    }
-    expect(caughtErrorB).toBeInstanceOf(Error);
-    expect((caughtErrorB: any).message).toBe('Error: 1');
-
-    expect(loadCalls).toEqual([ [ 1 ] ]);
-  });
-
-  it('Handles priming the cache with an error', async () => {
-    const [ identityLoader, loadCalls ] = idLoader<number>();
-
-    identityLoader.prime(1, new Error('Error: 1'));
-
-    // Wait a bit.
-    await new Promise(setImmediate);
-
-    let caughtErrorA;
-    try {
-      await identityLoader.load(1);
-    } catch (error) {
-      caughtErrorA = error;
-    }
-    expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('Error: 1');
-
-    expect(loadCalls).toEqual([]);
-  });
-
-  it('Can clear values from cache after errors', async () => {
-    const loadCalls = [];
-    const errorLoader = new DataLoader(keys => {
-      loadCalls.push(keys);
-      return Promise.resolve(
-        keys.map(key => new Error(`Error: ${key}`))
-      );
-    });
-
-    let caughtErrorA;
-    try {
-      await errorLoader.load(1).catch(error => {
-        // Presumably determine if this error is transient, and only clear the
-        // cache in that case.
-        errorLoader.clear(1);
-        throw error;
-      });
-    } catch (error) {
-      caughtErrorA = error;
-    }
-    expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('Error: 1');
-
-    let caughtErrorB;
-    try {
-      await errorLoader.load(1).catch(error => {
-        // Again, only do this if you can determine the error is transient.
-        errorLoader.clear(1);
-        throw error;
-      });
-    } catch (error) {
-      caughtErrorB = error;
-    }
-    expect(caughtErrorB).toBeInstanceOf(Error);
-    expect((caughtErrorB: any).message).toBe('Error: 1');
-
-    expect(loadCalls).toEqual([ [ 1 ], [ 1 ] ]);
-  });
+  // it('Can clear values from cache after errors', async () => {
+  //   const loadCalls = [];
+  //   const errorLoader = new DataLoader(keys => {
+  //     loadCalls.push(keys);
+  //     return Promise.resolve(
+  //       keys.map(key => new Error(`Error: ${key}`))
+  //     );
+  //   });
+  //
+  //   let caughtErrorA;
+  //   try {
+  //     await errorLoader.load(1).catch(error => {
+  //       // Presumably determine if this error is transient, and only clear the
+  //       // cache in that case.
+  //       errorLoader.clear(1);
+  //       throw error;
+  //     });
+  //   } catch (error) {
+  //     caughtErrorA = error;
+  //   }
+  //   expect(caughtErrorA).toBeInstanceOf(Error);
+  //   expect((caughtErrorA: any).message).toBe('Error: 1');
+  //
+  //   let caughtErrorB;
+  //   try {
+  //     await errorLoader.load(1).catch(error => {
+  //       // Again, only do this if you can determine the error is transient.
+  //       errorLoader.clear(1);
+  //       throw error;
+  //     });
+  //   } catch (error) {
+  //     caughtErrorB = error;
+  //   }
+  //   expect(caughtErrorB).toBeInstanceOf(Error);
+  //   expect((caughtErrorB: any).message).toBe('Error: 1');
+  //
+  //   expect(loadCalls).toEqual([ [ 1 ], [ 1 ] ]);
+  // });
 
   it('Propagates error to all loads', async () => {
     const loadCalls = [];

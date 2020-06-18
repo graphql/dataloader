@@ -154,14 +154,14 @@ class DataLoader<K, V, C = K> {
         return { cached: this._cacheMap.get(cacheKey) };
       }
 
-      batch.indexByCacheKey = batch.indexByCacheKey || {};
-      const existingIndex = batch.indexByCacheKey[cacheKey];
+      batch.indexByCacheKey = batch.indexByCacheKey || new Map();
+      const existingIndex = batch.indexByCacheKey.get(cacheKey);
       if (existingIndex !== undefined) {
         return { valueIndex: existingIndex };
       }
 
       const valueIndex = batch.keys.length;
-      batch.indexByCacheKey[cacheKey] = valueIndex;
+      batch.indexByCacheKey.set(cacheKey, valueIndex);
       batch.keys.push(key);
       return { valueIndex };
     }
