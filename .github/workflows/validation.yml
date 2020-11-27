@@ -1,6 +1,6 @@
 name: Flow check, Lint and Tests 
 
-on: push 
+on: push
 
 jobs:
   validation:
@@ -11,15 +11,19 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 12.x
-      - uses: bahmutov/npm-install@v1.4.5
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-
       - name: Install dependencies
-        run: yarn install
-      - name: Flow
-        run: yarn check
+        run: npm install
       - name: Lint
-        run: yarn lint 
+        run: npm run lint
       - name: Tests
-        run: yarn testonly --coverage
+        run: npm run test:only 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
