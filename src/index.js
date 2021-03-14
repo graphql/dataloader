@@ -240,7 +240,7 @@ var enqueuePostPromiseJob =
       });
     } :
     typeof setImmediate === 'function' ?
-      setImmediate :
+      fn => { setImmediate(fn); } :
       fn => { setTimeout(fn, 0); };
 
 // Private: cached resolved Promise instance
