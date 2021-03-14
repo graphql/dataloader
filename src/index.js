@@ -239,7 +239,9 @@ var enqueuePostPromiseJob =
         process.nextTick(fn);
       });
     } :
-    setImmediate || setTimeout;
+    typeof setImmediate === 'function' ?
+      setImmediate :
+      fn => { setTimeout(fn, 0); };
 
 // Private: cached resolved Promise instance
 var resolvedPromise;
