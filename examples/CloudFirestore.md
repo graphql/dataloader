@@ -19,7 +19,12 @@ const datastoreLoader = new DataLoader(
       .collection(`users`)
       .where(admin.firestore.FieldPath.documentId(), `in`, keys)
       .get();
-    return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    // By default, a query retrieves all documents that satisfy the query in ascending order by document ID.
+    // Therefore, it is recommended to sort by key
+    return keys.map((key) => {
+      const doc = snapshot.docs.find((doc) => doc.id === key);
+      return doc ? { ...doc.data(), id: doc.id } : null;
+    });
   },
   {
     // The in clause of Cloud Firestore is support up to 10 comparison values
