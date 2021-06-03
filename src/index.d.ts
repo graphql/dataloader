@@ -37,7 +37,7 @@ declare class DataLoader<K, V, C = K> {
    *     ]);
    *
    */
-  loadMany(keys: ArrayLike<K>): Promise<Array<V | Error>>;
+  loadMany(keys: [K, ...Array<K>]): Promise<[V | Error, ...Array<V | Error>]>;
 
   /**
    * Clears the value at `key` from the cache, if it exists. Returns itself for
@@ -70,8 +70,9 @@ declare namespace DataLoader {
 
   // A Function, which when given an Array of keys, returns a Promise of an Array
   // of values or Errors.
-  export type BatchLoadFn<K, V> =
-    (keys: ReadonlyArray<K>) => PromiseLike<ArrayLike<V | Error>>;
+  export type BatchLoadFn<K, V> = (
+    keys: readonly [K, ...Array<K>]
+  ) => PromiseLike<[V | Error, ...Array<V | Error>]>;
 
   // Optionally turn off batching or caching or provide a cache key function or a
   // custom cache instance.
