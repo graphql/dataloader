@@ -71,7 +71,7 @@ declare namespace DataLoader {
   // A Function, which when given an Array of keys, returns a Promise of an Array
   // of values or Errors.
   export type BatchLoadFn<K, V> =
-    (keys: ReadonlyArray<K>) => PromiseLike<ArrayLike<V | Error>>;
+    (keys: ReadonlyArray<K>) => PromiseLike<ArrayLike<V | Error> | Record<string, V | Error>>;
 
   // Optionally turn off batching or caching or provide a cache key function or a
   // custom cache instance.
@@ -115,6 +115,13 @@ declare namespace DataLoader {
      * to be used as cache. May be set to `null` to disable caching.
      */
     cacheMap?: CacheMap<C, Promise<V>> | null;
+
+    /**
+     * Set to `true` to return an
+     * object in `batchFn` with `key` as `cacheKey` and
+     * the value of the `key` is the actual value.
+     */
+    objectResult?: boolean,
   }
 }
 

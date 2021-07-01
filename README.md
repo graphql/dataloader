@@ -401,6 +401,7 @@ Create a new `DataLoader` given a batch loading function and options.
   | *cache* | Boolean | `true` | Set to `false` to disable memoization caching, creating a new Promise and new key in the `batchLoadFn` for every load of the same key. This is equivalent to setting `cacheMap` to `null`.
   | *cacheKeyFn* | Function | `key => key` | Produces cache key for a given load key. Useful when objects are keys and two objects should be considered equivalent.
   | *cacheMap* | Object | `new Map()` | Instance of [Map][] (or an object with a similar API) to be used as cache. May be set to `null` to disable caching.
+  | *objectResult* | Boolean | `false` | Set to `true` to return an object in `batchFn` with `key` as `cacheKey` and the value of the `key` is the actual value.
 
 ##### `load(key)`
 
