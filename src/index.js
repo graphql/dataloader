@@ -16,6 +16,7 @@ export type BatchLoadFn<K, V> =
 // custom cache instance.
 export type Options<K, V, C = K> = {
   batch?: boolean;
+  objectResult?: boolean;
   maxBatchSize?: number;
   batchScheduleFn?: (callback: () => void) => void;
   cache?: boolean;
@@ -53,6 +54,7 @@ class DataLoader<K, V, C = K> {
       );
     }
     this._batchLoadFn = batchLoadFn;
+    this._objectResult = options ? Boolean(options.objectResult) : false;
     this._maxBatchSize = getValidMaxBatchSize(options);
     this._batchScheduleFn = getValidBatchScheduleFn(options);
     this._cacheKeyFn = getValidCacheKeyFn(options);
@@ -62,6 +64,7 @@ class DataLoader<K, V, C = K> {
 
   // Private
   _batchLoadFn: BatchLoadFn<K, V>;
+  _objectResult: boolean;
   _maxBatchSize: number;
   _batchScheduleFn: (() => void) => void;
   _cacheKeyFn: K => C;
@@ -315,14 +318,14 @@ function dispatchBatch<K, V>(
   batchPromise.then(values => {
 
     // Assert the expected resolution from batchLoadFn.
-    if (!isArrayLike(values)) {
+    if (!loader._objectResult && !isArrayLike(values)) {
       throw new TypeError(
         'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         `not return a Promise of an Array: ${String(values)}.`
       );
     }
-    if (values.length !== batch.keys.length) {
+    if (!loader._objectResult && values.length !== batch.keys.length) {
       throw new TypeError(
         'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
@@ -332,13 +335,21 @@ function dispatchBatch<K, V>(
         `\n\nValues:\n${String(values)}`
       );
     }
+    if (loader._objectResult && !isObjectLike(values)) {
+      throw new TypeError(
+        'DataLoader must be constructed with a function which accepts ' +
+        'Array<key> and returns Promise<Record<key, value>>,' +
+        'but the function did not return a Promise of an Object: ' +
+        `${String(values)}.`
+      );
+    }
 
     // Resolve all cache hits in the same micro-task as freshly loaded values.
     resolveCacheHits(batch);
 
     // Step through values, resolving or rejecting each Promise in the batch.
     for (var i = 0; i < batch.callbacks.length; i++) {
-      var value = values[i];
+      var value = loader._objectResult ? values[batch.keys[i]] : values[i];
       if (value instanceof Error) {
         batch.callbacks[i].reject(value);
       } else {
@@ -453,6 +464,14 @@ function isArrayLike(x: mixed): boolean {
     typeof x.length === 'number' &&
     (x.length === 0 ||
       (x.length > 0 && Object.prototype.hasOwnProperty.call(x, x.length - 1)))
+  );
+}
+
+function isObjectLike(x: mixed): boolean {
+  return (
+    typeof x === 'object' &&
+      x !== null &&
+      !isArrayLike(x)
   );
 }
 

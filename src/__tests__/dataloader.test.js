@@ -723,6 +723,25 @@ describe('Accepts options', () => {
     expect(loadCalls).toEqual([ [ 'A', 'B' ], [ 'A', 'B' ] ]);
   });
 
+  it('Return objects as a result of batchFn', async () => {
+    const identityLoader = new DataLoader<Obj, Obj, string>(() => {
+      return Promise.resolve({
+        A: 'a',
+        C: 'c'
+      });
+    }, { objectResult: true });
+
+    const [ valueA, valueB, valueC ] = await Promise.all([
+      identityLoader.load('A'),
+      identityLoader.load('B'),
+      identityLoader.load('C'),
+    ]);
+
+    expect(valueA).toBe('a');
+    expect(valueB).toBeUndefined();
+    expect(valueC).toBe('c');
+  });
+
   describe('Accepts object key in custom cacheKey function', () => {
     function cacheKey(key: {[string]: any}): string {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();

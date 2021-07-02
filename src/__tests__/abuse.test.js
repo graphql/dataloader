@@ -156,6 +156,29 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
   });
 
+  it(
+    'Batch function must promise an Object if objectResult is true',
+    async () => {
+    // Note: this resolves to empty array
+      const badLoader = new DataLoader<number, number>(async () => [],
+        { objectResult: true }
+      );
+
+      let caughtError;
+      try {
+        await badLoader.load(1);
+      } catch (error) {
+        caughtError = error;
+      }
+      expect(caughtError).toBeInstanceOf(Error);
+      expect((caughtError: any).message).toBe(
+        'DataLoader must be constructed with a function which accepts ' +
+        'Array<key> and returns Promise<Record<key, value>>,' +
+        'but the function did not return a Promise of an Object: ' +
+        '.'
+      );
+    });
+
   it('Cache should have get, set, delete, and clear methods', async () => {
     class IncompleteMap {
       get() {}
