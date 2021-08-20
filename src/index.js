@@ -14,7 +14,7 @@ export type BatchLoadFn<K, V> =
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
-export type Options<K, V, C = K> = {
+export type Options<K, V, C = K> = { 
   batch?: boolean;
   maxBatchSize?: number;
   batchScheduleFn?: (callback: () => void) => void;
@@ -27,7 +27,7 @@ export type Options<K, V, C = K> = {
 export type CacheMap<K, V> = {
   get(key: K): V | void;
   set(key: K, value: V): any;
-  delete(key: K): any;
+  delete(key: K): any; 
   clear(): any;
 };
 
