@@ -53,7 +53,7 @@ declare class DataLoader<K, V, C = K> {
   clearAll(): this;
 
   /**
-   * Adds the provied key and value to the cache. If the key already exists, no
+   * Adds the provided key and value to the cache. If the key already exists, no
    * change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V | Error): this;
