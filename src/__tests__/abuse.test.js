@@ -13,7 +13,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Loader creation requires a function', () => {
     expect(() => {
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       new DataLoader(); // eslint-disable-line no-new
     }).toThrow(
       'DataLoader must be constructed with a function which accepts ' +
@@ -21,7 +21,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
 
     expect(() => {
-      // $FlowExpectError
+      // $FlowExpectedError[prop-missing]
       new DataLoader({}); // eslint-disable-line no-new
     }).toThrow(
       'DataLoader must be constructed with a function which accepts ' +
@@ -33,7 +33,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     const idLoader = new DataLoader<number, number>(async keys => keys);
 
     expect(() => {
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       idLoader.load();
     }).toThrow(
       'The loader.load() function must be called with a value, ' +
@@ -41,7 +41,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
 
     expect(() => {
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       idLoader.load(null);
     }).toThrow(
       'The loader.load() function must be called with a value, ' +
@@ -58,7 +58,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     const idLoader = new DataLoader<number, number>(async keys => keys);
 
     expect(() => {
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       idLoader.loadMany();
     }).toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
@@ -66,7 +66,8 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
 
     expect(() => {
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
+      // $FlowExpectedError[extra-arg]
       idLoader.loadMany(1, 2, 3);
     }).toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
@@ -80,7 +81,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   });
 
   it('Batch function must return a Promise, not null', async () => {
-    // $FlowExpectError
+    // $FlowExpectedError[incompatible-call]
     const badLoader = new DataLoader<number, number>(() => null);
 
     let caughtError;
@@ -99,7 +100,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Batch function must return a Promise, not a value', async () => {
     // Note: this is returning the keys directly, rather than a promise to keys.
-    // $FlowExpectError
+    // $FlowExpectedError[incompatible-call]
     const badLoader = new DataLoader<number, number>(keys => keys);
 
     let caughtError;
@@ -118,7 +119,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Batch function must return a Promise of an Array, not null', async () => {
     // Note: this resolves to undefined
-    // $FlowExpectError
+    // $FlowExpectedError[incompatible-call]
     const badLoader = new DataLoader<number, number>(async () => null);
 
     let caughtError;
@@ -162,9 +163,9 @@ describe('Provides descriptive error messages for API abuse', () => {
     }
 
     expect(() => {
-      // $FlowExpectError
       const incompleteMap = new IncompleteMap();
       const options = { cacheMap: incompleteMap };
+      // $FlowExpectedError[incompatible-call]
       new DataLoader(async keys => keys, options); // eslint-disable-line no-new
     }).toThrow(
       'Custom cacheMap missing methods: set, delete, clear'
@@ -173,7 +174,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Requires a number for maxBatchSize', () => {
     expect(() =>
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       new DataLoader(async keys => keys, { maxBatchSize: null })
     ).toThrow('maxBatchSize must be a positive number: null');
   });
@@ -186,14 +187,14 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Requires a function for cacheKeyFn', () => {
     expect(() =>
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       new DataLoader(async keys => keys, { cacheKeyFn: null })
     ).toThrow('cacheKeyFn must be a function: null');
   });
 
   it('Requires a function for batchScheduleFn', () => {
     expect(() =>
-      // $FlowExpectError
+      // $FlowExpectedError[incompatible-call]
       new DataLoader(async keys => keys, { batchScheduleFn: null })
     ).toThrow('batchScheduleFn must be a function: null');
   });

@@ -46,7 +46,7 @@
     "@changesets/cli": "^2.22.0",
     "babel-eslint": "10.0.3",
     "eslint": "6.6.0",
-    "flow-bin": "0.112.0",
+    "flow-bin": "0.167.0",
     "jest": "24.9.0",
     "sane": "4.1.0"
   },
