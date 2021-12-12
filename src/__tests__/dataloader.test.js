@@ -34,7 +34,7 @@ describe('Primary API', () => {
   });
 
   it('references the loader as "this" in the batch function', async () => {
-    let that;
+    let that: DataLoader<number, number>;
     const loader = new DataLoader<number, number>(async function (keys) {
       that = this;
       return keys;

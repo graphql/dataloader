@@ -9,8 +9,8 @@
 
 // A Function, which when given an Array of keys, returns a Promise of an Array
 // of values or Errors.
-export type BatchLoadFn<K, V> =
-  (keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
+export type BatchLoadFn<K, V, C> =
+  (this: DataLoader<K, V, C>, keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
@@ -43,7 +43,7 @@ export interface CacheMap<K, V> {
  */
 class DataLoader<K, V, C = K> {
   constructor(
-    batchLoadFn: BatchLoadFn<K, V>,
+    batchLoadFn: BatchLoadFn<K, V, C>,
     options?: Options<K, V, C>
   ) {
     if (typeof batchLoadFn !== 'function') {
@@ -61,7 +61,7 @@ class DataLoader<K, V, C = K> {
   }
 
   // Private
-  _batchLoadFn: BatchLoadFn<K, V>;
+  _batchLoadFn: BatchLoadFn<K, V, C>;
   _maxBatchSize: number;
   _batchScheduleFn: (() => void) => void;
   _cacheKeyFn: K => C;
