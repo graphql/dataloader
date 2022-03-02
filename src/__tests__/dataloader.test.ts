@@ -3,16 +3,14 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
 import type { Options } from '..';
-const DataLoader = require('..');
+import DataLoader from '..';
 
 function idLoader<K, C = K>(
   options?: Options<K, K, C>
-): [ DataLoader<K, K, C>, Array<$ReadOnlyArray<K>> ] {
+): [ DataLoader<K, K, C>, Array<readonly K[]> ] {
   const loadCalls = [];
   const identityLoader = new DataLoader(keys => {
     loadCalls.push(keys);
@@ -386,7 +384,7 @@ describe('Represents Errors', () => {
 
   it('Resolves to error to indicate failure', async () => {
     const loadCalls = [];
-    const evenLoader = new DataLoader(keys => {
+    const evenLoader = new DataLoader((keys: readonly number[]) => {
       loadCalls.push(keys);
       return Promise.resolve(
         keys.map(key => key % 2 === 0 ? key : new Error(`Odd: ${key}`))
@@ -400,7 +398,7 @@ describe('Represents Errors', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe('Odd: 1');
+    expect((caughtError as any).message).toBe('Odd: 1');
 
     const value2 = await evenLoader.load(2);
     expect(value2).toBe(2);
@@ -410,7 +408,7 @@ describe('Represents Errors', () => {
 
   it('Can represent failures and successes simultaneously', async () => {
     const loadCalls = [];
-    const evenLoader = new DataLoader(keys => {
+    const evenLoader = new DataLoader((keys: readonly number[]) => {
       loadCalls.push(keys);
       return Promise.resolve(
         keys.map(key => key % 2 === 0 ? key : new Error(`Odd: ${key}`))
@@ -427,7 +425,7 @@ describe('Represents Errors', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe('Odd: 1');
+    expect((caughtError as any).message).toBe('Odd: 1');
 
     expect(await promise2).toBe(2);
 
@@ -450,7 +448,7 @@ describe('Represents Errors', () => {
       caughtErrorA = error;
     }
     expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('Error: 1');
+    expect((caughtErrorA as any).message).toBe('Error: 1');
 
     let caughtErrorB;
     try {
@@ -459,7 +457,7 @@ describe('Represents Errors', () => {
       caughtErrorB = error;
     }
     expect(caughtErrorB).toBeInstanceOf(Error);
-    expect((caughtErrorB: any).message).toBe('Error: 1');
+    expect((caughtErrorB as any).message).toBe('Error: 1');
 
     expect(loadCalls).toEqual([ [ 1 ] ]);
   });
@@ -479,7 +477,7 @@ describe('Represents Errors', () => {
       caughtErrorA = error;
     }
     expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('Error: 1');
+    expect((caughtErrorA as any).message).toBe('Error: 1');
 
     expect(loadCalls).toEqual([]);
   });
@@ -505,7 +503,7 @@ describe('Represents Errors', () => {
       caughtErrorA = error;
     }
     expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('Error: 1');
+    expect((caughtErrorA as any).message).toBe('Error: 1');
 
     let caughtErrorB;
     try {
@@ -518,7 +516,7 @@ describe('Represents Errors', () => {
       caughtErrorB = error;
     }
     expect(caughtErrorB).toBeInstanceOf(Error);
-    expect((caughtErrorB: any).message).toBe('Error: 1');
+    expect((caughtErrorB as any).message).toBe('Error: 1');
 
     expect(loadCalls).toEqual([ [ 1 ], [ 1 ] ]);
   });
@@ -540,7 +538,7 @@ describe('Represents Errors', () => {
       caughtErrorA = error;
     }
     expect(caughtErrorA).toBeInstanceOf(Error);
-    expect((caughtErrorA: any).message).toBe('I am a terrible loader');
+    expect((caughtErrorA as any).message).toBe('I am a terrible loader');
 
     let caughtErrorB;
     try {
@@ -724,11 +722,11 @@ describe('Accepts options', () => {
   });
 
   describe('Accepts object key in custom cacheKey function', () => {
-    function cacheKey(key: {[string]: any}): string {
+    function cacheKey(key: {[key: string]: any}): string {
       return Object.keys(key).sort().map(k => k + ':' + key[k]).join();
     }
 
-    type Obj = { [string]: number };
+    type Obj = { [key: string]: number };
 
     it('Accepts objects with a complex key', async () => {
       const identityLoadCalls = [];
@@ -959,8 +957,8 @@ describe('It is resilient to job queue ordering', () => {
   it('can call a loader from a loader', async () => {
     const deepLoadCalls = [];
     const deepLoader = new DataLoader<
-      $ReadOnlyArray<string>,
-      $ReadOnlyArray<string>
+      readonly string[],
+      readonly string[]
     >(keys => {
       deepLoadCalls.push(keys);
       return Promise.resolve(keys);

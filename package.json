@@ -22,32 +22,27 @@
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
     "lint": "eslint src",
-    "check": "flow check --max-warnings 0",
-    "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
-    "watch": "babel resources/watch.js | node",
+    "check": "tsc --noEmit",
+    "build": "tsc",
+    "watch": "tsc --watch",
     "testonly": "jest src",
     "prerelease": ". ./resources/prepublish.sh",
     "release": "changeset publish"
   },
   "files": [
     "index.js",
-    "index.js.flow",
     "index.d.ts",
     "README.md",
     "LICENSE",
     "PATENTS"
   ],
   "devDependencies": {
-    "@babel/cli": "7.7.0",
-    "@babel/core": "7.7.2",
-    "@babel/node": "7.7.0",
-    "@babel/preset-env": "7.7.1",
-    "@babel/preset-flow": "7.0.0",
     "@changesets/cli": "^2.22.0",
-    "babel-eslint": "10.0.3",
+    "@types/jest": "27.4.0",
     "eslint": "6.6.0",
-    "flow-bin": "0.112.0",
     "jest": "24.9.0",
+    "ts-jest": "27.1.3",
+    "typescript": "4.5.5",
     "sane": "4.1.0"
   },
   "publishConfig": {

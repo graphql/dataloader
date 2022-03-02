@@ -3,19 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-// Mock out process.nextTick and setImmediate as not existing for this test
-// before requiring.
-process.nextTick = (null: any);
-global.setImmediate = (null: any);
-const DataLoader = require('..');
+// Mock out process.nextTick as not existing for this test before requiring.
+process.nextTick = (null as any);
+import DataLoader from '..';
 
-describe('Old browser support', () => {
-  it('batches multiple requests without setImmediate', async () => {
-    const loadCalls = [];
+describe('Browser support', () => {
+  it('batches multiple requests without process.nextTick', async () => {
+    const loadCalls: Array<readonly number[]> = [];
     const identityLoader = new DataLoader<number, number>(async keys => {
       loadCalls.push(keys);
       return keys;
