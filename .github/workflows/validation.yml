@@ -4,26 +4,29 @@ on: push
 
 jobs:
   validation:
+    name: Testing on Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12, 14, 16, 17]
     steps:
-      - uses: actions/checkout@master
-      - name: Use Node.js 12.x
-        uses: actions/setup-node@v1
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Use Node ${{ matrix.node-version }}
+        uses: actions/setup-node@master
         with:
-          node-version: 12.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-      - name: Install dependencies
-        run: npm install
-      - name: Lint
-        run: npm run lint
+          node-version: ${{ matrix.node-version }}
+
+      - name: Get yarn cache
+        uses: c-hive/gha-yarn-cache@v2
+
+      - name: Install Dependencies using Yarn
+        run: yarn --ignore-engines
+
       - name: Tests
-        run: npm run test:only 
+        run: yarn test:ci 
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
