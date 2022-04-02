@@ -26,8 +26,8 @@
     "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
     "watch": "babel resources/watch.js | node",
     "testonly": "jest src",
-    "preversion": ". ./resources/checkgit.sh && npm test",
-    "prepublish": ". ./resources/prepublish.sh"
+    "prerelease": ". ./resources/prepublish.sh",
+    "release": "changeset publish"
   },
   "files": [
     "index.js",
@@ -43,10 +43,14 @@
     "@babel/node": "7.7.0",
     "@babel/preset-env": "7.7.1",
     "@babel/preset-flow": "7.0.0",
+    "@changesets/cli": "^2.22.0",
     "babel-eslint": "10.0.3",
     "eslint": "6.6.0",
     "flow-bin": "0.112.0",
     "jest": "24.9.0",
     "sane": "4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
