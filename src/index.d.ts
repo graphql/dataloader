@@ -106,7 +106,7 @@ declare namespace DataLoader {
 
     /**
      * Default `key => key`. Produces cache key for a given load key. Useful
-     * when objects are keys and two objects should be considered equivalent.
+     * when keys are objects and two objects should be considered equivalent.
      */
     cacheKeyFn?: (key: K) => C,
 
