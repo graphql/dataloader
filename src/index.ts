@@ -19,7 +19,7 @@ export interface Options<K, V, C = K> {
   cache?: boolean;
   cacheKeyFn?: (key: K) => C;
   cacheMap?: CacheMap<C, Promise<V>> | null;
-};
+}
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
 export interface CacheMap<K, V> {
@@ -27,7 +27,7 @@ export interface CacheMap<K, V> {
   set(key: K, value: V): any;
   delete(key: K): any;
   clear(): any;
-};
+}
 
 /**
  * A `DataLoader` creates a public API for loading data from a particular
@@ -237,9 +237,9 @@ const enqueuePostPromiseJob =
         process.nextTick(fn);
       });
     } :
-    typeof setImmediate === 'function' ? function (fn) {
+    typeof setImmediate === 'function' ? function (fn: () => void) {
       setImmediate(fn);
-    } : function (fn) {
+    } : function (fn: () => void) {
       setTimeout(fn);
     };
 
@@ -347,7 +347,7 @@ function dispatchBatch<K, V>(
         batch.callbacks[i].resolve(value);
       }
     }
-  }, (error) => {
+  }, error => {
     failedDispatch(loader, batch, error);
   });
 }
@@ -411,7 +411,9 @@ function getValidBatchScheduleFn(
 }
 
 // Private: given the DataLoader's options, produce a cache key function.
-function getValidCacheKeyFn<K, C>(options?: Options<K, any, C>): ((key: K) => C) {
+function getValidCacheKeyFn<K, C>(
+  options?: Options<K, any, C>
+): ((key: K) => C) {
   const cacheKeyFn = options && options.cacheKeyFn;
   if (cacheKeyFn === undefined) {
     return key => key as any;
