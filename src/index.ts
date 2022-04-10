@@ -448,7 +448,7 @@ function getValidCacheMap<K, V, C>(
 }
 
 // Private
-function isArrayLike(x: any): boolean {
+function isArrayLike<T>(x: any): x is ArrayLike<T> {
   return (
     typeof x === 'object' &&
     x !== null &&
