@@ -608,6 +608,8 @@ const myLoader = new DataLoader(objResults(myBatchLoader))
 
 Looking to get started with a specific back-end? Try the [loaders in the examples directory](/examples).
 
+Want to access your request context from your DataLoader functions? There's an [example of how to do that too](/examples/ContextBinding.md)!
+
 ## Other Implementations
 
 Listed in alphabetical order
