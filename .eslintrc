@@ -1,15 +1,12 @@
 {
-  "globals": {
-    "$ReadOnlyArray": true
-  },
-
-  "parser": "babel-eslint",
-
   "env": {
     "es6": true,
     "node": true,
     "jest": true
   },
+
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
 
   "rules": {
     "array-bracket-spacing": [2, "always"],
@@ -144,7 +141,7 @@
     "no-unneeded-ternary": 2,
     "no-unreachable": 2,
     "no-unused-expressions": 2,
-    "no-unused-vars": [2, {"vars": "all", "args": "after-used"}],
+    "@typescript-eslint/no-unused-vars": [2, {"vars": "all", "args": "after-used"}],
     "no-use-before-define": 0,
     "no-useless-call": 2,
     "no-var": 0,
