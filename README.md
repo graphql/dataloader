@@ -339,7 +339,7 @@ so later requests will load new values.
 
 ```js
 const myLoader = new DataLoader(keys => {
-  identityLoader.clearAll()
+  myLoader.clearAll()
   return someBatchLoadFn(keys)
 })
 ```
