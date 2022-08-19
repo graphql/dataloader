@@ -8,32 +8,10 @@ on:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@master
-        with:
-          # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
-          fetch-depth: 0
-
-      - name: Setup Node.js 16.x
-        uses: actions/setup-node@master
-        with:
-          node-version: 16.x
-
-      - name: Get yarn cache
-        uses: c-hive/gha-yarn-cache@v2
-
-      - name: Install Dependencies using Yarn
-        run: yarn --ignore-engines
-
-      - name: Create Release Pull Request or Publish to npm
-        id: changesets
-        uses: changesets/action@master
-        with:
-          publish: npm run release
-          commit: "release: update package versions"
-          title: "Upcoming Release Changes"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    uses: the-guild-org/shared-config/.github/workflows/release-stable.yml@main
+    with:
+      releaseScript: release
+      nodeVersion: 16
+    secrets:
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
+      npmToken: ${{ secrets.NPM_TOKEN }}
