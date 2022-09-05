@@ -637,6 +637,8 @@ Listed in alphabetical order
   * [Dataloader](https://github.com/cksac/dataloader-rs)
 * Swift
   * [SwiftDataLoader](https://github.com/kimdv/SwiftDataLoader)
+* C++
+  * [cppdataloader](https://github.com/jafarlihi/cppdataloader)
 
 ## Video Source Code Walkthrough
 
