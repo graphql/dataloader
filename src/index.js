@@ -302,7 +302,16 @@ function dispatchBatch<K, V>(
 
   // Call the provided batchLoadFn for this loader with the batch's keys and
   // with the loader as the `this` context.
-  var batchPromise = loader._batchLoadFn(batch.keys);
+  var batchPromise;
+  try {
+    batchPromise = loader._batchLoadFn(batch.keys);
+  } catch (e) {
+    return failedDispatch(loader, batch, new TypeError(
+      'DataLoader must be constructed with a function which accepts ' +
+      'Array<key> and returns Promise<Array<value>>, but the function ' +
+      `errored synchronously: ${String(e)}.`
+    ));
+  }
 
   // Assert the expected response from batchLoadFn
   if (!batchPromise || typeof batchPromise.then !== 'function') {
