@@ -120,6 +120,21 @@ describe('Primary API', () => {
     expect(loadCalls).toEqual([ [ 1, 2 ], [ 3 ] ]);
   });
 
+  it('applies maxBatchSize correctly with duplicate keys', async () => {
+    const [ identityLoader, loadCalls ] = idLoader<string>({
+      maxBatchSize: 3,
+      batchScheduleFn: callback => { setTimeout(callback, 100); },
+    });
+
+    const values = [ 'a', 'b', 'a', 'a', 'a', 'b', 'c' ];
+    const results = await Promise.all(values.map(
+      value => identityLoader.load(value)
+    ));
+
+    expect(results).toEqual(values);
+    expect(loadCalls).toEqual([ [ 'a', 'b', 'c' ] ]);
+  });
+
   it('batches cached requests', async () => {
     const loadCalls = [];
     let resolveBatch = () => {};
@@ -185,8 +200,9 @@ describe('Primary API', () => {
     // Move to next macro-task (tick)
     await new Promise(setImmediate);
 
-    // Promise 1 resolves first since max batch size is 1
-    expect(promise1Resolved).toBe(true);
+    // Promise 1 resolves first since max batch size is 1,
+    // but it still hasn't resolved yet.
+    expect(promise1Resolved).toBe(false);
     expect(promise2Resolved).toBe(false);
 
     resolveBatch();
