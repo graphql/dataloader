@@ -16,6 +16,8 @@ We actively welcome your pull requests for documentation and code.
 4. Ensure the test suite passes.
 5. Make sure your code lints.
 6. If you haven't already, complete the Contributor License Agreement ("CLA").
+7. Run `yarn changeset` and describe the change you're proposing. Commit the file it creates in `.changeset` to the repo. [You can read more about changeset here.](https://github.com/changesets/changesets)
+8. Open a Pull Request so we can review and incorporate your change.
 
 ## Issues
 
