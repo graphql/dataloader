@@ -268,9 +268,7 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
   if (
     existingBatch !== null &&
     !existingBatch.hasDispatched &&
-    existingBatch.keys.length < loader._maxBatchSize &&
-    (!existingBatch.cacheHits ||
-      existingBatch.cacheHits.length < loader._maxBatchSize)
+    existingBatch.keys.length < loader._maxBatchSize
   ) {
     return existingBatch;
   }
