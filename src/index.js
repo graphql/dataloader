@@ -24,12 +24,12 @@ export type Options<K, V, C = K> = {
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
-export type CacheMap<K, V> = {
+export interface CacheMap<K, V> {
   get(key: K): V | void;
   set(key: K, value: V): any;
   delete(key: K): any;
   clear(): any;
-};
+}
 
 /**
  * A `DataLoader` creates a public API for loading data from a particular
@@ -305,6 +305,7 @@ function dispatchBatch<K, V>(
   var batchPromise = loader._batchLoadFn(batch.keys);
 
   // Assert the expected response from batchLoadFn
+  // $FlowIgnore[method-unbinding]
   if (!batchPromise || typeof batchPromise.then !== 'function') {
     return failedDispatch(loader, batch, new TypeError(
       'DataLoader must be constructed with a function which accepts ' +
@@ -437,6 +438,7 @@ function getValidCacheMap<K, V, C>(
   if (cacheMap !== null) {
     var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
     var missingFunctions = cacheFunctions
+      // $FlowIgnore[prop-missing]
       .filter(fnName => cacheMap && typeof cacheMap[fnName] !== 'function');
     if (missingFunctions.length !== 0) {
       throw new TypeError(
@@ -454,6 +456,7 @@ function isArrayLike(x: mixed): boolean {
     x !== null &&
     typeof x.length === 'number' &&
     (x.length === 0 ||
+      // $FlowIgnore[method-unbinding]
       (x.length > 0 && Object.prototype.hasOwnProperty.call(x, x.length - 1)))
   );
 }

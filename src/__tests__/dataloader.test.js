@@ -50,6 +50,7 @@ describe('Primary API', () => {
     let that;
     const loader = new DataLoader<number, number>(async keys => keys, {
       cacheKeyFn(key) {
+        // $FlowIgnore[object-this-reference]
         that = this;
         return key;
       }
