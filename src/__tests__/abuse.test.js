@@ -97,6 +97,26 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
   });
 
+  it('Batch function must return a Promise, not error synchronously', async () => {
+    // $FlowExpectError
+    const badLoader = new DataLoader<number, number>(() => {
+      throw new Error("Mock Synchronous Error")
+    });
+
+    let caughtError;
+    try {
+      await badLoader.load(1);
+    } catch (error) {
+      caughtError = error;
+    }
+    expect(caughtError).toBeInstanceOf(Error);
+    expect((caughtError: any).message).toBe(
+      'DataLoader must be constructed with a function which accepts ' +
+      'Array<key> and returns Promise<Array<value>>, but the function ' +
+      `errored synchronously: Error: Mock Synchronous Error.`
+    );
+  });
+
   it('Batch function must return a Promise, not a value', async () => {
     // Note: this is returning the keys directly, rather than a promise to keys.
     // $FlowExpectError
