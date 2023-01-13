@@ -10,5 +10,4 @@
 [libs]
 
 [options]
-suppress_comment=\\(.\\|\n\\)*\\$FlowExpectError
 include_warnings=true

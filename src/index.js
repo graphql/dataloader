@@ -9,8 +9,8 @@
 
 // A Function, which when given an Array of keys, returns a Promise of an Array
 // of values or Errors.
-export type BatchLoadFn<K, V> =
-  (keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
+export type BatchLoadFn<K, V, C> =
+  (this: DataLoader<K, V, C>, keys: $ReadOnlyArray<K>) => Promise<$ReadOnlyArray<V | Error>>;
 
 // Optionally turn off batching or caching or provide a cache key function or a
 // custom cache instance.
@@ -24,12 +24,12 @@ export type Options<K, V, C = K> = {
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
-export type CacheMap<K, V> = {
+export interface CacheMap<K, V> {
   get(key: K): V | void;
   set(key: K, value: V): any;
   delete(key: K): any;
   clear(): any;
-};
+}
 
 /**
  * A `DataLoader` creates a public API for loading data from a particular
@@ -43,7 +43,7 @@ export type CacheMap<K, V> = {
  */
 class DataLoader<K, V, C = K> {
   constructor(
-    batchLoadFn: BatchLoadFn<K, V>,
+    batchLoadFn: BatchLoadFn<K, V, C>,
     options?: Options<K, V, C>
   ) {
     if (typeof batchLoadFn !== 'function') {
@@ -61,7 +61,7 @@ class DataLoader<K, V, C = K> {
   }
 
   // Private
-  _batchLoadFn: BatchLoadFn<K, V>;
+  _batchLoadFn: BatchLoadFn<K, V, C>;
   _maxBatchSize: number;
   _batchScheduleFn: (() => void) => void;
   _cacheKeyFn: K => C;
@@ -314,6 +314,7 @@ function dispatchBatch<K, V>(
   }
 
   // Assert the expected response from batchLoadFn
+  // $FlowIgnore[method-unbinding]
   if (!batchPromise || typeof batchPromise.then !== 'function') {
     return failedDispatch(loader, batch, new TypeError(
       'DataLoader must be constructed with a function which accepts ' +
@@ -446,6 +447,7 @@ function getValidCacheMap<K, V, C>(
   if (cacheMap !== null) {
     var cacheFunctions = [ 'get', 'set', 'delete', 'clear' ];
     var missingFunctions = cacheFunctions
+      // $FlowIgnore[prop-missing]
       .filter(fnName => cacheMap && typeof cacheMap[fnName] !== 'function');
     if (missingFunctions.length !== 0) {
       throw new TypeError(
@@ -463,6 +465,7 @@ function isArrayLike(x: mixed): boolean {
     x !== null &&
     typeof x.length === 'number' &&
     (x.length === 0 ||
+      // $FlowIgnore[method-unbinding]
       (x.length > 0 && Object.prototype.hasOwnProperty.call(x, x.length - 1)))
   );
 }
