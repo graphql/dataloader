@@ -412,6 +412,14 @@ describe('Primary API', () => {
     expect(loadCalls).toEqual([ [ 'B' ] ]);
   });
 
+  it('allows giving the loader a name', () => {
+    expect(new DataLoader(() => []).name).toBeNull();
+    expect(new DataLoader(() => [], {}).name).toBeNull();
+
+    expect(new DataLoader(() => [], { name: 'Some name' }).name).toBe(
+      'Some name'
+    );
+  });
 });
 
 describe('Represents Errors', () => {
