@@ -24,10 +24,10 @@ describe('Old browser support', () => {
     const promise1 = identityLoader.load(1);
     const promise2 = identityLoader.load(2);
 
-    const [ value1, value2 ] = await Promise.all([ promise1, promise2 ]);
+    const [value1, value2] = await Promise.all([promise1, promise2]);
     expect(value1).toBe(1);
     expect(value2).toBe(2);
 
-    expect(loadCalls).toEqual([ [ 1, 2 ] ]);
+    expect(loadCalls).toEqual([[1, 2]]);
   });
 });

@@ -10,14 +10,13 @@
 const DataLoader = require('..');
 
 describe('Provides descriptive error messages for API abuse', () => {
-
   it('Loader creation requires a function', () => {
     expect(() => {
       // $FlowExpectError
       new DataLoader(); // eslint-disable-line no-new
     }).toThrow(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but got: undefined.'
+        'Array<key> and returns Promise<Array<value>>, but got: undefined.',
     );
 
     expect(() => {
@@ -25,7 +24,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       new DataLoader({}); // eslint-disable-line no-new
     }).toThrow(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but got: [object Object].'
+        'Array<key> and returns Promise<Array<value>>, but got: [object Object].',
     );
   });
 
@@ -37,7 +36,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       idLoader.load();
     }).toThrow(
       'The loader.load() function must be called with a value, ' +
-      'but got: undefined.'
+        'but got: undefined.',
     );
 
     expect(() => {
@@ -45,7 +44,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       idLoader.load(null);
     }).toThrow(
       'The loader.load() function must be called with a value, ' +
-      'but got: null.'
+        'but got: null.',
     );
 
     // Falsey values like the number 0 is acceptable
@@ -62,7 +61,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       idLoader.loadMany();
     }).toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
-      'but got: undefined.'
+        'but got: undefined.',
     );
 
     expect(() => {
@@ -70,7 +69,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       idLoader.loadMany(1, 2, 3);
     }).toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
-      'but got: 1.'
+        'but got: 1.',
     );
 
     // Empty array is acceptable
@@ -92,15 +91,15 @@ describe('Provides descriptive error messages for API abuse', () => {
     expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError: any).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but the function did ' +
-      'not return a Promise: null.'
+        'Array<key> and returns Promise<Array<value>>, but the function did ' +
+        'not return a Promise: null.',
     );
   });
 
   it('Batch function must return a Promise, not error synchronously', async () => {
     // $FlowExpectError
     const badLoader = new DataLoader<number, number>(() => {
-      throw new Error("Mock Synchronous Error")
+      throw new Error('Mock Synchronous Error');
     });
 
     let caughtError;
@@ -112,8 +111,8 @@ describe('Provides descriptive error messages for API abuse', () => {
     expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError: any).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but the function ' +
-      `errored synchronously: Error: Mock Synchronous Error.`
+        'Array<key> and returns Promise<Array<value>>, but the function ' +
+        'errored synchronously: Error: Mock Synchronous Error.',
     );
   });
 
@@ -131,8 +130,8 @@ describe('Provides descriptive error messages for API abuse', () => {
     expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError: any).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but the function did ' +
-      'not return a Promise: 1.'
+        'Array<key> and returns Promise<Array<value>>, but the function did ' +
+        'not return a Promise: 1.',
     );
   });
 
@@ -150,8 +149,8 @@ describe('Provides descriptive error messages for API abuse', () => {
     expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError: any).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but the function did ' +
-      'not return a Promise of an Array: null.'
+        'Array<key> and returns Promise<Array<value>>, but the function did ' +
+        'not return a Promise of an Array: null.',
     );
   });
 
@@ -168,11 +167,11 @@ describe('Provides descriptive error messages for API abuse', () => {
     expect(caughtError).toBeInstanceOf(Error);
     expect((caughtError: any).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
-      'Array<key> and returns Promise<Array<value>>, but the function did ' +
-      'not return a Promise of an Array of the same length as the Array ' +
-      'of keys.' +
-      '\n\nKeys:\n1' +
-      '\n\nValues:\n'
+        'Array<key> and returns Promise<Array<value>>, but the function did ' +
+        'not return a Promise of an Array of the same length as the Array ' +
+        'of keys.' +
+        '\n\nKeys:\n1' +
+        '\n\nValues:\n',
     );
   });
 
@@ -186,35 +185,36 @@ describe('Provides descriptive error messages for API abuse', () => {
       const incompleteMap = new IncompleteMap();
       const options = { cacheMap: incompleteMap };
       new DataLoader(async keys => keys, options); // eslint-disable-line no-new
-    }).toThrow(
-      'Custom cacheMap missing methods: set, delete, clear'
-    );
+    }).toThrow('Custom cacheMap missing methods: set, delete, clear');
   });
 
   it('Requires a number for maxBatchSize', () => {
-    expect(() =>
-      // $FlowExpectError
-      new DataLoader(async keys => keys, { maxBatchSize: null })
+    expect(
+      () =>
+        // $FlowExpectError
+        new DataLoader(async keys => keys, { maxBatchSize: null }),
     ).toThrow('maxBatchSize must be a positive number: null');
   });
 
   it('Requires a positive number for maxBatchSize', () => {
-    expect(() =>
-      new DataLoader(async keys => keys, { maxBatchSize: 0 })
+    expect(
+      () => new DataLoader(async keys => keys, { maxBatchSize: 0 }),
     ).toThrow('maxBatchSize must be a positive number: 0');
   });
 
   it('Requires a function for cacheKeyFn', () => {
-    expect(() =>
-      // $FlowExpectError
-      new DataLoader(async keys => keys, { cacheKeyFn: null })
+    expect(
+      () =>
+        // $FlowExpectError
+        new DataLoader(async keys => keys, { cacheKeyFn: null }),
     ).toThrow('cacheKeyFn must be a function: null');
   });
 
   it('Requires a function for batchScheduleFn', () => {
-    expect(() =>
-      // $FlowExpectError
-      new DataLoader(async keys => keys, { batchScheduleFn: null })
+    expect(
+      () =>
+        // $FlowExpectError
+        new DataLoader(async keys => keys, { batchScheduleFn: null }),
     ).toThrow('batchScheduleFn must be a function: null');
   });
 });

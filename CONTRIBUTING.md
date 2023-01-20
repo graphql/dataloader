@@ -4,6 +4,7 @@ We want to make contributing to this project as easy and transparent as
 possible.
 
 ## Code of Conduct
+
 This project's code of conduct is described in the GraphQL Foundation's [`CODE_OF_CONDUCT.md`](https://github.com/graphql/foundation/blob/master/CODE-OF-CONDUCT.md)
 
 ## Pull Requests
@@ -26,9 +27,9 @@ clear and has sufficient instructions to be able to reproduce the issue.
 
 ## Coding Style
 
-* 2 spaces for indentation rather than tabs
-* 80 character line length
-* See .eslintrc for the gory details.
+- 2 spaces for indentation rather than tabs
+- 80 character line length
+- See .eslintrc for the gory details.
 
 ## License
 
