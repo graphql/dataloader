@@ -21,6 +21,7 @@ export type Options<K, V, C = K> = {
   cache?: boolean;
   cacheKeyFn?: (key: K) => C;
   cacheMap?: CacheMap<C, Promise<V>> | null;
+  name?: string;
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -58,6 +59,7 @@ class DataLoader<K, V, C = K> {
     this._cacheKeyFn = getValidCacheKeyFn(options);
     this._cacheMap = getValidCacheMap(options);
     this._batch = null;
+    this.name = getValidName(options);
   }
 
   // Private
@@ -201,6 +203,13 @@ class DataLoader<K, V, C = K> {
     }
     return this;
   }
+
+  /**
+   * The name given to this `DataLoader` instance. Useful for APM tools.
+   *
+   * Is `null` if not set in the constructor.
+   */
+  name: string | null;
 }
 
 // Private: Enqueue a Job to be executed after all "PromiseJobs" Jobs.
@@ -454,6 +463,16 @@ function getValidCacheMap<K, V, C>(
     }
   }
   return cacheMap;
+}
+
+function getValidName<K, V, C>(
+  options: ?Options<K, V, C>
+): string | null {
+  if (options && options.name) {
+    return options.name;
+  }
+
+  return null;
 }
 
 // Private

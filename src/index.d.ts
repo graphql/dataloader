@@ -115,6 +115,13 @@ declare namespace DataLoader {
      * to be used as cache. May be set to `null` to disable caching.
      */
     cacheMap?: CacheMap<C, Promise<V>> | null;
+
+    /**
+     * The name given to this `DataLoader` instance. Useful for APM tools.
+     *
+     * Is `null` if not set in the constructor.
+     */
+    name: string | null;
   }
 }
 
