@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12, 14, 16, 17]
+        node-version: [14, 16, 18, 19]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
