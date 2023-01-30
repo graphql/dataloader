@@ -15,17 +15,29 @@ const db = require('./db'); // an instance of Knex client
 // The list of data loaders
 
 const loaders = {
-  user: new DataLoader(ids => db.table('users')
-    .whereIn('id', ids).select()
-    .then(rows => ids.map(id => rows.find(x => x.id === id)))),
+  user: new DataLoader(ids =>
+    db
+      .table('users')
+      .whereIn('id', ids)
+      .select()
+      .then(rows => ids.map(id => rows.find(x => x.id === id))),
+  ),
 
-  story: new DataLoader(ids => db.table('stories')
-    .whereIn('id', ids).select()
-    .then(rows => ids.map(id => rows.find(x => x.id === id)))),
+  story: new DataLoader(ids =>
+    db
+      .table('stories')
+      .whereIn('id', ids)
+      .select()
+      .then(rows => ids.map(id => rows.find(x => x.id === id))),
+  ),
 
-  storiesByUserId: new DataLoader(ids => db.table('stories')
-    .whereIn('author_id', ids).select()
-    .then(rows => ids.map(id => rows.filter(x => x.author_id === id)))),
+  storiesByUserId: new DataLoader(ids =>
+    db
+      .table('stories')
+      .whereIn('author_id', ids)
+      .select()
+      .then(rows => ids.map(id => rows.filter(x => x.author_id === id))),
+  ),
 };
 
 // Usage
@@ -33,7 +45,7 @@ const loaders = {
 const [user, stories] = await Promise.all([
   loaders.user.load('1234'),
   loaders.storiesByUserId.load('1234'),
-])
+]);
 ```
 
 For a complete example visit [kriasoft/nodejs-api-starter][nsk].

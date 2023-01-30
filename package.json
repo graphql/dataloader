@@ -21,7 +21,7 @@
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
-    "lint": "eslint src",
+    "lint": "eslint .",
     "check": "flow check --max-warnings 0",
     "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
     "watch": "babel resources/watch.js | node",
@@ -43,15 +43,30 @@
     "@babel/node": "7.7.0",
     "@babel/preset-env": "7.7.1",
     "@babel/preset-flow": "7.0.0",
-    "@changesets/cli": "2.24.3",
     "@changesets/changelog-github": "0.4.6",
+    "@changesets/cli": "2.24.3",
     "babel-eslint": "10.0.3",
     "eslint": "6.6.0",
+    "eslint-plugin-prettier": "^3.4.1",
     "flow-bin": "0.112.0",
     "jest": "24.9.0",
+    "prettier": "^2.8.3",
     "sane": "4.1.0"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "singleQuote": true,
+    "trailingComma": "all",
+    "overrides": [
+      {
+        "files": "src/**/*.js",
+        "options": {
+          "parser": "babel-flow"
+        }
+      }
+    ]
   }
 }

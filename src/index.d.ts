@@ -16,8 +16,10 @@
  * per web request.
  */
 declare class DataLoader<K, V, C = K> {
-
-  constructor(batchLoadFn: DataLoader.BatchLoadFn<K, V>, options?: DataLoader.Options<K, V, C>);
+  constructor(
+    batchLoadFn: DataLoader.BatchLoadFn<K, V>,
+    options?: DataLoader.Options<K, V, C>,
+  );
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
@@ -66,23 +68,23 @@ declare namespace DataLoader {
     set(key: K, value: V): any;
     delete(key: K): any;
     clear(): any;
-  }
+  };
 
   // A Function, which when given an Array of keys, returns a Promise of an Array
   // of values or Errors.
-  export type BatchLoadFn<K, V> =
-    (keys: ReadonlyArray<K>) => PromiseLike<ArrayLike<V | Error>>;
+  export type BatchLoadFn<K, V> = (
+    keys: ReadonlyArray<K>,
+  ) => PromiseLike<ArrayLike<V | Error>>;
 
   // Optionally turn off batching or caching or provide a cache key function or a
   // custom cache instance.
   export type Options<K, V, C = K> = {
-
     /**
      * Default `true`. Set to `false` to disable batching, invoking
      * `batchLoadFn` with a single load key. This is equivalent to setting
      * `maxBatchSize` to `1`.
      */
-    batch?: boolean,
+    batch?: boolean;
 
     /**
      * Default `Infinity`. Limits the number of items that get passed in to the
@@ -102,13 +104,13 @@ declare namespace DataLoader {
      * new Promise and new key in the `batchLoadFn` for every load of the same
      * key. This is equivalent to setting `cacheMap` to `null`.
      */
-    cache?: boolean,
+    cache?: boolean;
 
     /**
      * Default `key => key`. Produces cache key for a given load key. Useful
      * when keys are objects and two objects should be considered equivalent.
      */
-    cacheKeyFn?: (key: K) => C,
+    cacheKeyFn?: (key: K) => C;
 
     /**
      * Default `new Map()`. Instance of `Map` (or an object with a similar API)
@@ -122,7 +124,7 @@ declare namespace DataLoader {
      * Is `null` if not set in the constructor.
      */
     name: string | null;
-  }
+  };
 }
 
 export = DataLoader;

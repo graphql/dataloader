@@ -10,8 +10,9 @@ const Datastore = require('@google-cloud/datastore');
 
 const datastore = new Datastore();
 
-const datastoreLoader = new DataLoader(async keys => {
-    const results = await datastore.get(keys)
+const datastoreLoader = new DataLoader(
+  async keys => {
+    const results = await datastore.get(keys);
     // Sort resulting entities by the keys they were requested with.
     const entities = results[0];
     const entitiesByKey = {};
@@ -23,6 +24,6 @@ const datastoreLoader = new DataLoader(async keys => {
   {
     // Datastore complex keys need to be converted to a string for use as cache keys
     cacheKeyFn: key => JSON.stringify(key),
-  }
+  },
 );
 ```
