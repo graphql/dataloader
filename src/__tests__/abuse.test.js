@@ -97,7 +97,6 @@ describe('Provides descriptive error messages for API abuse', () => {
   });
 
   it('Batch function must return a Promise, not error synchronously', async () => {
-    // $FlowExpectError
     const badLoader = new DataLoader<number, number>(() => {
       throw new Error('Mock Synchronous Error');
     });
