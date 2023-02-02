@@ -1,3 +1,6 @@
+# Remove existing build artifacts
+rm -rf dist;
+
 # Build before publishing
 npm run build;
 
