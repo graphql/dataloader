@@ -1,5 +1,19 @@
 # dataloader
 
+## 2.2.0
+
+### Minor Changes
+
+- [#326](https://github.com/graphql/dataloader/pull/326) [`6c758d0`](https://github.com/graphql/dataloader/commit/6c758d03bef628a69b238f053da3b263cd5e3321) Thanks [@SimenB](https://github.com/SimenB)! - Add `name` property to `DataLoader`. Useful in APM tools.
+
+### Patch Changes
+
+- [#318](https://github.com/graphql/dataloader/pull/318) [`588a8b6`](https://github.com/graphql/dataloader/commit/588a8b6c6391aad042b369f10dc440c7e0458312) Thanks [@boopathi](https://github.com/boopathi)! - Fix the propagation of sync throws in the batch function to the loader function instead of crashing the process wtih an uncaught exception.
+
+* [#252](https://github.com/graphql/dataloader/pull/252) [`fae38f1`](https://github.com/graphql/dataloader/commit/fae38f14702e925d1e59051d7e5cb3a9a78bfde8) Thanks [@LinusU](https://github.com/LinusU)! - Fix types for priming cache with promise
+
+- [#321](https://github.com/graphql/dataloader/pull/321) [`3cd3a43`](https://github.com/graphql/dataloader/commit/3cd3a430bdb4f9ef2f7f265a29e93e0255277885) Thanks [@thekevinbrown](https://github.com/thekevinbrown)! - Resolves an issue where the maxBatchSize parameter wouldn't be fully used on each batch sent to the backend loader.
+
 ## 2.1.0
 
 ### Minor Changes
