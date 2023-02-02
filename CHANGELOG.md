@@ -1,5 +1,11 @@
 # dataloader
 
+## 2.2.1
+
+### Patch Changes
+
+- [#331](https://github.com/graphql/dataloader/pull/331) [`6d2efb7`](https://github.com/graphql/dataloader/commit/6d2efb7dd0363062de255e723c29a781d0ea9937) Thanks [@saihaj](https://github.com/saihaj)! - `name` is an optional property
+
 ## 2.2.0
 
 ### Minor Changes
