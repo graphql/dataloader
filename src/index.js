@@ -207,7 +207,7 @@ class DataLoader<K, V, C = K> {
    *
    * Is `null` if not set in the constructor.
    */
-  name?: string | null;
+  name: string | null;
 }
 
 // Private: Enqueue a Job to be executed after all "PromiseJobs" Jobs.
