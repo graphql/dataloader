@@ -123,7 +123,7 @@ declare namespace DataLoader {
      *
      * Is `null` if not set in the constructor.
      */
-    name: string | null;
+    name?: string | null;
   };
 }
 
