@@ -435,12 +435,12 @@ describe('Primary API', () => {
   });
 
   it('allows giving the loader a name', () => {
-    expect(new DataLoader(() => []).name).toBeNull();
-    expect(new DataLoader(() => [], {}).name).toBeNull();
+    expect(new DataLoader(() => Promise.resolve([])).name).toBeNull();
+    expect(new DataLoader(() => Promise.resolve([]), {}).name).toBeNull();
 
-    expect(new DataLoader(() => [], { name: 'Some name' }).name).toBe(
-      'Some name',
-    );
+    expect(
+      new DataLoader(() => Promise.resolve([]), { name: 'Some name' }).name,
+    ).toBe('Some name');
   });
 });
 
