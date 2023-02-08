@@ -59,6 +59,14 @@ declare class DataLoader<K, V, C = K> {
    * change is made. Returns itself for method chaining.
    */
   prime(key: K, value: V | PromiseLike<V> | Error): this;
+
+
+  /**
+   * The name given to this `DataLoader` instance. Useful for APM tools.
+   *
+   * Is `null` if not set in the constructor.
+   */
+  name: string | null;
 }
 
 declare namespace DataLoader {
