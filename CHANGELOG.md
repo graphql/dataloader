@@ -1,5 +1,11 @@
 # dataloader
 
+## 2.2.2
+
+### Patch Changes
+
+- [#334](https://github.com/graphql/dataloader/pull/334) [`e286f66`](https://github.com/graphql/dataloader/commit/e286f662657675fa790f33abcd6aa87b5aac2be3) Thanks [@henrinormak](https://github.com/henrinormak)! - Added missing type definition for Dataloader.name
+
 ## 2.2.1
 
 ### Patch Changes
