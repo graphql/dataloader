@@ -81,10 +81,11 @@ class DataLoader<K, V, C = K> {
 
     const batch = getCurrentBatch(this);
     const cacheMap = this._cacheMap;
-    const cacheKey = this._cacheKeyFn(key);
+    let cacheKey;
 
     // If caching and there is a cache-hit, return cached Promise.
     if (cacheMap) {
+      cacheKey = this._cacheKeyFn(key);
       const cachedPromise = cacheMap.get(cacheKey);
       if (cachedPromise) {
         const cacheHits = batch.cacheHits || (batch.cacheHits = []);
