@@ -23,6 +23,7 @@ export type Options<K, V, C = K> = {
   cacheKeyFn?: (key: K) => C,
   cacheMap?: CacheMap<C, Promise<V>> | null,
   name?: string,
+  maxPriority?: number,
 };
 
 // If a custom cache is provided, it must be of this type (a subset of ES6 Map).
@@ -56,7 +57,8 @@ class DataLoader<K, V, C = K> {
     this._batchScheduleFn = getValidBatchScheduleFn(options);
     this._cacheKeyFn = getValidCacheKeyFn(options);
     this._cacheMap = getValidCacheMap(options);
-    this._batch = null;
+    this._batches = new Map();
+    this._maxPriority = getValidMaxPriority(options);
     this.name = getValidName(options);
   }
 
@@ -66,12 +68,13 @@ class DataLoader<K, V, C = K> {
   _batchScheduleFn: (() => void) => void;
   _cacheKeyFn: K => C;
   _cacheMap: CacheMap<C, Promise<V>> | null;
-  _batch: Batch<K, V> | null;
+  _batches: Map<number, Batch<K, V>>;
+  _maxPriority: number;
 
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
    */
-  load(key: K): Promise<V> {
+  load(key: K, priority: number = 0): Promise<V> {
     if (key === null || key === undefined) {
       throw new TypeError(
         'The loader.load() function must be called with a value, ' +
@@ -79,7 +82,17 @@ class DataLoader<K, V, C = K> {
       );
     }
 
-    const batch = getCurrentBatch(this);
+    if (typeof priority !== 'number' || priority < 0) {
+      throw new TypeError(
+        'The priority argument to the loader.load() function must be a number ' +
+          `greater to or equal to zero, but got: ${String(priority)}.`,
+      );
+    }
+
+    const batch = getCurrentBatch(
+      this,
+      priority > this._maxPriority ? this._maxPriority : priority,
+    );
     const cacheMap = this._cacheMap;
     const cacheKey = this._cacheKeyFn(key);
 
@@ -131,7 +144,10 @@ class DataLoader<K, V, C = K> {
    *     // c instanceof Error
    *
    */
-  loadMany(keys: $ReadOnlyArray<K>): Promise<Array<V | Error>> {
+  loadMany(
+    keys: $ReadOnlyArray<K>,
+    priority: number = 0,
+  ): Promise<Array<V | Error>> {
     if (!isArrayLike(keys)) {
       throw new TypeError(
         'The loader.loadMany() function must be called with Array<key> ' +
@@ -141,7 +157,7 @@ class DataLoader<K, V, C = K> {
     // Support ArrayLike by using only minimal property access
     const loadPromises = [];
     for (let i = 0; i < keys.length; i++) {
-      loadPromises.push(this.load(keys[i]).catch(error => error));
+      loadPromises.push(this.load(keys[i], priority).catch(error => error));
     }
     return Promise.all(loadPromises);
   }
@@ -259,7 +275,7 @@ let resolvedPromise;
 
 // Private: Describes a batch of requests
 type Batch<K, V> = {
-  hasDispatched: boolean,
+  priority: number,
   keys: Array<K>,
   callbacks: Array<{
     resolve: (value: V) => void,
@@ -270,27 +286,29 @@ type Batch<K, V> = {
 
 // Private: Either returns the current batch, or creates and schedules a
 // dispatch of a new batch for the given loader.
-function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
+function getCurrentBatch<K, V>(
+  loader: DataLoader<K, V, any>,
+  priority: number,
+): Batch<K, V> {
   // If there is an existing batch which has not yet dispatched and is within
   // the limit of the batch size, then return it.
-  const existingBatch = loader._batch;
+  const existingBatch = loader._batches.get(priority);
   if (
-    existingBatch !== null &&
-    !existingBatch.hasDispatched &&
+    existingBatch !== undefined &&
     existingBatch.keys.length < loader._maxBatchSize
   ) {
     return existingBatch;
   }
 
   // Otherwise, create a new batch for this loader.
-  const newBatch = { hasDispatched: false, keys: [], callbacks: [] };
+  const newBatch = { priority, keys: [], callbacks: [] };
 
   // Store it on the loader so it may be reused.
-  loader._batch = newBatch;
+  loader._batches.set(priority, newBatch);
 
   // Then schedule a task to dispatch this batch of requests.
   loader._batchScheduleFn(() => {
-    dispatchBatch(loader, newBatch);
+    dispatchBatch(loader, newBatch, priority);
   });
 
   return newBatch;
@@ -299,9 +317,10 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
 function dispatchBatch<K, V>(
   loader: DataLoader<K, V, any>,
   batch: Batch<K, V>,
+  priority: number,
 ) {
   // Mark this batch as having been dispatched.
-  batch.hasDispatched = true;
+  loader._batches.delete(priority);
 
   // If there's nothing to load, resolve any cache hits and return early.
   if (batch.keys.length === 0) {
@@ -473,6 +492,14 @@ function getValidCacheMap<K, V, C>(
     }
   }
   return cacheMap;
+}
+
+function getValidMaxPriority<K, V, C>(options: ?Options<K, V, C>): number {
+  if (options && options.maxPriority) {
+    return options.maxPriority;
+  }
+
+  return 10;
 }
 
 function getValidName<K, V, C>(options: ?Options<K, V, C>): string | null {

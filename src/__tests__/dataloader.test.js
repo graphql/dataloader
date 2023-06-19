@@ -1071,3 +1071,31 @@ describe('It is resilient to job queue ordering', () => {
     ]);
   });
 });
+
+describe('It allows setting priorities', () => {
+  it('batches load calls with identical priorities', async () => {
+    const [identityLoader, loadCalls] = idLoader<number>();
+
+    const promise1 = identityLoader.load(1, 1);
+    const promise2 = identityLoader.load(2, 1);
+
+    const [value1, value2] = await Promise.all([promise1, promise2]);
+    expect(value1).toBe(1);
+    expect(value2).toBe(2);
+
+    expect(loadCalls).toEqual([[1, 2]]);
+  });
+
+  it('does not batch load calls with distinct priorities', async () => {
+    const [identityLoader, loadCalls] = idLoader<number>();
+
+    const promise1 = identityLoader.load(1, 0);
+    const promise2 = identityLoader.load(2, 1);
+
+    const [value1, value2] = await Promise.all([promise1, promise2]);
+    expect(value1).toBe(1);
+    expect(value2).toBe(2);
+
+    expect(loadCalls).toEqual([[1], [2]]);
+  });
+});
