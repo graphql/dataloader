@@ -4,7 +4,7 @@ DataLoader is a generic utility to be used as part of your application's data
 fetching layer to provide a simplified and consistent API over various remote
 data sources such as databases or web services via batching and caching.
 
-[![Build Status](https://travis-ci.org/graphql/dataloader.svg)](https://travis-ci.org/graphql/dataloader)
+[![Build Status](https://github.com/graphql/dataloader/actions/workflows/validation.yml/badge.svg)](https://github.com/graphql/dataloader/actions/workflows/validation.yml)
 [![Coverage Status](https://coveralls.io/repos/graphql/dataloader/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql/dataloader?branch=main)
 
 A port of the "Loader" API originally developed by [@schrockn][] at Facebook in
