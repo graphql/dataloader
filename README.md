@@ -632,6 +632,7 @@ Listed in alphabetical order
   - [Dataloader](https://github.com/sheerun/dataloader)
   - [GraphQL Batch](https://github.com/Shopify/graphql-batch)
 - Rust
+  - [Stack Queue](https://github.com/Bajix/stack-queue)
   - [Dataloader](https://github.com/cksac/dataloader-rs)
 - Swift
   - [SwiftDataLoader](https://github.com/kimdv/SwiftDataLoader)
