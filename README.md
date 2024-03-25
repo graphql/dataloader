@@ -266,17 +266,17 @@ Here's a simple example using SQL UPDATE to illustrate.
 
 ```js
 // Request begins...
-const userLoader = new DataLoader(...)
+const userLoader = new DataLoader(...);
 
 // And a value happens to be loaded (and cached).
-const user = await userLoader.load(4)
+const user = await userLoader.load(4);
 
 // A mutation occurs, invalidating what might be in cache.
-await sqlRun('UPDATE users WHERE id=4 SET username="zuck"')
-userLoader.clear(4)
+await sqlRun('UPDATE users WHERE id=4 SET username="zuck"');
+userLoader.clear(4);
 
 // Later the value load is loaded again so the mutated data appears.
-const user = await userLoader.load(4)
+const user = await userLoader.load(4);
 
 // Request completes.
 ```
@@ -292,10 +292,10 @@ In some circumstances you may wish to clear the cache for these individual Error
 
 ```js
 try {
-  const user = await userLoader.load(1)
+  const user = await userLoader.load(1);
 } catch (error) {
   if (/* determine if the error should not be cached */) {
-    userLoader.clear(1)
+    userLoader.clear(1);
   }
   throw error
 }
