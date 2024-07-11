@@ -750,6 +750,20 @@ describe('Accepts options', () => {
     expect(cacheMap.get('X')).toBe(promiseX);
   });
 
+  it('Does not call cacheKeyFn when cache is disabled', async () => {
+    const cacheKeyFnCalls = [];
+    const [identityLoader] = idLoader<string>({
+      cache: false,
+      cacheKeyFn: key => {
+        cacheKeyFnCalls.push(key);
+        return key;
+      },
+    });
+
+    await identityLoader.load('A');
+    expect(cacheKeyFnCalls).toEqual([]);
+  });
+
   it('Complex cache behavior via clearAll()', async () => {
     // This loader clears its cache as soon as a batch function is dispatched.
     const loadCalls = [];
