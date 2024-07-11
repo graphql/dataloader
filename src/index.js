@@ -81,7 +81,7 @@ class DataLoader<K, V, C = K> {
 
     const batch = getCurrentBatch(this);
     const cacheMap = this._cacheMap;
-    let cacheKey;
+    let cacheKey: ?C;
 
     // If caching and there is a cache-hit, return cached Promise.
     if (cacheMap) {
@@ -106,7 +106,7 @@ class DataLoader<K, V, C = K> {
 
     // If caching, cache this promise.
     if (cacheMap) {
-      cacheMap.set(cacheKey, promise);
+      cacheMap.set((cacheKey: any), promise);
     }
 
     return promise;
