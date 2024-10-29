@@ -412,7 +412,7 @@ function getValidMaxBatchSize(options: ?Options<any, any, any>): number {
   }
   const maxBatchSize = options && options.maxBatchSize;
   if (maxBatchSize === undefined) {
-    return Infinity;
+    return 1000;
   }
   if (typeof maxBatchSize !== 'number' || maxBatchSize < 1) {
     throw new TypeError(

@@ -95,7 +95,7 @@ declare namespace DataLoader {
     batch?: boolean;
 
     /**
-     * Default `Infinity`. Limits the number of items that get passed in to the
+     * Default `1000`. Limits the number of items that get passed in to the
      * `batchLoadFn`. May be set to `1` to disable batching.
      */
     maxBatchSize?: number;
