@@ -20,7 +20,7 @@
 
 ### Patch Changes
 
-- [#318](https://github.com/graphql/dataloader/pull/318) [`588a8b6`](https://github.com/graphql/dataloader/commit/588a8b6c6391aad042b369f10dc440c7e0458312) Thanks [@boopathi](https://github.com/boopathi)! - Fix the propagation of sync throws in the batch function to the loader function instead of crashing the process wtih an uncaught exception.
+- [#318](https://github.com/graphql/dataloader/pull/318) [`588a8b6`](https://github.com/graphql/dataloader/commit/588a8b6c6391aad042b369f10dc440c7e0458312) Thanks [@boopathi](https://github.com/boopathi)! - Fix the propagation of sync throws in the batch function to the loader function instead of crashing the process with an uncaught exception.
 
 * [#252](https://github.com/graphql/dataloader/pull/252) [`fae38f1`](https://github.com/graphql/dataloader/commit/fae38f14702e925d1e59051d7e5cb3a9a78bfde8) Thanks [@LinusU](https://github.com/LinusU)! - Fix types for priming cache with promise
 
