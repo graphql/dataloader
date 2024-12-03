@@ -1,5 +1,11 @@
 # dataloader
 
+## 2.2.3
+
+### Patch Changes
+
+- [#342](https://github.com/graphql/dataloader/pull/342) [`38fedd4`](https://github.com/graphql/dataloader/commit/38fedd4106e9e3e7eb77bd68e42abc088110bd43) Thanks [@abendi](https://github.com/abendi)! - Ensure `cacheKeyFn` is not called when caching is disabled, since the key is not utilized in that case.
+
 ## 2.2.2
 
 ### Patch Changes
