@@ -11,15 +11,13 @@ jobs:
         node-version: [18, 20, 22]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Node ${{ matrix.node-version }}
-        uses: actions/setup-node@master
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Get yarn cache
-        uses: c-hive/gha-yarn-cache@v2
+          cache: 'yarn'
 
       - name: Install Dependencies using Yarn
         run: yarn --ignore-engines
@@ -28,6 +26,8 @@ jobs:
         run: yarn test:ci 
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           fail_ci_if_error: true
