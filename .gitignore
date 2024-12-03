@@ -9,3 +9,8 @@ npm-debug.log
 node_modules
 coverage
 dist
+
+# Generated with release scripts
+index.d.ts
+index.js
+index.js.flow
