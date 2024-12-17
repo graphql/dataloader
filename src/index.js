@@ -218,25 +218,25 @@ class DataLoader<K, V, C = K> {
 // http://www.ecma-international.org/ecma-262/6.0/#sec-jobs-and-job-queues
 //
 // When calling `then` on a Promise, it enqueues a Job on a specific
-// "PromiseJobs" JobQueue which is flushed "recursively" until it 
-// is empty, including new Promise Jobs that are added during the current 
+// "PromiseJobs" JobQueue which is flushed "recursively" until it
+// is empty, including new Promise Jobs that are added during the current
 // flushing.
 //
 // DataLoader batches all loads which occur in a single frame of execution
-// (synchronously executed code), but should include in the batch all loads 
-// which occur during the flushing of the "PromiseJobs" JobQueue after that 
+// (synchronously executed code), but should include in the batch all loads
+// which occur during the flushing of the "PromiseJobs" JobQueue after that
 // same execution frame.
-// 
-// In Node.js we can use `process.nextTick` that is run 
+//
+// In Node.js we can use `process.nextTick` that is run
 // immediately after the "PromiseJobs" is empty.
-// 
-// Browsers do not have an equivalent mechanism, therfore 
-// we use `setImmediate` or `setTimeout` which is always run after all Promise 
-// jobs. This might be less efficient that `nextTick`, which is ensured to 
+//
+// Browsers do not have an equivalent mechanism, therefore
+// we use `setImmediate` or `setTimeout` which is always run after all Promise
+// jobs. This might be less efficient that `nextTick`, which is ensured to
 // run directly after the all Promise jobs are done.
 //
-// In either environment we wrap `nextTick`, `setImmedidate` or `setTimeout` 
-// in a Promise handler itself, to ensure the flushing of "PromiseJobs" has 
+// In either environment we wrap `nextTick`, `setImmediate` or `setTimeout`
+// in a Promise handler itself, to ensure the flushing of "PromiseJobs" has
 // started.
 const enqueuePostPromiseJob =
   typeof process === 'object' && typeof process.nextTick === 'function'
