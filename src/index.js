@@ -227,17 +227,15 @@ class DataLoader<K, V, C = K> {
 // which occur during the flushing of the "PromiseJobs" JobQueue after that
 // same execution frame.
 //
-// In Node.js we can use `process.nextTick` that is run
-// immediately after the "PromiseJobs" is empty.
+// In Node.js we wrap `nextTick`in a Promise handler itself, to ensure the
+// flushing of "PromiseJobs" has started, otherwise the dispatch would happen
+// before the Promise handlers are called.
 //
-// Browsers do not have an equivalent mechanism, therefore
-// we use `setImmediate` or `setTimeout` which is always run after all Promise
-// jobs. This might be less efficient that `nextTick`, which is ensured to
+// Browsers do not have an equivalent mechanism to `nextTick`, therefore
+// we use `setImmediate` or `setTimeout`, which is always run after all Promise
+// jobs. This might be less efficient than `nextTick`, which is ensured to
 // run directly after the all Promise jobs are done.
 //
-// In either environment we wrap `nextTick`, `setImmediate` or `setTimeout`
-// in a Promise handler itself, to ensure the flushing of "PromiseJobs" has
-// started.
 const enqueuePostPromiseJob =
   typeof process === 'object' && typeof process.nextTick === 'function'
     ? function (fn) {
