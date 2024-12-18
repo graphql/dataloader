@@ -217,26 +217,25 @@ class DataLoader<K, V, C = K> {
 // after the current execution context has completed:
 // http://www.ecma-international.org/ecma-262/6.0/#sec-jobs-and-job-queues
 //
-// Node.js uses the `process.nextTick` mechanism to implement the concept of a
-// Job, maintaining a global FIFO JobQueue for all Jobs, which is flushed after
-// the current call stack ends.
-//
 // When calling `then` on a Promise, it enqueues a Job on a specific
-// "PromiseJobs" JobQueue which is flushed in Node as a single Job on the
-// global JobQueue.
+// "PromiseJobs" JobQueue which is flushed "recursively" until it
+// is empty, including new Promise Jobs that are added during the current
+// flushing.
 //
-// DataLoader batches all loads which occur in a single frame of execution, but
-// should include in the batch all loads which occur during the flushing of the
-// "PromiseJobs" JobQueue after that same execution frame.
+// DataLoader batches all loads which occur in a single frame of execution
+// (synchronously executed code), but should include in the batch all loads
+// which occur during the flushing of the "PromiseJobs" JobQueue after that
+// same execution frame.
 //
-// In order to avoid the DataLoader dispatch Job occuring before "PromiseJobs",
-// A Promise Job is created with the sole purpose of enqueuing a global Job,
-// ensuring that it always occurs after "PromiseJobs" ends.
+// In Node.js we wrap `nextTick`in a Promise handler itself, to ensure the
+// flushing of "PromiseJobs" has started, otherwise the dispatch would happen
+// before the Promise handlers are called.
 //
-// Node.js's job queue is unique. Browsers do not have an equivalent mechanism
-// for enqueuing a job to be performed after promise microtasks and before the
-// next macrotask. For browser environments, a macrotask is used (via
-// setImmediate or setTimeout) at a potential performance penalty.
+// Browsers do not have an equivalent mechanism to `nextTick`, therefore
+// we use `setImmediate` or `setTimeout`, which is always run after all Promise
+// jobs. This might be less efficient than `nextTick`, which is ensured to
+// run directly after the all Promise jobs are done.
+//
 const enqueuePostPromiseJob =
   typeof process === 'object' && typeof process.nextTick === 'function'
     ? function (fn) {
