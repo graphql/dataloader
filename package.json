@@ -1,72 +1,76 @@
 {
-  "name": "dataloader",
-  "version": "2.2.3",
-  "description": "A data loading utility to reduce requests to a backend via batching and caching.",
-  "contributors": [
-    "Lee Byron <lee@leebyron.com> (http://leebyron.com/)",
-    "Daniel Schafer <dschafer@fb.com>",
-    "Nicholas Schrock <schrockn@fb.com>"
-  ],
-  "license": "MIT",
-  "homepage": "https://github.com/graphql/dataloader",
-  "bugs": {
-    "url": "https://github.com/graphql/dataloader/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/graphql/dataloader.git"
-  },
-  "main": "index.js",
-  "typings": "index.d.ts",
-  "scripts": {
-    "test": "npm run lint && npm run check && npm run testonly",
-    "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
-    "lint": "eslint .",
-    "check": "flow check --max-warnings 0",
-    "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
-    "watch": "babel resources/watch.js | node",
-    "testonly": "jest src",
-    "prerelease": ". ./resources/prepublish.sh",
-    "release": "changeset publish"
-  },
-  "files": [
-    "index.js",
-    "index.js.flow",
-    "index.d.ts",
-    "README.md",
-    "LICENSE",
-    "PATENTS"
-  ],
-  "devDependencies": {
-    "@babel/cli": "7.7.0",
-    "@babel/core": "7.7.2",
-    "@babel/node": "7.7.0",
-    "@babel/preset-env": "7.7.1",
-    "@babel/preset-flow": "7.0.0",
-    "@changesets/changelog-github": "0.4.6",
-    "@changesets/cli": "2.24.3",
-    "babel-eslint": "10.0.3",
-    "eslint": "6.6.0",
-    "eslint-plugin-prettier": "^3.4.1",
-    "flow-bin": "0.112.0",
-    "jest": "24.9.0",
-    "prettier": "^2.8.3",
-    "sane": "4.1.0"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "prettier": {
-    "arrowParens": "avoid",
-    "singleQuote": true,
-    "trailingComma": "all",
-    "overrides": [
-      {
-        "files": "src/**/*.js",
-        "options": {
-          "parser": "babel-flow"
-        }
-      }
-    ]
-  }
+     "name": "dataloader",
+     "version": "2.2.3",
+     "description": "A data loading utility to reduce requests to a backend via batching and caching.",
+     "contributors": [
+          "Lee Byron <lee@leebyron.com> (http://leebyron.com/)",
+          "Daniel Schafer <dschafer@fb.com>",
+          "Nicholas Schrock <schrockn@fb.com>"
+     ],
+     "license": "MIT",
+     "homepage": "https://github.com/graphql/dataloader",
+     "bugs": {
+          "url": "https://github.com/graphql/dataloader/issues"
+     },
+     "repository": {
+          "type": "git",
+          "url": "http://github.com/graphql/dataloader.git"
+     },
+     "main": "index.js",
+     "typings": "index.d.ts",
+     "scripts": {
+          "test": "npm run lint && npm run check && npm run testonly",
+          "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
+          "lint": "eslint .",
+          "check": "flow check --max-warnings 0",
+          "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
+          "watch": "babel resources/watch.js | node",
+          "testonly": "jest src",
+          "prerelease": ". ./resources/prepublish.sh",
+          "release": "changeset publish",
+          "test:unit": "jest --coverage --coverageReporters=text --coverageReporters=cobertura --collectCoverageFrom='./**/*.js'"
+     },
+     "files": [
+          "index.js",
+          "index.js.flow",
+          "index.d.ts",
+          "README.md",
+          "LICENSE",
+          "PATENTS"
+     ],
+     "devDependencies": {
+          "@babel/cli": "7.7.0",
+          "@babel/core": "7.7.2",
+          "@babel/node": "7.7.0",
+          "@babel/preset-env": "7.7.1",
+          "@babel/preset-flow": "7.0.0",
+          "@changesets/changelog-github": "0.4.6",
+          "@changesets/cli": "2.24.3",
+          "babel-eslint": "10.0.3",
+          "eslint": "6.6.0",
+          "eslint-plugin-prettier": "^3.4.1",
+          "flow-bin": "0.112.0",
+          "jest": "^24.9.0",
+          "prettier": "^2.8.3",
+          "sane": "4.1.0"
+     },
+     "publishConfig": {
+          "access": "public"
+     },
+     "prettier": {
+          "arrowParens": "avoid",
+          "singleQuote": true,
+          "trailingComma": "all",
+          "overrides": [
+               {
+                    "files": "src/**/*.js",
+                    "options": {
+                         "parser": "babel-flow"
+                    }
+               }
+          ]
+     },
+     "dependencies": {
+          "nyc": "^17.1.0"
+     }
 }
