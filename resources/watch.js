@@ -171,7 +171,7 @@ function srcPath(filepath) {
 // Predicates
 
 function isJS(filepath) {
-  return filepath.indexOf('.js') === filepath.length - 3;
+  return filepath.endsWith('.js');
 }
 
 function allTests(filepaths) {
