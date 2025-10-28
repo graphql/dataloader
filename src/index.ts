@@ -41,16 +41,12 @@ export type CacheMap<K, V> = {
  * web request.
  */
 class DataLoader<K, V, C = K> {
-  // TODO: Make this property private, at the moment it is used in 'dispatchBatch'
-  _batchLoadFn: BatchLoadFn<K, V>;
-  // TODO: Make this property private, at the moment it is used in 'getCurrentBatch'
-  _maxBatchSize: number;
-  // TODO: Make this property private, at the moment it is used in 'getCurrentBatch'
-  _batchScheduleFn: (callback: () => void) => void;
+  private _batchLoadFn: BatchLoadFn<K, V>;
+  private _maxBatchSize: number;
+  private _batchScheduleFn: (callback: () => void) => void;
   private _cacheKeyFn: (key: K) => C;
   private _cacheMap: CacheMap<C, Promise<V>> | null;
-  // TODO: Make this property private, at the moment it is used in 'getCurrentBatch'
-  _batch: Batch<K, V> | null;
+  private _batch: Batch<K, V> | null;
   public name: string | null;
 
   constructor(batchLoadFn: BatchLoadFn<K, V>, options?: Options<K, V, C>) {
@@ -69,6 +65,126 @@ class DataLoader<K, V, C = K> {
     this.name = getValidName(options);
   }
 
+  private dispatchBatch(batch: Batch<K, V>) {
+    // Mark this batch as having been dispatched.
+    batch.hasDispatched = true;
+
+    // If there's nothing to load, resolve any cache hits and return early.
+    if (batch.keys.length === 0) {
+      resolveCacheHits(batch);
+      return;
+    }
+
+    // Call the provided batchLoadFn for this loader with the batch's keys and
+    // with the loader as the `this` context.
+    let batchPromise: Promise<ReadonlyArray<V | Error>>;
+    try {
+      batchPromise = this._batchLoadFn(batch.keys);
+    } catch (e) {
+      return this.failedDispatch(
+        batch,
+        new TypeError(
+          'DataLoader must be constructed with a function which accepts ' +
+            'Array<key> and returns Promise<Array<value>>, but the function ' +
+            `errored synchronously: ${String(e)}.`,
+        ),
+      );
+    }
+
+    // Assert the expected response from batchLoadFn
+    if (!batchPromise || typeof batchPromise.then !== 'function') {
+      return this.failedDispatch(
+        batch,
+        new TypeError(
+          'DataLoader must be constructed with a function which accepts ' +
+            'Array<key> and returns Promise<Array<value>>, but the function did ' +
+            `not return a Promise: ${String(batchPromise)}.`,
+        ),
+      );
+    }
+
+    // Await the resolution of the call to batchLoadFn.
+    batchPromise
+      .then(values => {
+        // Assert the expected resolution from batchLoadFn.
+        if (!isArrayLike(values)) {
+          throw new TypeError(
+            'DataLoader must be constructed with a function which accepts ' +
+              'Array<key> and returns Promise<Array<value>>, but the function did ' +
+              `not return a Promise of an Array: ${String(values)}.`,
+          );
+        }
+        if (values.length !== batch.keys.length) {
+          throw new TypeError(
+            'DataLoader must be constructed with a function which accepts ' +
+              'Array<key> and returns Promise<Array<value>>, but the function did ' +
+              'not return a Promise of an Array of the same length as the Array ' +
+              'of keys.' +
+              `\n\nKeys:\n${String(batch.keys)}` +
+              `\n\nValues:\n${String(values)}`,
+          );
+        }
+
+        // Resolve all cache hits in the same micro-task as freshly loaded values.
+        resolveCacheHits(batch);
+
+        // Step through values, resolving or rejecting each Promise in the batch.
+        for (let i = 0; i < batch.callbacks.length; i++) {
+          const value = values[i]!;
+          if (value instanceof Error) {
+            batch.callbacks[i]!.reject(value);
+          } else {
+            batch.callbacks[i]!.resolve(value);
+          }
+        }
+      })
+      .catch(error => {
+        this.failedDispatch(batch, error);
+      });
+  }
+
+  // Private: Either returns the current batch, or creates and schedules a
+  // dispatch of a new batch for the given loader.
+  private getCurrentBatch(): Batch<K, V> {
+    // If there is an existing batch which has not yet dispatched and is within
+    // the limit of the batch size, then return it.
+    const existingBatch = this._batch;
+    if (
+      existingBatch !== null &&
+      !existingBatch.hasDispatched &&
+      existingBatch.keys.length < this._maxBatchSize
+    ) {
+      return existingBatch;
+    }
+
+    // Otherwise, create a new batch for this loader.
+    const newBatch: Batch<K, V> = {
+      hasDispatched: false,
+      keys: [],
+      callbacks: [],
+    };
+
+    // Store it on the loader so it may be reused.
+    this._batch = newBatch;
+
+    // Then schedule a task to dispatch this batch of requests.
+    this._batchScheduleFn(() => {
+      this.dispatchBatch(newBatch);
+    });
+
+    return newBatch;
+  }
+
+  // Private: do not cache individual loads if the entire batch dispatch fails,
+  // but still reject each request so they do not hang.
+  private failedDispatch(batch: Batch<K, V>, error: Error) {
+    // Cache hits are resolved, even though the batch failed.
+    resolveCacheHits(batch);
+    for (let i = 0; i < batch.keys.length; i++) {
+      this.clear(batch.keys[i]!);
+      batch.callbacks[i]!.reject(error);
+    }
+  }
   /**
    * Loads a key, returning a `Promise` for the value represented by that key.
    */
@@ -80,7 +196,7 @@ class DataLoader<K, V, C = K> {
       );
     }
 
-    const batch = getCurrentBatch(this);
+    const batch = this.getCurrentBatch();
     const cacheMap = this._cacheMap;
     let cacheKey: C | undefined;
 
@@ -263,136 +379,6 @@ type Batch<K, V> = {
   }>;
   cacheHits?: Array<() => void>;
 };
-
-// Private: Either returns the current batch, or creates and schedules a
-// dispatch of a new batch for the given loader.
-function getCurrentBatch<K, V, C>(loader: DataLoader<K, V, C>): Batch<K, V> {
-  // If there is an existing batch which has not yet dispatched and is within
-  // the limit of the batch size, then return it.
-  const existingBatch = loader._batch;
-  if (
-    existingBatch !== null &&
-    !existingBatch.hasDispatched &&
-    existingBatch.keys.length < loader._maxBatchSize
-  ) {
-    return existingBatch;
-  }
-
-  // Otherwise, create a new batch for this loader.
-  const newBatch: Batch<K, V> = {
-    hasDispatched: false,
-    keys: [],
-    callbacks: [],
-  };
-
-  // Store it on the loader so it may be reused.
-  loader._batch = newBatch;
-
-  // Then schedule a task to dispatch this batch of requests.
-  loader._batchScheduleFn(() => {
-    dispatchBatch(loader, newBatch);
-  });
-
-  return newBatch;
-}
-
-function dispatchBatch<K, V, C>(
-  loader: DataLoader<K, V, C>,
-  batch: Batch<K, V>,
-) {
-  // Mark this batch as having been dispatched.
-  batch.hasDispatched = true;
-
-  // If there's nothing to load, resolve any cache hits and return early.
-  if (batch.keys.length === 0) {
-    resolveCacheHits(batch);
-    return;
-  }
-
-  // Call the provided batchLoadFn for this loader with the batch's keys and
-  // with the loader as the `this` context.
-  let batchPromise: Promise<ReadonlyArray<V | Error>>;
-  try {
-    batchPromise = loader._batchLoadFn(batch.keys);
-  } catch (e) {
-    return failedDispatch(
-      loader,
-      batch,
-      new TypeError(
-        'DataLoader must be constructed with a function which accepts ' +
-          'Array<key> and returns Promise<Array<value>>, but the function ' +
-          `errored synchronously: ${String(e)}.`,
-      ),
-    );
-  }
-
-  // Assert the expected response from batchLoadFn
-  if (!batchPromise || typeof batchPromise.then !== 'function') {
-    return failedDispatch(
-      loader,
-      batch,
-      new TypeError(
-        'DataLoader must be constructed with a function which accepts ' +
-          'Array<key> and returns Promise<Array<value>>, but the function did ' +
-          `not return a Promise: ${String(batchPromise)}.`,
-      ),
-    );
-  }
-
-  // Await the resolution of the call to batchLoadFn.
-  batchPromise
-    .then(values => {
-      // Assert the expected resolution from batchLoadFn.
-      if (!isArrayLike(values)) {
-        throw new TypeError(
-          'DataLoader must be constructed with a function which accepts ' +
-            'Array<key> and returns Promise<Array<value>>, but the function did ' +
-            `not return a Promise of an Array: ${String(values)}.`,
-        );
-      }
-      if (values.length !== batch.keys.length) {
-        throw new TypeError(
-          'DataLoader must be constructed with a function which accepts ' +
-            'Array<key> and returns Promise<Array<value>>, but the function did ' +
-            'not return a Promise of an Array of the same length as the Array ' +
-            'of keys.' +
-            `\n\nKeys:\n${String(batch.keys)}` +
-            `\n\nValues:\n${String(values)}`,
-        );
-      }
-
-      // Resolve all cache hits in the same micro-task as freshly loaded values.
-      resolveCacheHits(batch);
-
-      // Step through values, resolving or rejecting each Promise in the batch.
-      for (let i = 0; i < batch.callbacks.length; i++) {
-        const value = values[i]!;
-        if (value instanceof Error) {
-          batch.callbacks[i]!.reject(value);
-        } else {
-          batch.callbacks[i]!.resolve(value);
-        }
-      }
-    })
-    .catch(error => {
-      failedDispatch(loader, batch, error);
-    });
-}
-
-// Private: do not cache individual loads if the entire batch dispatch fails,
-// but still reject each request so they do not hang.
-function failedDispatch<K, V, C>(
-  loader: DataLoader<K, V, C>,
-  batch: Batch<K, V>,
-  error: Error,
-) {
-  // Cache hits are resolved, even though the batch failed.
-  resolveCacheHits(batch);
-  for (let i = 0; i < batch.keys.length; i++) {
-    loader.clear(batch.keys[i]!);
-    batch.callbacks[i]!.reject(error);
-  }
-}
 
 // Private: Resolves the Promises for any cache hits in this batch.
 function resolveCacheHits<K, V>(batch: Batch<K, V>) {
