@@ -16,8 +16,10 @@
     "type": "git",
     "url": "http://github.com/graphql/dataloader.git"
   },
-  "main": "index.js",
-  "typings": "index.d.ts",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
@@ -26,13 +28,14 @@
     "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
     "watch": "babel resources/watch.js | node",
     "testonly": "jest src",
+    "check": "tsc --noEmit --pretty",
+    "build": "tsup",
+    "watch": "tsup --watch",
     "prerelease": ". ./resources/prepublish.sh",
     "release": "changeset publish"
   },
   "files": [
-    "index.js",
-    "index.js.flow",
-    "index.d.ts",
+    "dist/*",
     "README.md",
     "LICENSE",
     "PATENTS"
@@ -71,5 +74,17 @@
         }
       }
     ]
+  },
+  "tsup": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "format": [
+      "cjs",
+      "esm"
+    ],
+    "dts": true,
+    "sourcemap": true,
+    "clean": true
   }
 }
