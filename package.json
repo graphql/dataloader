@@ -38,20 +38,23 @@
     "PATENTS"
   ],
   "devDependencies": {
-    "@babel/cli": "7.7.0",
-    "@babel/core": "7.7.2",
-    "@babel/node": "7.7.0",
-    "@babel/preset-env": "7.7.1",
-    "@babel/preset-flow": "7.0.0",
-    "@changesets/changelog-github": "0.4.6",
-    "@changesets/cli": "2.24.3",
-    "babel-eslint": "10.0.3",
-    "eslint": "6.6.0",
-    "eslint-plugin-prettier": "^3.4.1",
-    "flow-bin": "0.112.0",
-    "jest": "24.9.0",
-    "prettier": "^2.8.3",
-    "sane": "4.1.0"
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
+    "@eslint/js": "^9.38.0",
+    "@jest/globals": "^30.2.0",
+    "@types/node": "^24.9.1",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "jest": "^30.2.0",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2"
   },
   "publishConfig": {
     "access": "public"
