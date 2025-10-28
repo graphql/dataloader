@@ -27,6 +27,7 @@
     "check": "tsc --noEmit --pretty",
     "build": "tsup",
     "watch": "tsup --watch",
+    "testonly": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest ",
     "prerelease": ". ./resources/prepublish.sh",
     "release": "changeset publish"
   },
