@@ -3,25 +3,24 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-const DataLoader = require('..');
+import DataLoader from '../index.ts';
+import { describe, it, expect } from '@jest/globals';
 
 describe('Provides descriptive error messages for API abuse', () => {
   it('Loader creation requires a function', () => {
     expect(() => {
-      // $FlowExpectError
-      new DataLoader(); // eslint-disable-line no-new
+      // @ts-expect-error testing invalid usage
+      new DataLoader();
     }).toThrow(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but got: undefined.',
     );
 
     expect(() => {
-      // $FlowExpectError
-      new DataLoader({}); // eslint-disable-line no-new
+      // @ts-expect-error testing invalid usage
+      new DataLoader({});
     }).toThrow(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but got: [object Object].',
@@ -32,7 +31,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     const idLoader = new DataLoader<number, number>(async keys => keys);
 
     expect(() => {
-      // $FlowExpectError
+      // @ts-expect-error testing invalid usage
       idLoader.load();
     }).toThrow(
       'The loader.load() function must be called with a value, ' +
@@ -40,7 +39,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
 
     expect(() => {
-      // $FlowExpectError
+      // @ts-expect-error testing invalid usage
       idLoader.load(null);
     }).toThrow(
       'The loader.load() function must be called with a value, ' +
@@ -57,7 +56,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     const idLoader = new DataLoader<number, number>(async keys => keys);
 
     expect(() => {
-      // $FlowExpectError
+      // @ts-expect-error testing invalid usage
       idLoader.loadMany();
     }).toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
@@ -65,7 +64,7 @@ describe('Provides descriptive error messages for API abuse', () => {
     );
 
     expect(() => {
-      // $FlowExpectError
+      // @ts-expect-error testing invalid usage
       idLoader.loadMany(1, 2, 3);
     }).toThrow(
       'The loader.loadMany() function must be called with Array<key> ' +
@@ -79,7 +78,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   });
 
   it('Batch function must return a Promise, not null', async () => {
-    // $FlowExpectError
+    // @ts-expect-error testing invalid usage
     const badLoader = new DataLoader<number, number>(() => null);
 
     let caughtError;
@@ -89,7 +88,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe(
+    expect((caughtError as Error).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         'not return a Promise: null.',
@@ -108,7 +107,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe(
+    expect((caughtError as Error).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function ' +
         'errored synchronously: Error: Mock Synchronous Error.',
@@ -117,7 +116,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Batch function must return a Promise, not a value', async () => {
     // Note: this is returning the keys directly, rather than a promise to keys.
-    // $FlowExpectError
+    // @ts-expect-error testing invalid usage
     const badLoader = new DataLoader<number, number>(keys => keys);
 
     let caughtError;
@@ -127,7 +126,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe(
+    expect((caughtError as Error).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         'not return a Promise: 1.',
@@ -136,7 +135,7 @@ describe('Provides descriptive error messages for API abuse', () => {
 
   it('Batch function must return a Promise of an Array, not null', async () => {
     // Note: this resolves to undefined
-    // $FlowExpectError
+    // @ts-expect-error testing invalid usage
     const badLoader = new DataLoader<number, number>(async () => null);
 
     let caughtError;
@@ -146,7 +145,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe(
+    expect((caughtError as Error).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         'not return a Promise of an Array: null.',
@@ -164,7 +163,7 @@ describe('Provides descriptive error messages for API abuse', () => {
       caughtError = error;
     }
     expect(caughtError).toBeInstanceOf(Error);
-    expect((caughtError: any).message).toBe(
+    expect((caughtError as Error).message).toBe(
       'DataLoader must be constructed with a function which accepts ' +
         'Array<key> and returns Promise<Array<value>>, but the function did ' +
         'not return a Promise of an Array of the same length as the Array ' +
@@ -180,17 +179,17 @@ describe('Provides descriptive error messages for API abuse', () => {
     }
 
     expect(() => {
-      // $FlowExpectError
       const incompleteMap = new IncompleteMap();
       const options = { cacheMap: incompleteMap };
-      new DataLoader(async keys => keys, options); // eslint-disable-line no-new
+      // @ts-expect-error testing invalid usage
+      new DataLoader(async keys => keys, options);
     }).toThrow('Custom cacheMap missing methods: set, delete, clear');
   });
 
   it('Requires a number for maxBatchSize', () => {
     expect(
       () =>
-        // $FlowExpectError
+        // @ts-expect-error testing invalid usage
         new DataLoader(async keys => keys, { maxBatchSize: null }),
     ).toThrow('maxBatchSize must be a positive number: null');
   });
@@ -204,7 +203,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   it('Requires a function for cacheKeyFn', () => {
     expect(
       () =>
-        // $FlowExpectError
+        // @ts-expect-error testing invalid usage
         new DataLoader(async keys => keys, { cacheKeyFn: null }),
     ).toThrow('cacheKeyFn must be a function: null');
   });
@@ -212,7 +211,7 @@ describe('Provides descriptive error messages for API abuse', () => {
   it('Requires a function for batchScheduleFn', () => {
     expect(
       () =>
-        // $FlowExpectError
+        // @ts-expect-error testing invalid usage
         new DataLoader(async keys => keys, { batchScheduleFn: null }),
     ).toThrow('batchScheduleFn must be a function: null');
   });

@@ -3,17 +3,19 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-// Mock out process.nextTick as not existing for this test before requiring.
-process.nextTick = (null: any);
-const DataLoader = require('..');
+// Set up mocks to simulate a recent browser environment.
+// Remove process.nextTick.
+// This mock must be imported before importing DataLoader.
+import './nextTick.mock.ts';
+
+import DataLoader from '../index.ts';
+import { describe, it, expect } from '@jest/globals';
 
 describe('Browser support', () => {
   it('batches multiple requests without process.nextTick', async () => {
-    const loadCalls = [];
+    const loadCalls: ReadonlyArray<number>[] = [];
     const identityLoader = new DataLoader<number, number>(async keys => {
       loadCalls.push(keys);
       return keys;

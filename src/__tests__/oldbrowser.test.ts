@@ -3,19 +3,20 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-// Mock out process.nextTick and setImmediate as not existing for this test
-// before requiring.
-process.nextTick = (null: any);
-global.setImmediate = (null: any);
-const DataLoader = require('..');
+// Set up mocks to simulate an old browser environment.
+// Remove both setImmediate and process.nextTick.
+// These mocks must be imported before importing DataLoader.
+import './nextTick.mock.ts';
+import './setImmediate.mock.ts';
+
+import DataLoader from '../index.ts';
+import { describe, it, expect } from '@jest/globals';
 
 describe('Old browser support', () => {
   it('batches multiple requests without setImmediate', async () => {
-    const loadCalls = [];
+    const loadCalls: ReadonlyArray<number>[] = [];
     const identityLoader = new DataLoader<number, number>(async keys => {
       loadCalls.push(keys);
       return keys;
