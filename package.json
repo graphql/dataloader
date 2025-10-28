@@ -23,11 +23,7 @@
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
-    "lint": "eslint .",
-    "check": "flow check --max-warnings 0",
-    "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
-    "watch": "babel resources/watch.js | node",
-    "testonly": "jest src",
+    "lint": "eslint ./src --ext .js,.ts",
     "check": "tsc --noEmit --pretty",
     "build": "tsup",
     "watch": "tsup --watch",
