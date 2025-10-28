@@ -653,9 +653,8 @@ DataLoader and how it works.
 [graphql-js]: https://github.com/graphql/graphql-js
 [cache algorithms]: https://en.wikipedia.org/wiki/Cache_algorithms
 [express]: http://expressjs.com/
-[babel/polyfill]: https://babeljs.io/docs/usage/polyfill/
 [lru_map]: https://github.com/rsms/js-lru
-[source code]: https://github.com/graphql/dataloader/blob/main/src/index.js
+[source code]: https://github.com/graphql/dataloader/blob/main/src/index.ts
 
 # Contributing to this repo
 
