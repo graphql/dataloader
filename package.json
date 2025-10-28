@@ -64,10 +64,7 @@
     "trailingComma": "all",
     "overrides": [
       {
-        "files": "src/**/*.js",
-        "options": {
-          "parser": "babel-flow"
-        }
+        "files": "src/**/*.ts"
       }
     ]
   },
