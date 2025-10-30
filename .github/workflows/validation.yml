@@ -1,6 +1,6 @@
-name: Flow check, Lint and Tests 
+name: Typescript check, Lint and Tests
 
-on: push
+on: [push, pull_request]
 
 jobs:
   validation:
