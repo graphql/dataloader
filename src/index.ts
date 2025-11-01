@@ -71,7 +71,6 @@ class DataLoader<K, V, C = K> {
 
     // If there's nothing to load, resolve any cache hits and return early.
     if (batch.keys.length === 0) {
-      resolveCacheHits(batch);
       return;
     }
 
@@ -125,9 +124,6 @@ class DataLoader<K, V, C = K> {
           );
         }
 
-        // Resolve all cache hits in the same micro-task as freshly loaded values.
-        resolveCacheHits(batch);
-
         // Step through values, resolving or rejecting each Promise in the batch.
         for (let i = 0; i < batch.callbacks.length; i++) {
           const value = values[i]!;
@@ -178,8 +174,6 @@ class DataLoader<K, V, C = K> {
   // Private: do not cache individual loads if the entire batch dispatch fails,
   // but still reject each request so they do not hang.
   private failedDispatch(batch: Batch<K, V>, error: Error) {
-    // Cache hits are resolved, even though the batch failed.
-    resolveCacheHits(batch);
     for (let i = 0; i < batch.keys.length; i++) {
       this.clear(batch.keys[i]!);
       batch.callbacks[i]!.reject(error);
@@ -205,12 +199,7 @@ class DataLoader<K, V, C = K> {
       cacheKey = this._cacheKeyFn(key);
       const cachedPromise = cacheMap.get(cacheKey);
       if (cachedPromise) {
-        const cacheHits = batch.cacheHits || (batch.cacheHits = []);
-        return new Promise(resolve => {
-          cacheHits.push(() => {
-            resolve(cachedPromise);
-          });
-        });
+        return cachedPromise;
       }
     }
 
@@ -378,17 +367,7 @@ type Batch<K, V> = {
     resolve: (value: V) => void;
     reject: (error: Error) => void;
   }>;
-  cacheHits?: Array<() => void>;
 };
-
-// Private: Resolves the Promises for any cache hits in this batch.
-function resolveCacheHits<K, V>(batch: Batch<K, V>) {
-  if (batch.cacheHits) {
-    for (let i = 0; i < batch.cacheHits.length; i++) {
-      batch.cacheHits[i]!();
-    }
-  }
-}
 
 // Private: given the DataLoader's options, produce a valid max batch size.
 function getValidMaxBatchSize<K, V, C>(options?: Options<K, V, C>): number {
