@@ -348,8 +348,8 @@ class DataLoader<K, V, C = K> {
 // for enqueuing a job to be performed after promise microtasks and before the
 // next macrotask. For browser environments, a macrotask is used (via
 // setImmediate or setTimeout) at a potential performance penalty.
-const enqueuePostPromiseJob: (fn: () => void) => void =
-  typeof process === 'object' && typeof process.nextTick === 'function'
+function getEnqueuePostPromiseJob(): (fn: () => void) => void {
+  return typeof process === 'object' && typeof process.nextTick === 'function'
     ? function (fn) {
         if (!resolvedPromise) {
           resolvedPromise = Promise.resolve();
@@ -365,6 +365,7 @@ const enqueuePostPromiseJob: (fn: () => void) => void =
       : function (fn) {
           setTimeout(fn);
         };
+}
 
 // Private: cached resolved Promise instance
 let resolvedPromise: Promise<void> | undefined;
@@ -413,7 +414,7 @@ function getValidBatchScheduleFn<K, V, C>(
 ): (callback: () => void) => void {
   const batchScheduleFn = options && options.batchScheduleFn;
   if (batchScheduleFn === undefined) {
-    return enqueuePostPromiseJob;
+    return getEnqueuePostPromiseJob();
   }
   if (typeof batchScheduleFn !== 'function') {
     throw new TypeError(

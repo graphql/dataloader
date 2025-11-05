@@ -5,15 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Set up mocks to simulate a recent browser environment.
-// Remove process.nextTick.
-// This mock must be imported before importing DataLoader.
-import './nextTick.mock.ts';
-
 import DataLoader from '../index.ts';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 describe('Browser support', () => {
+  const originalProcess = global.process;
+
+  beforeEach(() => {
+    // @ts-expect-error testing a browser environment by removing process.nextTick
+    global.process = { nextTick: undefined };
+  });
+
+  afterEach(() => {
+    global.process = originalProcess;
+  });
+
   it('batches multiple requests without process.nextTick', async () => {
     const loadCalls: ReadonlyArray<number>[] = [];
     const identityLoader = new DataLoader<number, number>(async keys => {

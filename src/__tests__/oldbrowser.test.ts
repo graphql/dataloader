@@ -5,16 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// Set up mocks to simulate an old browser environment.
-// Remove both setImmediate and process.nextTick.
-// These mocks must be imported before importing DataLoader.
-import './nextTick.mock.ts';
-import './setImmediate.mock.ts';
-
 import DataLoader from '../index.ts';
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 describe('Old browser support', () => {
+  const originalSetImmediate = global.setImmediate;
+  const originalProcess = global.process;
+
+  beforeEach(() => {
+    // @ts-expect-error testing an old browser environment by removing setImmediate
+    global.setImmediate = undefined;
+    // @ts-expect-error testing an old browser environment by removing process.nextTick
+    global.process = { nextTick: undefined };
+  });
+
+  afterEach(() => {
+    global.setImmediate = originalSetImmediate;
+    global.process = originalProcess;
+  });
+
   it('batches multiple requests without setImmediate', async () => {
     const loadCalls: ReadonlyArray<number>[] = [];
     const identityLoader = new DataLoader<number, number>(async keys => {
