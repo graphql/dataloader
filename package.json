@@ -25,8 +25,10 @@
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
     "lint": "eslint ./src --ext .js,.ts",
     "check": "tsc --noEmit --pretty",
-    "build": "tsdown",
-    "watch": "tsdown --watch",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "npm run build:esm && npm run build:cjs",
+    "watch": "node --watch-path=src --experimental-strip-types src/index.ts",
     "testonly": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest ",
     "prerelease": ". ./resources/prepublish.sh",
     "release": "changeset publish"
@@ -52,7 +54,6 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
-    "tsdown": "^0.16.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2"
   },
