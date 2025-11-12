@@ -3,19 +3,29 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-// Mock out process.nextTick and setImmediate as not existing for this test
-// before requiring.
-process.nextTick = (null: any);
-global.setImmediate = (null: any);
-const DataLoader = require('..');
+import DataLoader from '../index.ts';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 describe('Old browser support', () => {
+  const originalSetImmediate = global.setImmediate;
+  const originalProcess = global.process;
+
+  beforeEach(() => {
+    // @ts-expect-error testing an old browser environment by removing setImmediate
+    global.setImmediate = undefined;
+    // @ts-expect-error testing an old browser environment by removing process.nextTick
+    global.process = { nextTick: undefined };
+  });
+
+  afterEach(() => {
+    global.setImmediate = originalSetImmediate;
+    global.process = originalProcess;
+  });
+
   it('batches multiple requests without setImmediate', async () => {
-    const loadCalls = [];
+    const loadCalls: ReadonlyArray<number>[] = [];
     const identityLoader = new DataLoader<number, number>(async keys => {
       loadCalls.push(keys);
       return keys;

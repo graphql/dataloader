@@ -17,14 +17,14 @@ We actively welcome your pull requests for documentation and code.
 4. Ensure the test suite passes.
 5. Make sure your code lints.
 6. If you haven't already, complete the Contributor License Agreement ("CLA").
-7. Run `yarn changeset` and describe the change you're proposing. Commit the file it creates in `.changeset` to the repo. [You can read more about changeset here.](https://github.com/changesets/changesets)
+7. Run `npx @changesets/cli` and describe the change you're proposing. Commit the file it creates in `.changeset` to the repo. [You can read more about changeset here.](https://github.com/changesets/changesets)
 8. Open a Pull Request so we can review and incorporate your change.
 
 ## Releases
 
 To release a new version:
-1. Run `yarn changeset version` to bump the version of the package.
-2. Run `yarn release` this will create a new release on GitHub and publish the package to NPM. 
+1. Run `npx @changesets/cli version` to bump the version of the package.
+2. Run `npx @changesets/cli publish` this will create a new release on GitHub and publish the package to NPM. 
 
 ## Issues
 

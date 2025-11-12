@@ -16,42 +16,46 @@
     "type": "git",
     "url": "http://github.com/graphql/dataloader.git"
   },
-  "main": "index.js",
-  "typings": "index.d.ts",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/esm/index.d.ts",
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
-    "lint": "eslint .",
-    "check": "flow check --max-warnings 0",
-    "build": "babel src --ignore src/__tests__ --out-dir dist/ ; cp src/index.js dist/index.js.flow ; cp src/index.d.ts dist/",
-    "watch": "babel resources/watch.js | node",
-    "testonly": "jest src",
+    "lint": "eslint ./src --ext .js,.ts",
+    "check": "tsc --noEmit --pretty",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "npm run build:esm && npm run build:cjs",
+    "watch": "node --watch-path=src --experimental-strip-types src/index.ts",
+    "testonly": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest ",
     "prerelease": ". ./resources/prepublish.sh",
     "release": "changeset publish"
   },
   "files": [
-    "index.js",
-    "index.js.flow",
-    "index.d.ts",
+    "dist/*",
     "README.md",
     "LICENSE",
     "PATENTS"
   ],
   "devDependencies": {
-    "@babel/cli": "7.7.0",
-    "@babel/core": "7.7.2",
-    "@babel/node": "7.7.0",
-    "@babel/preset-env": "7.7.1",
-    "@babel/preset-flow": "7.0.0",
-    "@changesets/changelog-github": "0.4.6",
-    "@changesets/cli": "2.24.3",
-    "babel-eslint": "10.0.3",
-    "eslint": "6.6.0",
-    "eslint-plugin-prettier": "^3.4.1",
-    "flow-bin": "0.112.0",
-    "jest": "24.9.0",
-    "prettier": "^2.8.3",
-    "sane": "4.1.0"
+    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/cli": "^2.29.7",
+    "@eslint/js": "^9.38.0",
+    "@jest/globals": "^30.2.0",
+    "@types/node": "^24.9.1",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "jest": "^30.2.0",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2"
   },
   "publishConfig": {
     "access": "public"
@@ -62,10 +66,7 @@
     "trailingComma": "all",
     "overrides": [
       {
-        "files": "src/**/*.js",
-        "options": {
-          "parser": "babel-flow"
-        }
+        "files": "src/**/*.ts"
       }
     ]
   }

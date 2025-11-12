@@ -1,6 +1,6 @@
-name: Flow check, Lint and Tests 
+name: Typescript check, Lint and Tests
 
-on: push
+on: [push, pull_request]
 
 jobs:
   validation:
@@ -17,13 +17,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
+          cache: 'npm'
 
-      - name: Install Dependencies using Yarn
-        run: yarn --ignore-engines
+      - name: Install Dependencies using NPM
+        run: npm install
 
       - name: Tests
-        run: yarn test:ci 
+        run: npm run test:ci
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
