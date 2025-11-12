@@ -17,9 +17,9 @@
     "url": "http://github.com/graphql/dataloader.git"
   },
   "type": "module",
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "typings": "dist/index.d.ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "typings": "dist/esm/index.d.ts",
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
