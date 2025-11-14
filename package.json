@@ -17,9 +17,9 @@
     "url": "http://github.com/graphql/dataloader.git"
   },
   "type": "module",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "typings": "dist/esm/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "test": "npm run lint && npm run check && npm run testonly",
     "test:ci": "npm run lint && npm run check && npm run testonly -- --coverage",
@@ -28,6 +28,7 @@
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build": "npm run build:esm && npm run build:cjs",
+    "postbuild": "node --experimental-strip-types ./post-build.ts",
     "watch": "node --watch-path=src --experimental-strip-types src/index.ts",
     "testonly": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest ",
     "prerelease": ". ./resources/prepublish.sh",
