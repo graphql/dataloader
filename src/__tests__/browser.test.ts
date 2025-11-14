@@ -3,17 +3,25 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
-// Mock out process.nextTick as not existing for this test before requiring.
-process.nextTick = (null: any);
-const DataLoader = require('..');
+import DataLoader from '../index.ts';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 
 describe('Browser support', () => {
+  const originalProcess = global.process;
+
+  beforeEach(() => {
+    // @ts-expect-error testing a browser environment by removing process.nextTick
+    global.process = { nextTick: undefined };
+  });
+
+  afterEach(() => {
+    global.process = originalProcess;
+  });
+
   it('batches multiple requests without process.nextTick', async () => {
-    const loadCalls = [];
+    const loadCalls: ReadonlyArray<number>[] = [];
     const identityLoader = new DataLoader<number, number>(async keys => {
       loadCalls.push(keys);
       return keys;
