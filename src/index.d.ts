@@ -17,7 +17,7 @@
  */
 declare class DataLoader<K, V, C = K> {
   constructor(
-    batchLoadFn: DataLoader.BatchLoadFn<K, V>,
+    batchLoadFn: DataLoader.BatchLoadFn<K, V, C>,
     options?: DataLoader.Options<K, V, C>,
   );
 
@@ -80,7 +80,8 @@ declare namespace DataLoader {
 
   // A Function, which when given an Array of keys, returns a Promise of an Array
   // of values or Errors.
-  export type BatchLoadFn<K, V> = (
+  export type BatchLoadFn<K, V, C = K> = (
+    this: DataLoader<K, V, C>,
     keys: ReadonlyArray<K>,
   ) => PromiseLike<ArrayLike<V | Error>>;
 
