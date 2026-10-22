@@ -1,7 +1,7 @@
 # Using DataLoader with CouchDB
 
 CouchDB is a "NoSQL" document database which supports batch loading via the
-[HTTP Bulk Document API](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API),
+[HTTP Bulk Document API](https://docs.couchdb.org/en/stable/api/database/bulk-api.html),
 making it well suited for use with DataLoader.
 
 This example uses the [nano][] CouchDB client which offers a `fetch` method
