@@ -103,6 +103,7 @@ class DataLoader<K, V, C = K> {
     const promise = new Promise((resolve, reject) => {
       batch.callbacks.push({ resolve, reject });
     });
+    batch.promises.push(promise);
 
     // If caching, cache this promise.
     if (cacheMap) {
@@ -262,6 +263,7 @@ let resolvedPromise;
 type Batch<K, V> = {
   hasDispatched: boolean,
   keys: Array<K>,
+  promises: Array<Promise<V>>,
   callbacks: Array<{
     resolve: (value: V) => void,
     reject: (error: Error) => void,
@@ -284,7 +286,12 @@ function getCurrentBatch<K, V>(loader: DataLoader<K, V, any>): Batch<K, V> {
   }
 
   // Otherwise, create a new batch for this loader.
-  const newBatch = { hasDispatched: false, keys: [], callbacks: [] };
+  const newBatch = {
+    hasDispatched: false,
+    keys: [],
+    promises: [],
+    callbacks: [],
+  };
 
   // Store it on the loader so it may be reused.
   loader._batch = newBatch;
@@ -389,8 +396,15 @@ function failedDispatch<K, V>(
 ) {
   // Cache hits are resolved, even though the batch failed.
   resolveCacheHits(batch);
+  const cacheMap = loader._cacheMap;
   for (let i = 0; i < batch.keys.length; i++) {
-    loader.clear(batch.keys[i]);
+    // A cleared key may now belong to a newer load or a primed value.
+    if (
+      cacheMap &&
+      cacheMap.get(loader._cacheKeyFn(batch.keys[i])) === batch.promises[i]
+    ) {
+      loader.clear(batch.keys[i]);
+    }
     batch.callbacks[i].reject(error);
   }
 }
