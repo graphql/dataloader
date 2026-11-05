@@ -201,6 +201,12 @@ describe('Provides descriptive error messages for API abuse', () => {
     ).toThrow('maxBatchSize must be a positive number: 0');
   });
 
+  it('Rejects NaN for maxBatchSize', () => {
+    expect(
+      () => new DataLoader(async keys => keys, { maxBatchSize: NaN }),
+    ).toThrow('maxBatchSize must be a positive number: NaN');
+  });
+
   it('Requires a function for cacheKeyFn', () => {
     expect(
       () =>
