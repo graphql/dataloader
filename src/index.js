@@ -414,7 +414,7 @@ function getValidMaxBatchSize(options: ?Options<any, any, any>): number {
   if (maxBatchSize === undefined) {
     return Infinity;
   }
-  if (typeof maxBatchSize !== 'number' || maxBatchSize < 1) {
+  if (typeof maxBatchSize !== 'number' || !(maxBatchSize >= 1)) {
     throw new TypeError(
       `maxBatchSize must be a positive number: ${(maxBatchSize: any)}`,
     );
